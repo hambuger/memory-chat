@@ -42,6 +42,7 @@ public class MemorySearch {
     public static List<MemoryDTO> searchRelationMemory(String ownerId, String content) {
         List<Float> contentVector = TextEmbeddings.generateTextEmbeddings(content);
         BoolQueryBuilder mustQuery = QueryBuilders.boolQuery();
+        mustQuery.must(new TermQueryBuilder("messageContentType", "TEXT"));
         if (StringUtils.isNotBlank(ownerId)) {
             mustQuery.must(new TermQueryBuilder("messageCreatorId", ownerId));
         }
@@ -57,8 +58,8 @@ public class MemorySearch {
                                 "['memoryLeafDepth'].value))", Collections.emptyMap()))), new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchAllQuery(),
                         new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "double score = (cosineSimilarity(params.query_vector, 'messageContentVector') + 1.0); return score "
                                 + "> 0.5 " + "? 10 + score : 0;", new HashMap() {{
-            put("query_vector", contentVector);
-        }})))}).scoreMode(FunctionScoreQuery.ScoreMode.SUM).boostMode(CombineFunction.REPLACE).setMinScore(10));
+                            put("query_vector", contentVector);
+                        }})))}).scoreMode(FunctionScoreQuery.ScoreMode.SUM).boostMode(CombineFunction.REPLACE).setMinScore(10));
 
         SearchRequest searchRequest = new SearchRequest(CHAT_MEMORY_INDEX);
         searchRequest.source(searchSourceBuilder);

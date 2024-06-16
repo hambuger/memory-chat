@@ -51,6 +51,9 @@ public class RedisLikeCounter {
         listMap.computeIfAbsent(key, k -> new CopyOnWriteArrayList<>()).add(element);
     }
 
+    public static void reset(String key) {
+        countMap.remove(key);
+    }
 
     /**
      * Get the list of elements for the given key.

@@ -1,5 +1,7 @@
 package image;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URI;
 
 import constants.Constants;
@@ -18,7 +20,8 @@ public class LangChainImage {
 
     public static URI generateImageWithOpenai(String prompt) {
         OpenAiImageModel.OpenAiImageModelBuilder modelBuilder =
-                OpenAiImageModel.builder().baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).modelName(DALL_E_3.toString()).size(DALL_E_SIZE_1792_x_1024).logRequests(true).logResponses(true);
+                OpenAiImageModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL,
+                        Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).modelName(DALL_E_3.toString()).size(DALL_E_SIZE_1792_x_1024).logRequests(true).logResponses(true);
 
         OpenAiImageModel model = modelBuilder.build();
 

@@ -1,5 +1,7 @@
 package embeddings;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,10 +22,15 @@ import static constants.Constants.TEXT_EMBEDDING_3_SMALL;
 public class TextEmbeddings {
 
     public static List<Float> generateTextEmbeddings(String text) {
-        EmbeddingModel model = OpenAiEmbeddingModel.builder().baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).modelName(TEXT_EMBEDDING_3_SMALL).logRequests(true).logResponses(true).build();
+        EmbeddingModel model = OpenAiEmbeddingModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL,
+                Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).modelName(TEXT_EMBEDDING_3_SMALL).logRequests(true).logResponses(true).build();
         Response<Embedding> response = model.embed(text);
         return Optional.ofNullable(response).map(Response::content).map(Embedding::vectorAsList).orElse(new ArrayList<>());
 
+    }
+
+    public static void main(String[] args) {
+        generateTextEmbeddings("test");
     }
 
 }
