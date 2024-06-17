@@ -28,6 +28,7 @@ public class CallFunctionRegistryFactory {
 
     }
 
+
     public static volatile ConcurrentHashMap<String, ToolSpecification> FUNCTION_CALL_METHOD_MAP = new ConcurrentHashMap<>();
 
     public static volatile ConcurrentHashMap<String, MethodFunction> FUNCTION_CALL_MAP = new ConcurrentHashMap<>();
@@ -46,7 +47,7 @@ public class CallFunctionRegistryFactory {
 
 
     public static String executeFunctionResult(String functionName, String arg) {
-        return JSON.toJSONString(Optional.ofNullable(FUNCTION_CALL_MAP.get(functionName)).map(function -> function.getFunction().apply(JSON.parseObject(arg, function.argClass))).orElse(null));
+        return Optional.ofNullable(FUNCTION_CALL_MAP.get(functionName)).map(function -> function.getFunction().apply(JSON.parseObject(arg, function.argClass)).toString()).orElse("NULL");
     }
 
 }

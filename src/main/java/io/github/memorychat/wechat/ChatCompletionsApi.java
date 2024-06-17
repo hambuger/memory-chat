@@ -31,6 +31,7 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.output.Response;
 import io.github.memorychat.audio.SpringAiAudio;
@@ -162,6 +163,12 @@ public class ChatCompletionsApi {
                 MemoryDTO aiMsgDTO = convert2AiMSg(aiMessageResponse.content().text(), memoryDTO, aiMessageResponse.tokenUsage().outputTokenCount());
                 MemoryInsert.insertNewMemory(aiMsgDTO);
             });
+            if (messageList.getLast() instanceof ToolExecutionResultMessage) {
+                ToolExecutionResultMessage resultMessage = (ToolExecutionResultMessage) messageList.getLast();
+                if (resultMessage.toolName().equals("generateImage")) {
+                    return new ChatResponse("PICTURE", resultMessage.text());
+                }
+            }
             return new ChatResponse("TEXT", aiMessageResponse.content().text());
         } catch (Exception e) {
             e.printStackTrace();

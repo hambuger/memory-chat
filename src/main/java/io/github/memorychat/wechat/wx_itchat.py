@@ -24,6 +24,22 @@ class Message:
 pool = ThreadPoolExecutor(max_workers=20)
 
 
+def send_image_from_url(external_image_url, to_user_name):
+    # 设置本地图片路径
+    image_file_path = "send_image.png"
+    try:
+        # 下载图片到本地
+        image_response = requests.get(external_image_url)
+        with open(image_file_path, "wb") as f:
+            f.write(image_response.content)
+        # 发送图片
+        itchat.send_image(image_file_path, toUserName=to_user_name)
+    finally:
+        # Delete the local file after processing
+        if os.path.exists(image_file_path):
+            os.remove(image_file_path)
+
+
 def message_handler(msg):
     try:
         msg_type = msg['MsgType']
@@ -75,7 +91,7 @@ def message_handler(msg):
                         if json_data.get('messageType') == 'TEXT':
                             itchat.send(json_data.get('messageContent'), toUserName=msg['FromUserName'])
                         elif json_data.get('messageType') == 'PICTURE':
-                            itchat.send_msg(json_data.get('messageContent'), toUserName=msg['FromUserName'])
+                            send_image_from_url(json_data.get('messageContent'), msg['FromUserName'])
                 except ValueError:
                     print("响应不是有效的JSON格式")
             if failFlag:
