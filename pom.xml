@@ -10,13 +10,13 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.3.0.RELEASE</version> <!-- 替换为最新的版本号 -->
+        <version>3.3.0</version> <!-- 替换为最新的版本号 -->
     </parent>
 
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <java.version>17</java.version>
     </properties>
+    <!--    spring AI导入-->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -30,6 +30,11 @@
     </dependencyManagement>
     <dependencies>
         <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+        </dependency>
+        <!--        spring boot引入-->
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
@@ -37,6 +42,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!--        JSON schema生成工具-->
         <dependency>
             <groupId>com.kjetland</groupId>
             <artifactId>mbknor-jackson-jsonschema_2.13</artifactId>
@@ -58,6 +64,7 @@
             <artifactId>guava</artifactId>
             <version>27.1-jre</version>
         </dependency>
+        <!--        github上openai的可用sdk-->
         <dependency>
             <groupId>com.github.plexpt</groupId>
             <artifactId>chatgpt</artifactId>
@@ -67,10 +74,6 @@
                     <artifactId>jtokkit</artifactId>
                     <groupId>com.knuddels</groupId>
                 </exclusion>
-<!--                <exclusion>-->
-<!--                    <artifactId>okhttp</artifactId>-->
-<!--                    <groupId>com.squareup.okhttp3</groupId>-->
-<!--                </exclusion>-->
                 <exclusion>
                     <artifactId>jackson-databind</artifactId>
                     <groupId>com.fasterxml.jackson.core</groupId>
@@ -91,10 +94,6 @@
                     <artifactId>logging-interceptor</artifactId>
                     <groupId>com.squareup.okhttp3</groupId>
                 </exclusion>
-                <!--                <exclusion>-->
-<!--                    <artifactId>okhttp</artifactId>-->
-<!--                    <groupId>com.squareup.okhttp3</groupId>-->
-<!--                </exclusion>-->
             </exclusions>
         </dependency>
 
@@ -103,7 +102,7 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.38</version>
         </dependency>
-
+        <!--langchain4j-->
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j</artifactId>

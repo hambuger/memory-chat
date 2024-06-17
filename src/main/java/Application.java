@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
  * @author hamburger
  * @since 2024/6/15
  */
-@SpringBootApplication(scanBasePackages = "controller", exclude = DataSourceAutoConfiguration.class)
+@SpringBootApplication(scanBasePackages = "io.github.memorychat", exclude = DataSourceAutoConfiguration.class)
 public class Application {
 
     public static void main(String[] args) {

@@ -1,0 +1,13 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: memory-chat
+  ai:
+    openai:
+      api-key: sk-xxx
+      base-url: https://api.openai.com
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.0
