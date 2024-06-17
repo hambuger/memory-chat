@@ -82,7 +82,7 @@ def message_handler(msg):
 
             # 处理服务器响应
             failFlag = True
-            if response.status_code == 200:
+            if response and response.status_code and response.json() == 200:
                 # 解析JSON格式的响应体
                 try:
                     json_data = response.json()
@@ -96,6 +96,7 @@ def message_handler(msg):
                     print("响应不是有效的JSON格式")
             if failFlag:
                 print("消息处理失败或者是消息叠加了")
+        return
     except Exception as ex:
         print(ex)
 
