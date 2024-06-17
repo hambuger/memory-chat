@@ -4,10 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.github.memorychat.memory.model.BaseMemoryDTO;
 import io.github.memorychat.wechat.ChatCompletionsApi;
+import io.github.memorychat.wechat.dto.ChatResponse;
 
 
 /**
@@ -23,7 +25,8 @@ public class ChatController {
 
 
     @PostMapping("/wechat")
-    public String wechat(@RequestBody BaseMemoryDTO memoryDTO) {
+    @ResponseBody
+    public ChatResponse wechat(@RequestBody BaseMemoryDTO memoryDTO) {
         chatCompletionsApi.convertAudio2TextMsg(memoryDTO);
         return ChatCompletionsApi.chat(memoryDTO);
     }

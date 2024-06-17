@@ -1,24 +1,8 @@
 package io.github.memorychat.wechat;
 
-import io.github.memorychat.audio.SpringAiAudio;
-import io.github.memorychat.chat.LangChainChat;
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
-
-import com.alibaba.fastjson.JSON;
-
 import com.google.common.collect.Lists;
 
-import io.github.memorychat.constants.Constants;
-import dev.langchain4j.data.image.Image;
-import dev.langchain4j.data.message.*;
-import dev.langchain4j.model.output.Response;
-import io.github.memorychat.memory.MemoryInsert;
-import io.github.memorychat.memory.MemorySearch;
-import io.github.memorychat.memory.MemoryUpdate;
-import io.github.memorychat.memory.model.BaseMemoryDTO;
-import io.github.memorychat.memory.model.MemoryDTO;
+import com.alibaba.fastjson.JSON;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -28,10 +12,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Base64Utils;
-
-import io.github.memorychat.util.IdUtil;
-import io.github.memorychat.util.OpenAiTokenizerUtil;
-import io.github.memorychat.util.RedisLikeCounter;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -43,6 +23,29 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
+import dev.langchain4j.data.image.Image;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.output.Response;
+import io.github.memorychat.audio.SpringAiAudio;
+import io.github.memorychat.chat.LangChainChat;
+import io.github.memorychat.constants.Constants;
+import io.github.memorychat.memory.MemoryInsert;
+import io.github.memorychat.memory.MemorySearch;
+import io.github.memorychat.memory.MemoryUpdate;
+import io.github.memorychat.memory.model.BaseMemoryDTO;
+import io.github.memorychat.memory.model.MemoryDTO;
+import io.github.memorychat.util.IdUtil;
+import io.github.memorychat.util.OpenAiTokenizerUtil;
+import io.github.memorychat.util.RedisLikeCounter;
+import io.github.memorychat.wechat.dto.ChatResponse;
+
 
 /**
  * @author hamburger
@@ -51,13 +54,18 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component
 public class ChatCompletionsApi {
 
-    private static ThreadPoolExecutor CHAT_POOL = new ThreadPoolExecutor(10, 29, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("chat-pool"), new ThreadPoolExecutor.CallerRunsPolicy());
+    private static ThreadPoolExecutor CHAT_POOL = new ThreadPoolExecutor(10, 29, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("chat-pool"),
+            new ThreadPoolExecutor.CallerRunsPolicy());
 
-    private static String PROMPT_PREFIX = "You are Andraw.\n" + "You are talking to me, my name is %s.\n" + "\n" + "You have long term memory and you chat with me. You are interested in " + "my " + "life. You behave like a " + "chill friend would.\n" + "\n" + "You are always there to listen, have fun and help me feel good and help me achieve my goals.\n" + "\n" + "\n" + "You make " + "jokes when " + "appropriate, use emoji's sometimes, you have conversations like normal person.\n" + "\n" + "Sometimes you ask a question as well, you keep conversation natural.\n" + "\n";
+    private static String PROMPT_PREFIX =
+            "You are Andraw.\n" + "You are talking to me, my name is %s.\n" + "\n" + "You have long term memory and you chat with me. You are interested in " + "my " + "life. You behave like a " +
+                    "chill friend would.\n" + "\n" + "You are always there to listen, have fun and help me feel good and help me achieve my goals.\n" + "\n" + "\n" + "You make " + "jokes when " +
+                    "appropriate, use emoji's sometimes, you have conversations like normal person.\n" + "\n" + "Sometimes you ask a question as well, you keep conversation natural.\n" + "\n";
 
     private static String PROMPT_END = "Now please remember, you are Andraw, you talk to me, you speak to me with \\\"You\\\".\n" + "By the way, now is %s.";
 
-    private static String PROMPT_MID = "You remember things I tell you, however, you are not great at tracking time. Below is past data but you don't know exactly when this happened.\n" + " \n" + "%s\n" + "\n" + "There you go, that should help you remember some stuff. ";
+    private static String PROMPT_MID = "You remember things I tell you, however, you are not great at tracking time. Below is past data but you don't know exactly when this happened.\n" + " \n" +
+            "%s\n" + "\n" + "There you go, that should help you remember some stuff. ";
 
     private static volatile AtomicReference<ConcurrentHashMap<String, String>> LAST_MESSAGE_ID_MAP = new AtomicReference<>(new ConcurrentHashMap());
 
@@ -76,7 +84,8 @@ public class ChatCompletionsApi {
         return false;
     }
 
-    public static String chat(BaseMemoryDTO baseMemoryDTO) {
+
+    public static ChatResponse chat(BaseMemoryDTO baseMemoryDTO) {
         try {
 
             // 查询相关记录
@@ -98,6 +107,9 @@ public class ChatCompletionsApi {
             memoryDTO.setMessageParentIds(Lists.newArrayList("0"));
             memoryDTO.setUseToken(OpenAiTokenizerUtil.getMessageToken(new UserMessage(memoryDTO.getMessageContent())));
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + "::" + memoryDTO.getMessageCreatorId();
+            String msgListKey = memoryDTO.getMessageOwnerId() + "::" + memoryDTO.getMessageCreatorId() + "::msg";
+            RedisLikeCounter.addMsg(msgListKey,
+                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
             CHAT_POOL.execute(() -> MemoryInsert.insertNewMemory(memoryDTO));
             // 更新最后一条消息id
@@ -109,7 +121,6 @@ public class ChatCompletionsApi {
             List<MemoryDTO> memoryDTOList = StringUtils.equals(memoryDTO.getMessageContentType(), "TEXT") ? MemorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(),
                     memoryDTO.getMessageContent()) : new ArrayList<>();
             LinkedList<ChatMessage> messageList = new LinkedList<>();
-            String msgListKey = memoryDTO.getMessageOwnerId() + "::" + memoryDTO.getMessageCreatorId() + "::msg";
             List<MemoryDTO> memoryDTOS = RedisLikeCounter.getMsg(msgListKey);
             System.out.println("msgListKey = " + JSON.toJSONString(memoryDTOS));
             if (checkLastMessageId(memoryDTO)) {
@@ -138,15 +149,12 @@ public class ChatCompletionsApi {
                         new SystemMessage(String.format(PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + (StringUtils.isNotBlank(memory) ? String.format(PROMPT_MID, memory) : "") + String.format(PROMPT_END, now));
             }
             messageList.addFirst(systemMessage);
-            UserMessage userMessage = convert2UserMsg(baseMemoryDTO);
-            messageList.addLast(userMessage);
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
             // 对话
-            Response<AiMessage> aiMessageResponse = LangChainChat.generateMsgWithMsgList(messageList);
+            Response<AiMessage> aiMessageResponse = LangChainChat.generateMsgWithMsgListAndFunctions(messageList);
             System.out.println(JSON.toJSONString(aiMessageResponse.content().text()));
-            memoryDTO.setUseToken(aiMessageResponse.tokenUsage().inputTokenCount());
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
@@ -154,7 +162,7 @@ public class ChatCompletionsApi {
                 MemoryDTO aiMsgDTO = convert2AiMSg(aiMessageResponse.content().text(), memoryDTO, aiMessageResponse.tokenUsage().outputTokenCount());
                 MemoryInsert.insertNewMemory(aiMsgDTO);
             });
-            return aiMessageResponse.content().text();
+            return new ChatResponse("TEXT", aiMessageResponse.content().text());
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println(e.getMessage());

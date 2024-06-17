@@ -39,10 +39,14 @@ public class MemoryInsert {
         if (StringUtils.isBlank(memoryDTO.getMessageId())) {
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
         }
-        String msgListKey = memoryDTO.getMessageOwnerId() + "::" + (Objects.equal(memoryDTO.getAiResponseFlag(), "0") ? memoryDTO.getMessageCreatorId() : memoryDTO.getMessageReceiveId()) + "::msg";
-        RedisLikeCounter.addMsg(msgListKey, MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
-        boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), "TEXT");
         boolean userMsgFlag = StringUtils.equals(memoryDTO.getAiResponseFlag(), "0");
+        if (!userMsgFlag) {
+            String msgListKey = memoryDTO.getMessageOwnerId() + "::" + (Objects.equal(memoryDTO.getAiResponseFlag(), "0") ? memoryDTO.getMessageCreatorId() : memoryDTO.getMessageReceiveId()) +
+                    "::msg";
+            RedisLikeCounter.addMsg(msgListKey,
+                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
+        }
+        boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), "TEXT");
         // 生成重要性分数
         String messageContent = memoryDTO.getMessageContent();
         if (textMsgFlag) {
@@ -68,7 +72,8 @@ public class MemoryInsert {
             RedisLikeCounter.incrBy(depthLeafCountKey, memoryDTO.getUseToken());
             String jsonInfo = getAiUseJsonInfo(memoryDTO);
             RedisLikeCounter.addElement(depthLeafListKey, jsonInfo);
-            checkAndInsertDepthLeafReflection(memoryDTO.getMemoryLeafDepth(), depthLeafCountKey, depthLeafListKey, memoryDTO.getMessageOwnerId(), memoryDTO.getMessageOwnerName(), memoryDTO.getMessageOwnerType());
+            checkAndInsertDepthLeafReflection(memoryDTO.getMemoryLeafDepth(), depthLeafCountKey, depthLeafListKey, memoryDTO.getMessageOwnerId(), memoryDTO.getMessageOwnerName(),
+                    memoryDTO.getMessageOwnerType());
         }
         return true;
     }
@@ -99,7 +104,8 @@ public class MemoryInsert {
         for (MemoryReflection.ReflectionResult.Reflection reflection : reflectionList) {
             String reflectionText = reflection.getText();
             List<String> parentIdList = reflection.getP_ids();
-            MemoryDTO memoryDTO = MemoryDTO.builder().messageCreatorId(AI_CREATOR_ID).messageCreatorName(AI_CREATOR_NAME).messageContentType("1").messageParentIds(parentIdList).messageContent(reflectionText).aiResponseFlag("0").messageCreateAt(new Date()).messageContentType("REFLECTION").messageReceiveId(ownerId).messageOwnerId(ownerId).messageReceiveName(ownerName).messageReceiveName(ownerName).messageOwnerType(ownerType).messageReceiveType(ownerType).memoryLeafDepth(leafDepth + 1).useToken(OpenAiTokenizerUtil.getTextToken(reflectionText)).build();
+            MemoryDTO memoryDTO =
+                    MemoryDTO.builder().messageCreatorId(AI_CREATOR_ID).messageCreatorName(AI_CREATOR_NAME).messageContentType("1").messageParentIds(parentIdList).messageContent(reflectionText).aiResponseFlag("0").messageCreateAt(new Date()).messageContentType("REFLECTION").messageReceiveId(ownerId).messageOwnerId(ownerId).messageReceiveName(ownerName).messageReceiveName(ownerName).messageOwnerType(ownerType).messageReceiveType(ownerType).memoryLeafDepth(leafDepth + 1).useToken(OpenAiTokenizerUtil.getTextToken(reflectionText)).build();
             insertNewMemory(memoryDTO);
         }
     }

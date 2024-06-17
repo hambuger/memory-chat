@@ -65,9 +65,20 @@ def message_handler(msg):
             response = requests.post(server_url, json=message_data)
 
             # 处理服务器响应
-            if response.status_code == 200 and response.text:
-                itchat.send(response.text, toUserName=msg['FromUserName'])
-            else:
+            failFlag = True
+            if response.status_code == 200:
+                # 解析JSON格式的响应体
+                try:
+                    json_data = response.json()
+                    if json_data and json_data.get('messageContent'):
+                        failFlag = False
+                        if json_data.get('messageType') == 'TEXT':
+                            itchat.send(json_data.get('messageContent'), toUserName=msg['FromUserName'])
+                        elif json_data.get('messageType') == 'PICTURE':
+                            itchat.send_msg(json_data.get('messageContent'), toUserName=msg['FromUserName'])
+                except ValueError:
+                    print("响应不是有效的JSON格式")
+            if failFlag:
                 print("消息处理失败或者是消息叠加了")
     except Exception as ex:
         print(ex)
