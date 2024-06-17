@@ -48,13 +48,13 @@ def message_handler(msg):
             remark_name = msg['User']['RemarkName']
             if msg_type == 1:
                 content_type = 'TEXT'
-            elif msg_type == 3:
+            elif msg_type == 3 or msg_type == 47:
                 content_type = 'PICTURE'
             elif msg_type == 34:
                 content_type = 'AUDIO'
             else:
                 return
-            if msg_type == 3 or msg_type == 34:
+            if msg_type == 3 or msg_type == 34 or msg_type == 47:
                 image_file = msg['Text']
                 image_file((msg['FileName']))
                 try:
