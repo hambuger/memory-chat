@@ -6,6 +6,7 @@ import com.google.common.base.Objects;
 
 import com.alibaba.fastjson.JSON;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
@@ -15,6 +16,7 @@ import org.springframework.util.CollectionUtils;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import dev.langchain4j.data.message.UserMessage;
 import io.github.memorychat.chat.dto.ContentTypeEnum;
@@ -41,6 +43,7 @@ import static io.github.memorychat.constants.Constants.REFLECTION_TOKEN_LIMIT;
  * @author hamburger
  * @since 2024/6/13
  */
+@Slf4j
 public class MemoryInsert {
 
 
@@ -53,7 +56,7 @@ public class MemoryInsert {
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (Objects.equal(memoryDTO.getAiResponseFlag(), NO_STR) ? memoryDTO.getMessageCreatorId() :
                     memoryDTO.getMessageReceiveId()) + MSG_LIST_KEY_SUFFIX;
             RedisLikeCounter.addMsg(msgListKey,
-                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
+                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
         }
         boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType());
         // 生成重要性分数
@@ -72,7 +75,7 @@ public class MemoryInsert {
         try {
             EsClient.client.index(indexRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("insert memory error", e);
         }
         // 检查是否需要提炼
         if (userMsgFlag && textMsgFlag) {
@@ -92,7 +95,7 @@ public class MemoryInsert {
         MemoryDTO newMemoryDTO = new MemoryDTO();
         newMemoryDTO.setMessageId(memoryDTO.getMessageId());
         newMemoryDTO.setMessageContent(memoryDTO.getMessageContent());
-        newMemoryDTO.setMessageCreatorName(memoryDTO.getMessageCreatorName());
+        newMemoryDTO.setMessageCreatorName(Optional.ofNullable(memoryDTO.getRealCreatorName()).orElse(memoryDTO.getMessageCreatorName()));
         newMemoryDTO.setMessageCreateAt(memoryDTO.getMessageCreateAt());
         newMemoryDTO.setMessageImportanceScore(memoryDTO.getMessageImportanceScore());
         return JSON.toJSONString(newMemoryDTO);

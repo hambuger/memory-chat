@@ -40,7 +40,7 @@ def send_image_from_url(external_image_url, to_user_name):
             os.remove(image_file_path)
 
 
-def message_handler(msg):
+def message_handler(msg, group_flag):
     try:
         msg_type = msg['MsgType']
         if msg['ToUserName'] != msg['User']['UserName']:
@@ -107,7 +107,12 @@ def message_handler(msg):
 
 @itchat.msg_register([content.TEXT, content.PICTURE, content.VOICE, content.NOTE], isFriendChat=True)
 def handle_msg(msg):
-    pool.submit(message_handler, msg)
+    pool.submit(message_handler, msg, False)
+
+
+@itchat.msg_register([content.TEXT, content.PICTURE, content.VOICE, content.NOTE], isGroupChat=True)
+def handle_msg(msg):
+    pool.submit(message_handler, msg, True)
 
 
 def login_wx():

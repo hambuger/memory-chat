@@ -79,4 +79,20 @@ public class BaseMemoryDTO {
      */
     private String messageContent;
 
+
+    /**
+     * 是否群消息，1:是 0:否
+     */
+    private String groupMsgFlag;
+
+    /**
+     * 真正的消息发送者id
+     */
+    private String realCreatorId;
+
+    /**
+     * 真正的消息发送者名称
+     */
+    private String realCreatorName;
+
 }
