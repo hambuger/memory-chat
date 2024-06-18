@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.github.memorychat.chat.dto.ContentTypeEnum;
+import io.github.memorychat.chat.dto.CreatorEnum;
 import io.github.memorychat.elasticsearch.EsClient;
 import io.github.memorychat.embeddings.TextEmbeddings;
 import io.github.memorychat.memory.model.MemoryDTO;
@@ -40,16 +41,24 @@ import static io.github.memorychat.constants.Constants.CHAT_MEMORY_INDEX;
  */
 public class MemorySearch {
 
-    public static List<MemoryDTO> searchRelationMemory(String ownerId, String content) {
+    public static List<MemoryDTO> searchRelationMemory(String ownerId, String creatorId, String content) {
         List<Float> contentVector = TextEmbeddings.generateTextEmbeddings(content);
         BoolQueryBuilder mustQuery = QueryBuilders.boolQuery();
+        // 排除图片和系统消息
         mustQuery.must(new TermQueryBuilder("messageContentType", ContentTypeEnum.TEXT.getType()));
         if (StringUtils.isNotBlank(ownerId)) {
-            mustQuery.must(new TermQueryBuilder("messageCreatorId", ownerId));
+            // 数据隔离
+            mustQuery.must(new TermQueryBuilder("messageOwnerId", ownerId));
+        }
+        if (StringUtils.isNotBlank(creatorId)) {
+            mustQuery.must(new TermQueryBuilder("messageCreatorId", creatorId));
+        }else {
+            // 排除AI回复
+            mustQuery.mustNot(new TermQueryBuilder("messageCreatorId", CreatorEnum.Andrew.getUserId()));
         }
         // 构建查询体
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.size(3);
+        searchSourceBuilder.size(6);
         searchSourceBuilder.query(QueryBuilders.functionScoreQuery(QueryBuilders.boolQuery().must(mustQuery),
                 new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchQuery("messageContent", content),
                         new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "_score / (1 + _score)", Collections.emptyMap()))),
@@ -59,8 +68,8 @@ public class MemorySearch {
                                 "['memoryLeafDepth'].value))", Collections.emptyMap()))), new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchAllQuery(),
                         new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "double score = (cosineSimilarity(params.query_vector, 'messageContentVector') + 1.0); return score "
                                 + "> 0.5 " + "? 10 + score : 0;", new HashMap() {{
-                            put("query_vector", contentVector);
-                        }})))}).scoreMode(FunctionScoreQuery.ScoreMode.SUM).boostMode(CombineFunction.REPLACE).setMinScore(10));
+            put("query_vector", contentVector);
+        }})))}).scoreMode(FunctionScoreQuery.ScoreMode.SUM).boostMode(CombineFunction.REPLACE).setMinScore(10));
 
         SearchRequest searchRequest = new SearchRequest(CHAT_MEMORY_INDEX);
         searchRequest.source(searchSourceBuilder);

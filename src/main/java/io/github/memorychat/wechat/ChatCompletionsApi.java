@@ -106,8 +106,8 @@ public class ChatCompletionsApi {
             memoryDTO.setMessageCreatorType(CreatorEnum.USER.getType());
             memoryDTO.setMessageReceiveId(CreatorEnum.Andrew.getUserId());
             memoryDTO.setMessageReceiveName(CreatorEnum.Andrew.getUserName());
-            memoryDTO.setMessageReceiveType(CreatorEnum.USER.getType());
-            memoryDTO.setMessageOwnerType(CreatorEnum.USER.getType());
+            memoryDTO.setMessageReceiveType(CreatorEnum.Andrew.getType());
+            memoryDTO.setMessageOwnerType(CreatorEnum.Andrew.getType());
             memoryDTO.setMessageOwnerId(CreatorEnum.Andrew.getUserId());
             memoryDTO.setMessageOwnerName(CreatorEnum.Andrew.getUserName());
             memoryDTO.setMessageCreateAt(new Date());
@@ -129,7 +129,7 @@ public class ChatCompletionsApi {
                 return null;
             }
             List<MemoryDTO> memoryDTOList = StringUtils.equals(memoryDTO.getMessageContentType(), "TEXT") ? MemorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(),
-                    memoryDTO.getMessageContent()) : new ArrayList<>();
+                    memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent()) : new ArrayList<>();
             LinkedList<ChatMessage> messageList = new LinkedList<>();
             List<MemoryDTO> memoryDTOS = RedisLikeCounter.getMsg(msgListKey);
             System.out.println("msgListKey = " + JSON.toJSONString(memoryDTOS));
@@ -249,10 +249,10 @@ public class ChatCompletionsApi {
         MemoryDTO aiMemoryDTO = new MemoryDTO();
         aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
         aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
-        aiMemoryDTO.setMessageCreatorType(CreatorEnum.USER.getType());
+        aiMemoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
         aiMemoryDTO.setMessageReceiveId(memoryDTO.getMessageCreatorId());
-        aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageReceiveName());
-        aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageReceiveType());
+        aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageCreatorName());
+        aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageCreatorType());
         aiMemoryDTO.setMessageOwnerId(memoryDTO.getMessageOwnerId());
         aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
         aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());

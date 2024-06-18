@@ -1,15 +1,17 @@
 package io.github.memorychat.memory;
 
+import com.alibaba.fastjson.JSON;
+
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.common.xcontent.XContentType;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import io.github.memorychat.constants.Constants;
 import io.github.memorychat.elasticsearch.EsClient;
+import io.github.memorychat.memory.model.MemoryDTO;
 
 
 /**
@@ -20,12 +22,12 @@ public class MemoryUpdate {
 
     public static boolean updateMemoryAccessTime(String messageId) {
 
-        // 创建要更新的字段和值的Map
-        Map<String, Object> jsonMap = new HashMap<>();
-        jsonMap.put("messageCreateAt", new Date());
+        // 创建要更新的字段和值
+        MemoryDTO memoryDTO = new MemoryDTO();
+        memoryDTO.setMessageLastAccessTime(new Date());
 
         // 创建UpdateRequest
-        UpdateRequest updateRequest = new UpdateRequest(Constants.CHAT_MEMORY_INDEX, messageId).doc(jsonMap);
+        UpdateRequest updateRequest = new UpdateRequest(Constants.CHAT_MEMORY_INDEX, messageId).doc(JSON.toJSONString(memoryDTO), XContentType.JSON);
 
         // 执行更新操作
         try {

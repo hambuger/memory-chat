@@ -56,7 +56,7 @@ public class MemoryInsert {
         boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType());
         // 生成重要性分数
         String messageContent = memoryDTO.getMessageContent();
-        if (textMsgFlag) {
+        if (textMsgFlag && userMsgFlag) {
             Double score = MemoryImportantScore.generateImportantScore(messageContent);
             memoryDTO.setMessageImportanceScore(score);
             // 生成消息向量
