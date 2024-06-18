@@ -1,5 +1,7 @@
 package io.github.memorychat.memory;
 
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 
 import org.elasticsearch.action.update.UpdateRequest;
@@ -24,7 +26,7 @@ public class MemoryUpdate {
 
         // 创建要更新的字段和值
         MemoryDTO memoryDTO = new MemoryDTO();
-        memoryDTO.setMessageLastAccessTime(new Date());
+        memoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
 
         // 创建UpdateRequest
         UpdateRequest updateRequest = new UpdateRequest(Constants.CHAT_MEMORY_INDEX, messageId).doc(JSON.toJSONString(memoryDTO), XContentType.JSON);

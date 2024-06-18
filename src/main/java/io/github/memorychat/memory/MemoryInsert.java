@@ -1,5 +1,7 @@
 package io.github.memorychat.memory;
 
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import com.google.common.base.Objects;
 
 import com.alibaba.fastjson.JSON;
@@ -116,7 +118,7 @@ public class MemoryInsert {
                             .messageCreatorType(CreatorEnum.REFLECTION.getType())
                             .messageContentType(ContentTypeEnum.TEXT.getType())
                             .messageParentIds(parentIdList).messageContent(reflectionText).aiResponseFlag(NO_STR)
-                            .messageCreateAt(new Date()).messageReceiveId(ownerId).messageReceiveName(ownerName).messageReceiveType(ownerType)
+                            .messageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT)).messageReceiveId(ownerId).messageReceiveName(ownerName).messageReceiveType(ownerType)
                             .messageOwnerId(ownerId).messageOwnerName(ownerName).messageOwnerType(ownerType)
                             .memoryLeafDepth(leafDepth + 1).useToken(OpenAiTokenizerUtil.getMessageToken(new UserMessage(reflectionText))).build();
             insertNewMemory(memoryDTO);

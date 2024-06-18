@@ -86,7 +86,7 @@ def message_handler(msg):
 
             # 处理服务器响应
             failFlag = True
-            if response and response.status_code and response.json() == 200:
+            if response and response.status_code == 200 and response.json():
                 # 解析JSON格式的响应体
                 try:
                     json_data = response.json()

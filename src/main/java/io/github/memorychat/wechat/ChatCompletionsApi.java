@@ -110,10 +110,10 @@ public class ChatCompletionsApi {
             memoryDTO.setMessageOwnerType(CreatorEnum.Andrew.getType());
             memoryDTO.setMessageOwnerId(CreatorEnum.Andrew.getUserId());
             memoryDTO.setMessageOwnerName(CreatorEnum.Andrew.getUserName());
-            memoryDTO.setMessageCreateAt(new Date());
+            memoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
             memoryDTO.setAiResponseFlag(NO_STR);
             memoryDTO.setMemoryLeafDepth(0);
-            memoryDTO.setMessageLastAccessTime(new Date());
+            memoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
             memoryDTO.setMessageParentIds(Lists.newArrayList("0"));
             memoryDTO.setUseToken(OpenAiTokenizerUtil.getMessageToken(convertMemoryMsg2ModelMsg(memoryDTO)));
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
@@ -152,7 +152,7 @@ public class ChatCompletionsApi {
                     if (existMsgIds.contains(memorySingle.getMessageId())) {
                         continue;
                     }
-                    memory.append(i + "(" + DateUtil.format(memorySingle.getMessageCreateAt(), DatePattern.NORM_DATETIME_FORMAT) + ")" + memorySingle.getMessageCreatorName() + ":" + memorySingle.getMessageContent() + "\n");
+                    memory.append(i + "(" + memorySingle.getMessageCreateAt()+ ")" + memorySingle.getMessageCreatorName() + ":" + memorySingle.getMessageContent() + "\n");
                     MemoryUpdate.updateMemoryAccessTime(memorySingle.getMessageId());
                 }
                 systemMessage =
@@ -256,11 +256,11 @@ public class ChatCompletionsApi {
         aiMemoryDTO.setMessageOwnerId(memoryDTO.getMessageOwnerId());
         aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
         aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
-        aiMemoryDTO.setMessageCreateAt(new Date());
+        aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
         aiMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
         aiMemoryDTO.setMessageContent(response);
         aiMemoryDTO.setMemoryLeafDepth(0);
-        aiMemoryDTO.setMessageLastAccessTime(new Date());
+        aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
         aiMemoryDTO.setUseToken(token);
         aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
         aiMemoryDTO.setAiResponseFlag(YES_STR);

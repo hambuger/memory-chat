@@ -66,7 +66,7 @@ public class BaseMemoryDTO {
     /**
      * 消息发送时间
      */
-    private Date messageCreateAt;
+    private String messageCreateAt;
 
     /**
      * 消息内容类型

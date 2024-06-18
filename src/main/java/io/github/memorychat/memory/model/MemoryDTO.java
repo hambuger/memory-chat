@@ -39,7 +39,7 @@ public class MemoryDTO extends BaseMemoryDTO {
     /**
      * 消息最后读取时间
      */
-    private Date messageLastAccessTime;
+    private String messageLastAccessTime;
 
 
     /**
