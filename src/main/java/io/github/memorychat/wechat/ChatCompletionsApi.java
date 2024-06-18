@@ -11,9 +11,9 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Base64Utils;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,6 +36,8 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.output.Response;
 import io.github.memorychat.audio.SpringAiAudio;
 import io.github.memorychat.chat.LangChainChat;
+import io.github.memorychat.chat.dto.ContentTypeEnum;
+import io.github.memorychat.chat.dto.CreatorEnum;
 import io.github.memorychat.constants.Constants;
 import io.github.memorychat.memory.MemoryInsert;
 import io.github.memorychat.memory.MemorySearch;
@@ -46,6 +48,13 @@ import io.github.memorychat.util.IdUtil;
 import io.github.memorychat.util.OpenAiTokenizerUtil;
 import io.github.memorychat.util.RedisLikeCounter;
 import io.github.memorychat.wechat.dto.ChatResponse;
+
+import static io.github.memorychat.constants.CommonConstants.DOUBLE_COLON;
+import static io.github.memorychat.constants.CommonConstants.NO_STR;
+import static io.github.memorychat.constants.CommonConstants.YES_STR;
+import static io.github.memorychat.constants.Constants.GENERATE_IMAGE_FUNCTION_NAME;
+import static io.github.memorychat.constants.Constants.IMAGE_TYPE;
+import static io.github.memorychat.constants.Constants.MSG_LIST_KEY_SUFFIX;
 
 
 /**
@@ -75,10 +84,11 @@ public class ChatCompletionsApi {
 
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
-        String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + "::" + (StringUtils.equals(memoryDTO.getAiResponseFlag(), "1") ? memoryDTO.getMessageReceiveId() : memoryDTO.getMessageCreatorId());
+        String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageReceiveId() :
+                memoryDTO.getMessageCreatorId());
         String oldMsgId = LAST_MESSAGE_ID_MAP.get().get(lastMsgIdMapKey);
         System.out.println("oldMsgId:" + oldMsgId);
-        if (StringUtils.isNotBlank(oldMsgId) && !StringUtils.equals(oldMsgId, StringUtils.equals(memoryDTO.getAiResponseFlag(), "1") ? memoryDTO.getMessageParentIds().get(0) :
+        if (StringUtils.isNotBlank(oldMsgId) && !StringUtils.equals(oldMsgId, StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageParentIds().get(0) :
                 memoryDTO.getMessageId())) {
             return true;
         }
@@ -88,27 +98,26 @@ public class ChatCompletionsApi {
 
     public static ChatResponse chat(BaseMemoryDTO baseMemoryDTO) {
         try {
-
             // 查询相关记录
             MemoryDTO memoryDTO = BeanUtil.copyProperties(baseMemoryDTO, MemoryDTO.class);
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
             System.out.println(new Date() + memoryDTO.getMessageId());
             memoryDTO.setMessageCreatorId(memoryDTO.getMessageCreatorName());
-            memoryDTO.setMessageCreatorType("1");
-            memoryDTO.setMessageReceiveId(Constants.AI_CREATOR_ID);
-            memoryDTO.setMessageReceiveName(Constants.AI_CREATOR_NAME);
-            memoryDTO.setMessageReceiveType("1");
-            memoryDTO.setMessageOwnerType("1");
-            memoryDTO.setMessageOwnerId(Constants.AI_CREATOR_ID);
-            memoryDTO.setMessageOwnerName(Constants.AI_CREATOR_NAME);
+            memoryDTO.setMessageCreatorType(CreatorEnum.USER.getType());
+            memoryDTO.setMessageReceiveId(CreatorEnum.Andrew.getUserId());
+            memoryDTO.setMessageReceiveName(CreatorEnum.Andrew.getUserName());
+            memoryDTO.setMessageReceiveType(CreatorEnum.USER.getType());
+            memoryDTO.setMessageOwnerType(CreatorEnum.USER.getType());
+            memoryDTO.setMessageOwnerId(CreatorEnum.Andrew.getUserId());
+            memoryDTO.setMessageOwnerName(CreatorEnum.Andrew.getUserName());
             memoryDTO.setMessageCreateAt(new Date());
-            memoryDTO.setAiResponseFlag("0");
+            memoryDTO.setAiResponseFlag(NO_STR);
             memoryDTO.setMemoryLeafDepth(0);
             memoryDTO.setMessageLastAccessTime(new Date());
             memoryDTO.setMessageParentIds(Lists.newArrayList("0"));
-            memoryDTO.setUseToken(OpenAiTokenizerUtil.getMessageToken(new UserMessage(memoryDTO.getMessageContent())));
-            String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + "::" + memoryDTO.getMessageCreatorId();
-            String msgListKey = memoryDTO.getMessageOwnerId() + "::" + memoryDTO.getMessageCreatorId() + "::msg";
+            memoryDTO.setUseToken(OpenAiTokenizerUtil.getMessageToken(convertMemoryMsg2ModelMsg(memoryDTO)));
+            String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
+            String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + MSG_LIST_KEY_SUFFIX;
             RedisLikeCounter.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
@@ -165,11 +174,11 @@ public class ChatCompletionsApi {
             });
             if (messageList.getLast() instanceof ToolExecutionResultMessage) {
                 ToolExecutionResultMessage resultMessage = (ToolExecutionResultMessage) messageList.getLast();
-                if (resultMessage.toolName().equals("generateImage")) {
-                    return new ChatResponse("PICTURE", resultMessage.text());
+                if (resultMessage.toolName().equals(GENERATE_IMAGE_FUNCTION_NAME)) {
+                    return new ChatResponse(ContentTypeEnum.PICTURE.getType(), resultMessage.text());
                 }
             }
-            return new ChatResponse("TEXT", aiMessageResponse.content().text());
+            return new ChatResponse(ContentTypeEnum.TEXT.getType(), aiMessageResponse.content().text());
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println(e.getMessage());
@@ -179,25 +188,26 @@ public class ChatCompletionsApi {
 
 
     public void convertAudio2TextMsg(BaseMemoryDTO baseMemoryDTO) {
-        if (!StringUtils.equals(baseMemoryDTO.getMessageContentType(), "AUDIO")) {
+        if (!StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.AUDIO.getType())) {
             return;
         }
-        byte[] fileBytes = Base64Utils.decodeFromString(baseMemoryDTO.getMessageContent());
+        byte[] fileBytes = Base64.getDecoder().decode(baseMemoryDTO.getMessageContent());
         // 将 byte[] 转换为 Resource 对象
         Resource resource = new ByteArrayResource(fileBytes);
-        baseMemoryDTO.setMessageContentType("TEXT");
+        baseMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
         baseMemoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(resource));
     }
 
 
-    private static UserMessage convert2UserMsg(BaseMemoryDTO baseMemoryDTO) {
-
-        if (baseMemoryDTO.getMessageContentType().equals("TEXT")) {
+    public static ChatMessage convertMemoryMsg2ModelMsg(BaseMemoryDTO baseMemoryDTO) {
+        if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.TEXT.getType())) {
             return UserMessage.from(baseMemoryDTO.getMessageContent());
+        }else if (baseMemoryDTO.getMessageContent().equals(ContentTypeEnum.PICTURE.getType())) {
+            return new UserMessage(new ImageContent(new Image.Builder().mimeType(IMAGE_TYPE).base64Data(baseMemoryDTO.getMessageContent()).build()));
+        }else if (baseMemoryDTO.getMessageContent().equals(ContentTypeEnum.NOTE.getType())) {
+            return new SystemMessage(baseMemoryDTO.getMessageContent());
         }
-        ImageContent imageContent = new ImageContent(new Image.Builder().mimeType("image/png").base64Data(baseMemoryDTO.getMessageContent()).build());
-
-        return new UserMessage(imageContent);
+        return null;
     }
 
 
@@ -210,11 +220,11 @@ public class ChatCompletionsApi {
         for (int i = memoryDTOS.size() - 1; i >= 0; i--) {
             MemoryDTO memoryDTO = memoryDTOS.get(i);
             ChatMessage chatMessage;
-            if (memoryDTO.getAiResponseFlag().equals("1")) {
+            if (memoryDTO.getAiResponseFlag().equals(YES_STR)) {
                 chatMessage = new AiMessage(memoryDTO.getMessageContent());
                 sumMsgToken = sumMsgToken + OpenAiTokenizerUtil.getMessageToken(chatMessage);
             }else {
-                chatMessage = convert2UserMsg(memoryDTO);
+                chatMessage = convertMemoryMsg2ModelMsg(memoryDTO);
                 sumMsgToken = sumMsgToken + OpenAiTokenizerUtil.getMessageToken(chatMessage);
             }
             if (sumMsgToken < Constants.MAX_MSG_TOKEN) {
@@ -237,9 +247,9 @@ public class ChatCompletionsApi {
 
     private static MemoryDTO convert2AiMSg(String response, MemoryDTO memoryDTO, int token) {
         MemoryDTO aiMemoryDTO = new MemoryDTO();
-        aiMemoryDTO.setMessageCreatorId(Constants.AI_CREATOR_ID);
-        aiMemoryDTO.setMessageCreatorName(Constants.AI_CREATOR_NAME);
-        aiMemoryDTO.setMessageCreatorType("1");
+        aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
+        aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
+        aiMemoryDTO.setMessageCreatorType(CreatorEnum.USER.getType());
         aiMemoryDTO.setMessageReceiveId(memoryDTO.getMessageCreatorId());
         aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageReceiveName());
         aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageReceiveType());
@@ -247,13 +257,13 @@ public class ChatCompletionsApi {
         aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
         aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
         aiMemoryDTO.setMessageCreateAt(new Date());
-        aiMemoryDTO.setMessageContentType("TEXT");
+        aiMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
         aiMemoryDTO.setMessageContent(response);
         aiMemoryDTO.setMemoryLeafDepth(0);
         aiMemoryDTO.setMessageLastAccessTime(new Date());
         aiMemoryDTO.setUseToken(token);
         aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
-        aiMemoryDTO.setAiResponseFlag("1");
+        aiMemoryDTO.setAiResponseFlag(YES_STR);
         return aiMemoryDTO;
     }
 

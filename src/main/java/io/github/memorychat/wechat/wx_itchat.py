@@ -52,6 +52,8 @@ def message_handler(msg):
                 content_type = 'PICTURE'
             elif msg_type == 34:
                 content_type = 'AUDIO'
+            elif msg_type == 10000:
+                content_type = 'NOTE'
             else:
                 return
             if msg_type == 3 or msg_type == 34 or msg_type == 47:
@@ -65,8 +67,10 @@ def message_handler(msg):
                     # Delete the local file after processing
                     if os.path.exists(msg['FileName']):
                         os.remove(msg['FileName'])
-            else:
+            elif msg_type == 1 or msg_type == 10000:
                 content_text = msg['Text']
+            else:
+                return
             message = Message(
                 creator_name=remark_name if remark_name else creator_name,
                 content_type=content_type,
@@ -101,7 +105,7 @@ def message_handler(msg):
         print(ex)
 
 
-@itchat.msg_register([content.TEXT, content.PICTURE, content.VOICE], isFriendChat=True)
+@itchat.msg_register([content.TEXT, content.PICTURE, content.VOICE, content.NOTE], isFriendChat=True)
 def handle_msg(msg):
     pool.submit(message_handler, msg)
 

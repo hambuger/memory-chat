@@ -7,17 +7,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator;
 
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.util.List;
 
-import io.github.memorychat.constants.Constants;
 import dev.langchain4j.agent.tool.ToolParameters;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.output.Response;
+import io.github.memorychat.chat.LangChainChat;
 
 
 /**
@@ -34,8 +31,6 @@ public class LangChainFunctionCall {
 
         JsonNode jsonSchema = jsonSchemaGenerator.generateJsonSchema(argPojoClass);
 
-        OpenAiChatModel model = OpenAiChatModel.builder().baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL,
-                Constants.PROXY_PORT))).modelName(Constants.MODEL_NAME).logRequests(true).logResponses(true).build();
         ToolSpecification toolSpecification = null;
         try {
             ToolParameters toolParameters = objectMapper.treeToValue(jsonSchema, ToolParameters.Builder.class).build();
@@ -43,7 +38,7 @@ public class LangChainFunctionCall {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Response<AiMessage> aiMessageResponse = model.generate(messages, toolSpecification);
+        Response<AiMessage> aiMessageResponse = LangChainChat.COMMON_CHAT_MODEL.generate(messages, toolSpecification);
         return aiMessageResponse.content();
     }
 

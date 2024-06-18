@@ -21,7 +21,7 @@ import io.github.memorychat.util.CallFunctionRegistryFactory;
 
 
 /**
- * @author hanjiabao
+ * @author hamburger
  * @since 2024/6/17
  */
 @Component

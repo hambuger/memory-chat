@@ -27,6 +27,10 @@ import static dev.ai4j.openai4j.image.ImageModel.*;
 @Component
 public class LangChainImage {
 
+    public static OpenAiImageModel IMAGE_MODEL =
+            OpenAiImageModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL, Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).modelName(DALL_E_3.toString()).size(DALL_E_SIZE_1792_x_1024).logRequests(true).logResponses(true).build();
+
+
     @Data
     @AllArgsConstructor
     public static class ImageGenerateParam {
@@ -39,12 +43,8 @@ public class LangChainImage {
 
     @FunctionCallRegistry(functionDesc = "生成图片")
     public static String generateImage(ImageGenerateParam generateParam) {
-        OpenAiImageModel.OpenAiImageModelBuilder modelBuilder =
-                OpenAiImageModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL, Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).modelName(DALL_E_3.toString()).size(DALL_E_SIZE_1792_x_1024).logRequests(true).logResponses(true);
 
-        OpenAiImageModel model = modelBuilder.build();
-
-        Response<Image> response = model.generate(generateParam.getGenerateText());
+        Response<Image> response = IMAGE_MODEL.generate(generateParam.getGenerateText());
 
         URI remoteImage = response.content().url();
         return remoteImage.toString();

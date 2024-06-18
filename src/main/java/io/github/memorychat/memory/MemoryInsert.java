@@ -14,6 +14,9 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
+import dev.langchain4j.data.message.UserMessage;
+import io.github.memorychat.chat.dto.ContentTypeEnum;
+import io.github.memorychat.chat.dto.CreatorEnum;
 import io.github.memorychat.elasticsearch.EsClient;
 import io.github.memorychat.embeddings.TextEmbeddings;
 import io.github.memorychat.memory.model.MemoryDTO;
@@ -22,9 +25,13 @@ import io.github.memorychat.util.OpenAiTokenizerUtil;
 import io.github.memorychat.util.RedisLikeCounter;
 import io.github.memorychat.wechat.ChatCompletionsApi;
 
+import static io.github.memorychat.constants.CommonConstants.DOUBLE_COLON;
+import static io.github.memorychat.constants.CommonConstants.NO_STR;
 import static io.github.memorychat.constants.Constants.AI_CREATOR_ID;
 import static io.github.memorychat.constants.Constants.AI_CREATOR_NAME;
 import static io.github.memorychat.constants.Constants.CHAT_MEMORY_INDEX;
+import static io.github.memorychat.constants.Constants.DEPTH_LEAF_LIST_KEY_MID;
+import static io.github.memorychat.constants.Constants.MSG_LIST_KEY_SUFFIX;
 import static io.github.memorychat.constants.Constants.REFLECTION_TOKEN_LIMIT;
 
 
@@ -39,14 +46,14 @@ public class MemoryInsert {
         if (StringUtils.isBlank(memoryDTO.getMessageId())) {
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
         }
-        boolean userMsgFlag = StringUtils.equals(memoryDTO.getAiResponseFlag(), "0");
+        boolean userMsgFlag = StringUtils.equals(memoryDTO.getAiResponseFlag(), NO_STR);
         if (!userMsgFlag) {
-            String msgListKey = memoryDTO.getMessageOwnerId() + "::" + (Objects.equal(memoryDTO.getAiResponseFlag(), "0") ? memoryDTO.getMessageCreatorId() : memoryDTO.getMessageReceiveId()) +
-                    "::msg";
+            String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (Objects.equal(memoryDTO.getAiResponseFlag(), NO_STR) ? memoryDTO.getMessageCreatorId() :
+                    memoryDTO.getMessageReceiveId()) + MSG_LIST_KEY_SUFFIX;
             RedisLikeCounter.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
         }
-        boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), "TEXT");
+        boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType());
         // 生成重要性分数
         String messageContent = memoryDTO.getMessageContent();
         if (textMsgFlag) {
@@ -67,8 +74,8 @@ public class MemoryInsert {
         }
         // 检查是否需要提炼
         if (userMsgFlag && textMsgFlag) {
-            String depthLeafCountKey = memoryDTO.getMessageOwnerId() + "::" + memoryDTO.getMemoryLeafDepth();
-            String depthLeafListKey = memoryDTO.getMessageOwnerId() + "::list::" + memoryDTO.getMemoryLeafDepth();
+            String depthLeafCountKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMemoryLeafDepth();
+            String depthLeafListKey = memoryDTO.getMessageOwnerId() + DEPTH_LEAF_LIST_KEY_MID + memoryDTO.getMemoryLeafDepth();
             RedisLikeCounter.incrBy(depthLeafCountKey, memoryDTO.getUseToken());
             String jsonInfo = getAiUseJsonInfo(memoryDTO);
             RedisLikeCounter.addElement(depthLeafListKey, jsonInfo);
@@ -105,7 +112,13 @@ public class MemoryInsert {
             String reflectionText = reflection.getText();
             List<String> parentIdList = reflection.getP_ids();
             MemoryDTO memoryDTO =
-                    MemoryDTO.builder().messageCreatorId(AI_CREATOR_ID).messageCreatorName(AI_CREATOR_NAME).messageContentType("1").messageParentIds(parentIdList).messageContent(reflectionText).aiResponseFlag("0").messageCreateAt(new Date()).messageContentType("REFLECTION").messageReceiveId(ownerId).messageOwnerId(ownerId).messageReceiveName(ownerName).messageReceiveName(ownerName).messageOwnerType(ownerType).messageReceiveType(ownerType).memoryLeafDepth(leafDepth + 1).useToken(OpenAiTokenizerUtil.getTextToken(reflectionText)).build();
+                    MemoryDTO.builder().messageCreatorId(CreatorEnum.REFLECTION.getUserId()).messageCreatorName(CreatorEnum.REFLECTION.getUserName())
+                            .messageCreatorType(CreatorEnum.REFLECTION.getType())
+                            .messageContentType(ContentTypeEnum.TEXT.getType())
+                            .messageParentIds(parentIdList).messageContent(reflectionText).aiResponseFlag(NO_STR)
+                            .messageCreateAt(new Date()).messageReceiveId(ownerId).messageReceiveName(ownerName).messageReceiveType(ownerType)
+                            .messageOwnerId(ownerId).messageOwnerName(ownerName).messageOwnerType(ownerType)
+                            .memoryLeafDepth(leafDepth + 1).useToken(OpenAiTokenizerUtil.getMessageToken(new UserMessage(reflectionText))).build();
             insertNewMemory(memoryDTO);
         }
     }

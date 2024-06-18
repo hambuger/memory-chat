@@ -17,6 +17,10 @@ import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.github.memorychat.constants.Constants.JSON_OBJECT;
+import static io.github.memorychat.constants.Constants.MAX_RETRIES_NO;
+import static io.github.memorychat.constants.Constants.TEMPLATE;
+
 
 /**
  * @author hamburger
@@ -24,20 +28,21 @@ import java.util.List;
  */
 public class LangChainChat {
 
-    public static String generateJsonWithSingleMsgAndPrompt(String msg) {
+    public static OpenAiChatModel FORMAT_JSON_MODEL =
+            OpenAiChatModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL, Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).temperature(TEMPLATE).logRequests(true).logResponses(true).modelName(Constants.MODEL_NAME).responseFormat(JSON_OBJECT).maxRetries(MAX_RETRIES_NO).build();
 
-        OpenAiChatModel model =
-                OpenAiChatModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL, Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).temperature(0.0).logRequests(true).logResponses(true).modelName(Constants.MODEL_NAME).responseFormat("json_object").maxRetries(3).build();
-        String json = model.generate(msg);
-        return json;
+    public static OpenAiChatModel COMMON_CHAT_MODEL =
+            OpenAiChatModel.builder().maxRetries(MAX_RETRIES_NO).proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL, Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).temperature(TEMPLATE).logRequests(true).logResponses(true).modelName(Constants.MODEL_NAME).build();
+
+
+    public static String generateJsonWithSingleMsgAndPrompt(String msg) {
+        return FORMAT_JSON_MODEL.generate(msg);
     }
 
 
     public static Response<AiMessage> generateMsgWithMsgList(List<ChatMessage> messageList) {
 
-        OpenAiChatModel model =
-                OpenAiChatModel.builder().maxRetries(3).proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL, Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).temperature(0.0).logRequests(true).logResponses(true).modelName(Constants.MODEL_NAME).build();
-        return model.generate(messageList);
+        return COMMON_CHAT_MODEL.generate(messageList);
     }
 
 
@@ -46,10 +51,7 @@ public class LangChainChat {
         if (CollectionUtils.isEmpty(toolSpecifications)) {
             return generateMsgWithMsgList(messageList);
         }
-        OpenAiChatModel model =
-                OpenAiChatModel.builder().maxRetries(3).proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL, Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).temperature(0.0).logRequests(true).logResponses(true).modelName(Constants.MODEL_NAME).build();
-
-        Response<AiMessage> response = model.generate(messageList, toolSpecifications);
+        Response<AiMessage> response = COMMON_CHAT_MODEL.generate(messageList, toolSpecifications);
         AiMessage aiMessage = response.content();
         if (aiMessage == null || CollectionUtils.isEmpty(aiMessage.toolExecutionRequests())) {
             return response;

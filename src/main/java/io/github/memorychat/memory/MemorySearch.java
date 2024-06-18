@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.github.memorychat.chat.dto.ContentTypeEnum;
 import io.github.memorychat.elasticsearch.EsClient;
 import io.github.memorychat.embeddings.TextEmbeddings;
 import io.github.memorychat.memory.model.MemoryDTO;
@@ -42,7 +43,7 @@ public class MemorySearch {
     public static List<MemoryDTO> searchRelationMemory(String ownerId, String content) {
         List<Float> contentVector = TextEmbeddings.generateTextEmbeddings(content);
         BoolQueryBuilder mustQuery = QueryBuilders.boolQuery();
-        mustQuery.must(new TermQueryBuilder("messageContentType", "TEXT"));
+        mustQuery.must(new TermQueryBuilder("messageContentType", ContentTypeEnum.TEXT.getType()));
         if (StringUtils.isNotBlank(ownerId)) {
             mustQuery.must(new TermQueryBuilder("messageCreatorId", ownerId));
         }

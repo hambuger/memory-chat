@@ -14,9 +14,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+import static io.github.memorychat.constants.Constants.TEMPLATE;
+
 
 /**
- * @author hanjiabao
+ * @author hamburger
  * @since 2024/6/17
  */
 @Component
@@ -28,7 +30,8 @@ public class SpringAiAudio {
 
 
     public String generateTextWithAudio(Resource audioFile) {
-        OpenAiAudioTranscriptionOptions transcriptionOptions = OpenAiAudioTranscriptionOptions.builder().withResponseFormat(OpenAiAudioApi.TranscriptResponseFormat.TEXT).withTemperature(0f).build();
+        OpenAiAudioTranscriptionOptions transcriptionOptions =
+                OpenAiAudioTranscriptionOptions.builder().withResponseFormat(OpenAiAudioApi.TranscriptResponseFormat.TEXT).withTemperature(TEMPLATE.floatValue()).build();
         AudioTranscriptionPrompt transcriptionRequest = new AudioTranscriptionPrompt(audioFile, transcriptionOptions);
         AudioTranscriptionResponse response = openAiAudioTranscriptionModel.call(transcriptionRequest);
         System.out.println(JSON.toJSONString(response));

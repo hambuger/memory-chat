@@ -5,7 +5,7 @@ spring:
     name: memory-chat
   ai:
     openai:
-      api-key: sk-xxx
+      api-key: ${OPENAI_API_KEY:sk-xxx}
       base-url: https://api.openai.com
       chat:
         options:

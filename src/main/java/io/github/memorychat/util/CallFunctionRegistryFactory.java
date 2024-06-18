@@ -11,9 +11,11 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import static io.github.memorychat.constants.CommonConstants.NULL_STR;
+
 
 /**
- * @author hanjiabao
+ * @author hamburger
  * @since 2024/6/17
  */
 public class CallFunctionRegistryFactory {
@@ -47,7 +49,7 @@ public class CallFunctionRegistryFactory {
 
 
     public static String executeFunctionResult(String functionName, String arg) {
-        return Optional.ofNullable(FUNCTION_CALL_MAP.get(functionName)).map(function -> function.getFunction().apply(JSON.parseObject(arg, function.argClass)).toString()).orElse("NULL");
+        return Optional.ofNullable(FUNCTION_CALL_MAP.get(functionName)).map(function -> function.getFunction().apply(JSON.parseObject(arg, function.argClass)).toString()).orElse(NULL_STR);
     }
 
 }
