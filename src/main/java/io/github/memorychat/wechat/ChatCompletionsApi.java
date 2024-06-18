@@ -202,9 +202,9 @@ public class ChatCompletionsApi {
     public static ChatMessage convertMemoryMsg2ModelMsg(BaseMemoryDTO baseMemoryDTO) {
         if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.TEXT.getType())) {
             return UserMessage.from(baseMemoryDTO.getMessageContent());
-        }else if (baseMemoryDTO.getMessageContent().equals(ContentTypeEnum.PICTURE.getType())) {
+        }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.PICTURE.getType())) {
             return new UserMessage(new ImageContent(new Image.Builder().mimeType(IMAGE_TYPE).base64Data(baseMemoryDTO.getMessageContent()).build()));
-        }else if (baseMemoryDTO.getMessageContent().equals(ContentTypeEnum.NOTE.getType())) {
+        }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.NOTE.getType())) {
             return new SystemMessage(baseMemoryDTO.getMessageContent());
         }
         return null;
