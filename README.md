@@ -1,7 +1,10 @@
 # memory-chat
 a chat bot with long memory,with Java.
 
-启动参数：-DOPENAI_API_KEY=sk-xxx
+启动参数：
+-Dhttps.proxyHost=127.0.0.1 
+-Dhttps.proxyPort=7890 
+-DOPENAI_API_KEY=sk-xxx
 TODO:
 1.支持传入文件
 传入的文件场景应该是什么？
