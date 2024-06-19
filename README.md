@@ -26,3 +26,5 @@ itchat办不到，只能通过wechaty,但它收费
 6.支持系统消息处理
 
 7.支持ai决定是否回复
+
+8.使用Java版本itchat4j
