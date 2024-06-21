@@ -38,6 +38,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.log4j.Log4j2;
 
 import static com.github.hambuger.memory.chat.wechat.constant.WxRespConstant.WXReceiveMsgCodeEnum.MSGTYPE_TEXT;
+import static com.github.hambuger.memory.chat.wechat.constant.WxRespConstant.WXReceiveMsgCodeEnum.getByCode;
 
 
 /**
@@ -93,10 +94,10 @@ public class MsgCenter {
      *
      * @param msg
      */
-    private void processExtra(AddMsgList msg) {
+    private void processExtra(Message msg) {
         //需要发送的消息
         List<Message> messages = null;
-        switch (msg.getType()) {
+        switch (getByCode(msg.getMsgType())) {
             case MSGTYPE_MAP:
                 messages = msgHandler.mapMsgHandle(msg);
                 break;
@@ -146,11 +147,10 @@ public class MsgCenter {
                 break;
             case UNKNOWN:
             default:
-                log.warn(LogUtil.printFromMeg(msg, msg.getType().getCode()));
                 break;
         }
         //发送消息133 348
-        // MessageTools.sendMsgByUserId(messages);
+//        MessageTools.sendMsgByUserId(messages);
 //        ChatUtil.addMineNewMsg(messages);
 
     }
@@ -705,7 +705,7 @@ public class MsgCenter {
 //            updateUI(message, msg,contacts);
 //            messageMapper.insert(message);
         }
-        processExtra(msg);
+        processExtra(message);
 
     }
 

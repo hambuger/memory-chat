@@ -136,7 +136,7 @@ public class MessageTools {
                         return sendMsgResponse;
                     }
                     //存储数据库
-                     storeMsgToDB(message, sendMsgResponse, toUserName);
+//                     storeMsgToDB(message, sendMsgResponse, toUserName);
 
             }
         } catch (Exception e) {

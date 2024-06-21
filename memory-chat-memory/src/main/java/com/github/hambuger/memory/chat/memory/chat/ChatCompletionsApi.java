@@ -3,19 +3,31 @@ package com.github.hambuger.memory.chat.memory.chat;
 import com.google.common.collect.Lists;
 
 import com.alibaba.fastjson.JSON;
+import com.github.hambuger.memory.chat.memory.audio.SpringAiAudio;
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
 import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.constants.Constants;
+import com.github.hambuger.memory.chat.memory.memory.MemoryInsert;
+import com.github.hambuger.memory.chat.memory.memory.MemorySearch;
+import com.github.hambuger.memory.chat.memory.memory.MemoryUpdate;
+import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
+import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
+import com.github.hambuger.memory.chat.memory.util.IdUtil;
+import com.github.hambuger.memory.chat.memory.util.OpenAiTokenizerUtil;
+import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -38,16 +50,6 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.output.Response;
-import com.github.hambuger.memory.chat.memory.audio.SpringAiAudio;
-import com.github.hambuger.memory.chat.memory.memory.MemoryInsert;
-import com.github.hambuger.memory.chat.memory.memory.MemorySearch;
-import com.github.hambuger.memory.chat.memory.memory.MemoryUpdate;
-import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
-import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
-import com.github.hambuger.memory.chat.memory.util.IdUtil;
-import com.github.hambuger.memory.chat.memory.util.OpenAiTokenizerUtil;
-import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
-import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
 
 
 /**
@@ -75,6 +77,9 @@ public class ChatCompletionsApi {
     @Autowired
     private SpringAiAudio springAiAudio;
 
+    @Autowired
+    private ResourceLoader resourceLoader;
+
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
         String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + (StringUtils.equals(memoryDTO.getAiResponseFlag(), CommonConstants.YES_STR) ? memoryDTO.getMessageReceiveId() :
@@ -89,7 +94,7 @@ public class ChatCompletionsApi {
     }
 
 
-    public static ChatResponse chat(BaseMemoryDTO baseMemoryDTO) {
+    public ChatResponse chat(BaseMemoryDTO baseMemoryDTO) {
         try {
             // 查询相关记录
             MemoryDTO memoryDTO = BeanUtil.copyProperties(baseMemoryDTO, MemoryDTO.class);
@@ -184,11 +189,11 @@ public class ChatCompletionsApi {
         if (!StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.AUDIO.getType())) {
             return;
         }
-        byte[] fileBytes = Base64.getDecoder().decode(baseMemoryDTO.getMessageContent());
-        // 将 byte[] 转换为 Resource 对象
-        Resource resource = new ByteArrayResource(fileBytes);
+//        byte[] fileBytes = Base64.getDecoder().decode(baseMemoryDTO.getMessageContent());
+//        // 将 byte[] 转换为 Resource 对象
+//        Resource resource = new ByteArrayResource(fileBytes);
         baseMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
-        baseMemoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(resource));
+        baseMemoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(resourceLoader.getResource(baseMemoryDTO.getMessageContent())));
     }
 
 
@@ -196,9 +201,25 @@ public class ChatCompletionsApi {
         if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.TEXT.getType())) {
             return UserMessage.from(baseMemoryDTO.getMessageContent());
         }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.PICTURE.getType())) {
-            return new UserMessage(new ImageContent(new Image.Builder().mimeType(Constants.IMAGE_TYPE).base64Data(baseMemoryDTO.getMessageContent()).build()));
+            return new UserMessage(new ImageContent(new Image.Builder().mimeType(Constants.IMAGE_TYPE).base64Data(getFileBase64Data(baseMemoryDTO.getMessageContent())).build()));
         }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.NOTE.getType())) {
             return new SystemMessage(baseMemoryDTO.getMessageContent());
+        }
+        return null;
+    }
+
+    public static String getFileBase64Data(String filePath) {
+        try {
+            // 读取文件内容到字节数组
+            byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
+
+            // 将字节数组编码为 Base64 字符串
+            String base64String = Base64.getEncoder().encodeToString(fileContent);
+
+            // 输出 Base64 字符串
+            return base64String;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return null;
     }

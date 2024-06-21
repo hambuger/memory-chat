@@ -1,6 +1,5 @@
 package com.github.hambuger.memory.chat.wechat.service;
 
-import com.github.hambuger.memory.chat.wechat.dto.response.sync.AddMsgList;
 import com.github.hambuger.memory.chat.wechat.entity.Message;
 
 import java.util.List;
@@ -20,7 +19,7 @@ public interface IMsgHandlerFace {
      * @author Hamburger
      * @date 2017年4月20日 上午12:15:00
      */
-    public List<Message> textMsgHandle(AddMsgList msg);
+    public List<Message> textMsgHandle(Message msg);
 
     /**
      * 处理图片消息
@@ -30,7 +29,7 @@ public interface IMsgHandlerFace {
      * @author Hamburger
      * @date 2017年4月21日 下午11:07:06
      */
-    public List<Message> picMsgHandle(AddMsgList msg);
+    public List<Message> picMsgHandle(Message msg);
 
     /**
      * 处理声音消息
@@ -40,7 +39,7 @@ public interface IMsgHandlerFace {
      * @author Hamburger
      * @date 2017年4月22日 上午12:09:44
      */
-    public List<Message> voiceMsgHandle(AddMsgList msg);
+    public List<Message> voiceMsgHandle(Message msg);
 
     /**
      * 处理小视频消息
@@ -50,7 +49,7 @@ public interface IMsgHandlerFace {
      * @author Hamburger
      * @date 2017年4月23日 下午12:19:50
      */
-    public List<Message> videoMsgHandle(AddMsgList msg);
+    public List<Message> videoMsgHandle(Message msg);
 
     /**
      * 处理名片消息
@@ -60,7 +59,7 @@ public interface IMsgHandlerFace {
      * @author Hamburger
      * @date 2017年5月1日 上午12:50:50
      */
-    public List<Message> nameCardMsgHandle(AddMsgList msg);
+    public List<Message> nameCardMsgHandle(Message msg);
 
     /**
      * 处理撤回消息
@@ -70,7 +69,7 @@ public interface IMsgHandlerFace {
      * @author Hamburger
      * @date 2017年5月1日 上午12:50:50
      */
-    public List<Message> undoMsgHandle(AddMsgList msg);
+    public List<Message> undoMsgHandle(Message msg);
 
     /**
      * 处理好友确认消息
@@ -80,7 +79,7 @@ public interface IMsgHandlerFace {
      * @author Hamburger
      * @date 2017年5月1日 上午12:50:50
      */
-    public List<Message> addFriendMsgHandle(AddMsgList msg);
+    public List<Message> addFriendMsgHandle(Message msg);
 
     /**
      * 处理好友确认消息
@@ -90,7 +89,7 @@ public interface IMsgHandlerFace {
      * @author Hamburger
      * @date 2017年5月1日 上午12:50:50
      */
-    public List<Message> systemMsgHandle(AddMsgList msg);
+    public List<Message> systemMsgHandle(Message msg);
 
     /**
      * 表情处理消息
@@ -98,7 +97,7 @@ public interface IMsgHandlerFace {
      * @param msg
      * @return
      */
-    public List<Message> emotionMsgHandle(AddMsgList msg);
+    public List<Message> emotionMsgHandle(Message msg);
 
     /**
      * 分享链接信息
@@ -106,7 +105,7 @@ public interface IMsgHandlerFace {
      * @param msg
      * @return
      */
-    public List<Message> appMsgHandle(AddMsgList msg);
+    public List<Message> appMsgHandle(Message msg);
 
     /**
      * map消息
@@ -114,7 +113,7 @@ public interface IMsgHandlerFace {
      * @param msg
      * @return
      */
-    public List<Message> mapMsgHandle(AddMsgList msg);
+    public List<Message> mapMsgHandle(Message msg);
 
     /**
      * 处理确认添加好友消息
@@ -123,7 +122,7 @@ public interface IMsgHandlerFace {
      * @return
      * @date 2017年6月28日 下午10:15:30
      */
-    public List<Message> verifyAddFriendMsgHandle(AddMsgList msg);
+    public List<Message> verifyAddFriendMsgHandle(Message msg);
 
 
 }
