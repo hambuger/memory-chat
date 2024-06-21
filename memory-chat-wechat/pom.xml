@@ -24,34 +24,22 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.32</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.69</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
-            <version>4.5.14</version>
         </dependency>
         <dependency>
             <groupId>com.thoughtworks.xstream</groupId>
             <artifactId>xstream</artifactId>
-            <version>1.4.11.1</version>
         </dependency>
         <dependency>
             <groupId>com.vdurmont</groupId>
             <artifactId>emoji-java</artifactId>
-            <version>4.0.0</version>
-        </dependency>
-
-        <!--监听数据库操作-->
-        <dependency>
-            <groupId>org.bgee.log4jdbc-log4j2</groupId>
-            <artifactId>log4jdbc-log4j2-jdbc4.1</artifactId>
-            <version>1.16</version>
         </dependency>
 
         <!--log4j2依赖包-->
@@ -77,97 +65,32 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.2</version>
         </dependency>
-        <!--log color-->
-        <!--        <dependency>
-                    <groupId>org.fusesource.jansi</groupId>
-                    <artifactId>jansi</artifactId>
-                </dependency>-->
         <!--视频压缩工具-->
         <dependency>
             <groupId>ws.schild</groupId>
             <artifactId>jave-core</artifactId>
-            <version>3.0.0</version>
         </dependency>
         <!--图片压缩工具-->
         <dependency>
             <groupId>net.coobird</groupId>
             <artifactId>thumbnailator</artifactId>
-            <version>0.4.8</version>
         </dependency>
         <dependency>
             <groupId>com.madgag</groupId>
             <artifactId>animated-gif-lib</artifactId>
-            <version>1.2</version>
         </dependency>
-        <!--        &lt;!&ndash;JDBC&ndash;&gt;-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.springframework</groupId>-->
-        <!--            <artifactId>spring-jdbc</artifactId>-->
-        <!--        </dependency>-->
-        <!--mybatis 整合-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.mybatis.spring.boot</groupId>-->
-        <!--            <artifactId>mybatis-spring-boot-starter</artifactId>-->
-        <!--            <exclusions>-->
-        <!--                <exclusion>-->
-        <!--                    <artifactId>log4j-to-slf4j</artifactId>-->
-        <!--                    <groupId>org.apache.logging.log4j</groupId>-->
-        <!--                </exclusion>-->
-        <!--                <exclusion>-->
-        <!--                    <artifactId>logback-classic</artifactId>-->
-        <!--                    <groupId>ch.qos.logback</groupId>-->
-        <!--                </exclusion>-->
-        <!--                <exclusion>-->
-        <!--                    <artifactId>logback-core</artifactId>-->
-        <!--                    <groupId>ch.qos.logback</groupId>-->
-        <!--                </exclusion>-->
-        <!--            </exclusions>-->
-        <!--            <version>2.1.2</version>-->
-        <!--        </dependency>-->
-        <!--Jfree 图表-->
-        <!-- https://mvnrepository.com/artifact/org.jfree/jfreechart -->
-        <!--        <dependency>-->
-        <!--            <groupId>org.jfree</groupId>-->
-        <!--            <artifactId>jfreechart</artifactId>-->
-        <!--            <version>1.5.3</version>-->
-        <!--        </dependency>-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.jfree</groupId>-->
-        <!--            <artifactId>com.springsource.org.jfree</artifactId>-->
-        <!--            <version>1.0.12</version>-->
-        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.dom4j</groupId>
             <artifactId>dom4j</artifactId>
-            <version>2.1.1</version>
         </dependency>
 
-        <!--语音播放-->
-        <!--        <dependency>-->
-        <!--            <groupId>javazoom</groupId>-->
-        <!--            <artifactId>jlayer</artifactId>-->
-        <!--            <version>1.0.1</version>-->
-        <!--        </dependency>-->
-        <!-- Mybatis-plus -->
-        <!--        <dependency>-->
-        <!--            <groupId>com.baomidou</groupId>-->
-        <!--            <artifactId>mybatis-plus-boot-starter</artifactId>-->
-        <!--            <version>3.3.2</version>-->
-        <!--        </dependency>-->
-        <!--String 工具-->
-        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-text -->
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>1.9</version>
 
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>org.xerial</groupId>-->
-        <!--            <artifactId>sqlite-jdbc</artifactId>-->
-        <!--        </dependency>-->
-
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -177,36 +100,13 @@
             <artifactId>jackson-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.squareup.retrofit2</groupId>
-            <artifactId>converter-jackson</artifactId>
-            <version>2.9.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.retrofit2</groupId>
-            <artifactId>adapter-rxjava2</artifactId>
-            <version>2.9.0</version>
-        </dependency>
-
-
-        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>com.theokanning.openai-gpt3-java</groupId>-->
-        <!--            <artifactId>api</artifactId>-->
-        <!--            <version>0.9.0</version>-->
-        <!--        </dependency>-->
-        <!--        <dependency>-->
-        <!--            <groupId>com.theokanning.openai-gpt3-java</groupId>-->
-        <!--            <artifactId>client</artifactId>-->
-        <!--            <version>0.9.0</version>-->
-        <!--        </dependency>-->
         <!--视频工具-->
         <dependency>
             <groupId>org.bytedeco</groupId>
             <artifactId>javacv</artifactId>
-            <version>1.4.4</version>
             <exclusions>
                 <!--jar包很大-->
                 <exclusion>
@@ -266,7 +166,6 @@
         <dependency>
             <groupId>org.bytedeco</groupId>
             <artifactId>javacv-platform</artifactId>
-            <version>1.4.4</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.bytedeco.javacpp-presets</groupId>
@@ -321,32 +220,6 @@
                     <artifactId>artoolkitplus-platform</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <!--easypoi-->
-        <dependency>
-            <groupId>cn.afterturn</groupId>
-            <artifactId>easypoi-base</artifactId>
-            <version>4.2.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>javassist</artifactId>
-                    <groupId>org.javassist</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>cn.afterturn</groupId>
-            <artifactId>easypoi-web</artifactId>
-            <version>4.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>cn.afterturn</groupId>
-            <artifactId>easypoi-annotation</artifactId>
-            <version>4.2.0</version>
         </dependency>
     </dependencies>
     <build>
