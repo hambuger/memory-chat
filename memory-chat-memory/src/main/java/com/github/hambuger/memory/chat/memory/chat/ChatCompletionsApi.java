@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
+import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
 import com.google.common.collect.Lists;
 
 import com.alibaba.fastjson.JSON;
@@ -21,6 +22,7 @@ import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
@@ -97,6 +99,7 @@ public class ChatCompletionsApi {
     public ChatResponse chat(BaseMemoryDTO baseMemoryDTO) {
         try {
             // 查询相关记录
+            convertAudio2TextMsg(baseMemoryDTO);
             MemoryDTO memoryDTO = BeanUtil.copyProperties(baseMemoryDTO, MemoryDTO.class);
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
             System.out.println(new Date() + memoryDTO.getMessageId());
@@ -192,8 +195,9 @@ public class ChatCompletionsApi {
 //        byte[] fileBytes = Base64.getDecoder().decode(baseMemoryDTO.getMessageContent());
 //        // 将 byte[] 转换为 Resource 对象
 //        Resource resource = new ByteArrayResource(fileBytes);
+        DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
         baseMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
-        baseMemoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(resourceLoader.getResource(baseMemoryDTO.getMessageContent())));
+        baseMemoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(new FileSystemResource(baseMemoryDTO.getMessageContent())));
     }
 
 
@@ -201,7 +205,7 @@ public class ChatCompletionsApi {
         if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.TEXT.getType())) {
             return UserMessage.from(baseMemoryDTO.getMessageContent());
         }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.PICTURE.getType())) {
-            return new UserMessage(new ImageContent(new Image.Builder().mimeType(Constants.IMAGE_TYPE).base64Data(getFileBase64Data(baseMemoryDTO.getMessageContent())).build()));
+            return new UserMessage(new ImageContent(new Image.Builder().mimeType("image/jpeg").base64Data(getFileBase64Data(baseMemoryDTO.getMessageContent())).build(), ImageContent.DetailLevel.AUTO));
         }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.NOTE.getType())) {
             return new SystemMessage(baseMemoryDTO.getMessageContent());
         }
@@ -210,6 +214,7 @@ public class ChatCompletionsApi {
 
     public static String getFileBase64Data(String filePath) {
         try {
+            DownloadTools.awaitDownload(filePath);
             // 读取文件内容到字节数组
             byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
 

@@ -97,7 +97,11 @@ public class MsgCenter {
     private void processExtra(Message msg) {
         //需要发送的消息
         List<Message> messages = null;
-        switch (getByCode(msg.getMsgType())) {
+        WxRespConstant.WXReceiveMsgCodeEnum wxReceiveMsgCodeEnum = getByCode(msg.getMsgType());
+        if (wxReceiveMsgCodeEnum == null) {
+            return;
+        }
+        switch (wxReceiveMsgCodeEnum) {
             case MSGTYPE_MAP:
                 messages = msgHandler.mapMsgHandle(msg);
                 break;
@@ -492,7 +496,7 @@ public class MsgCenter {
                 break;
             case MSGTYPE_IMAGE:
                 msg.setPlainText("[图片]");
-                ext = ".gif";
+                ext = ".jpeg";
                 //存储消息
                 downloadThumImg(msg, fileName, ext);
                 downloadFile(msg, fileName, ext);
@@ -704,6 +708,9 @@ public class MsgCenter {
             //聊天界面
 //            updateUI(message, msg,contacts);
 //            messageMapper.insert(message);
+        }
+        if(message == null){
+            return;
         }
         processExtra(message);
 

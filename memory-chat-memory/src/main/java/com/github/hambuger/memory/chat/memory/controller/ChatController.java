@@ -27,8 +27,7 @@ public class ChatController {
     @PostMapping("/wechat")
     @ResponseBody
     public ChatResponse wechat(@RequestBody BaseMemoryDTO memoryDTO) {
-        chatCompletionsApi.convertAudio2TextMsg(memoryDTO);
-        return ChatCompletionsApi.chat(memoryDTO);
+        return chatCompletionsApi.chat(memoryDTO);
     }
 
 }

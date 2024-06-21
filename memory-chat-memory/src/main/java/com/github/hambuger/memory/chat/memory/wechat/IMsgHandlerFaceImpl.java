@@ -16,6 +16,7 @@ import com.github.hambuger.memory.chat.wechat.service.IMsgHandlerFace;
 import com.github.hambuger.memory.chat.wechat.utils.ExecutorServiceUtil;
 import com.github.hambuger.memory.chat.wechat.utils.SleepUtils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -342,7 +343,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         if (sendMsgContentTypeEnum == ContentTypeEnum.AUDIO || sendMsgContentTypeEnum == ContentTypeEnum.PICTURE) {
             baseMemoryDTO.setMessageContent(msg.getFilePath());
         }
-        baseMemoryDTO.setMessageCreatorName(msg.getFromUsername());
+        baseMemoryDTO.setMessageCreatorName(StringUtils.isNoneBlank(msg.getFromRemarkname()) ? msg.getFromRemarkname() : msg.getFromNickname());
         ChatResponse response = chatCompletionsApi.chat(baseMemoryDTO);
         if (response == null) {
             return null;
@@ -352,16 +353,12 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         message.setContent(response.getMessageContent());
         ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(response.getMessageType());
         message.setMsgType(contentTypeEnum.getMsgType());
-        String filePath = null;
         if (contentTypeEnum == ContentTypeEnum.PICTURE) {
-            filePath = FileUtil.downloadImage(response.getMessageContent());
+            String filePath = FileUtil.downloadImage(response.getMessageContent());
             message.setFilePath(filePath);
             message.setContent(null);
         }
         MessageTools.sendMsgByUserId(message);
-        if (filePath != null) {
-            FileUtil.deleteImage(filePath);
-        }
         return null;
     }
 

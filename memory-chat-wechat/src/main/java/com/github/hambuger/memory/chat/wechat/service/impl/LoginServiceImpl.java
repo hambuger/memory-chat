@@ -786,7 +786,7 @@ public class LoginServiceImpl implements LoginService {
     public void login() {
         try {
             // 防止SSL错误
-            System.setProperty("jsse.enableSNIExtension", "false");
+//            System.setProperty("jsse.enableSNIExtension", "false");
             while (true) {
                 log.info("获取微信UUID");
                 String uuid = getUuid();
