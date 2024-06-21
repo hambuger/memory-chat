@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.wechat.service.impl;
+package com.github.hambuger.memory.chat.memory.wechat;
 
 import com.github.hambuger.memory.chat.wechat.api.ContactsTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;

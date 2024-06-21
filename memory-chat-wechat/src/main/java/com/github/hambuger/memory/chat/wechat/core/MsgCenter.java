@@ -150,7 +150,7 @@ public class MsgCenter {
                 break;
         }
         //发送消息133 348
-        MessageTools.sendMsgByUserId(messages);
+        // MessageTools.sendMsgByUserId(messages);
 //        ChatUtil.addMineNewMsg(messages);
 
     }
