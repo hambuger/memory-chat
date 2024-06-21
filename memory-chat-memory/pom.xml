@@ -2,37 +2,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.github.hambuger</groupId>
+        <artifactId>memory-chat</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.hambuger</groupId>
-    <artifactId>memory-chat</artifactId>
-    <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
-    <modules>
-        <module>memory-chat-wechat</module>
-        <module>memory-chat-memory</module>
-    </modules>
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.0</version> <!-- 替换为最新的版本号 -->
-    </parent>
+    <artifactId>memory-chat-memory</artifactId>
 
     <properties>
-        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
     <!--    spring AI导入-->
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.ai</groupId>
-                <artifactId>spring-ai-bom</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.springframework.ai</groupId>
@@ -195,8 +178,12 @@
             <artifactId>logging-interceptor</artifactId>
             <version>4.9.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.hambuger</groupId>
+            <artifactId>memory-chat-wechat</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
-
 
 </project>
