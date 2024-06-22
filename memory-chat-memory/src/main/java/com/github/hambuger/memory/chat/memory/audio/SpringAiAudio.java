@@ -33,7 +33,6 @@ public class SpringAiAudio {
                 OpenAiAudioTranscriptionOptions.builder().withResponseFormat(OpenAiAudioApi.TranscriptResponseFormat.TEXT).withTemperature(Constants.TEMPLATE.floatValue()).build();
         AudioTranscriptionPrompt transcriptionRequest = new AudioTranscriptionPrompt(audioFile, transcriptionOptions);
         AudioTranscriptionResponse response = openAiAudioTranscriptionModel.call(transcriptionRequest);
-        System.out.println(JSON.toJSONString(response));
         return Optional.ofNullable(response).map(AudioTranscriptionResponse::getResult).map(AudioTranscription::getOutput).orElse(null);
     }
 

@@ -75,6 +75,9 @@
         "realCreatorId": {
           "type": "keyword"
         },
+        "realCreatorName": {
+          "type": "keyword"
+        },
         "useToken": {
           "type": "integer"
         }
