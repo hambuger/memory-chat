@@ -89,7 +89,7 @@ public class ChatCompletionsApi {
             MemoryDTO memoryDTO = BeanUtil.copyProperties(baseMemoryDTO, MemoryDTO.class);
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
             memoryDTO.setMessageCreatorId(memoryDTO.getMessageCreatorName());
-            memoryDTO.setMessageCreatorType(CreatorEnum.USER.getType());
+            memoryDTO.setMessageCreatorType(StringUtils.equals(YES_STR, baseMemoryDTO.getGroupMsgFlag()) ? CreatorEnum.USER.getType() : CreatorEnum.GROUP.getType());
             memoryDTO.setMessageReceiveId(CreatorEnum.Andrew.getUserId());
             memoryDTO.setMessageReceiveName(CreatorEnum.Andrew.getUserName());
             memoryDTO.setMessageReceiveType(CreatorEnum.Andrew.getType());
