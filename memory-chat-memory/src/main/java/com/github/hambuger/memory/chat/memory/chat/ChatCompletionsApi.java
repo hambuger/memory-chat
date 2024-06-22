@@ -1,8 +1,8 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
-import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
-import com.google.common.collect.Lists;
-
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.audio.SpringAiAudio;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
@@ -18,41 +18,33 @@ import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.util.IdUtil;
 import com.github.hambuger.memory.chat.memory.util.OpenAiTokenizerUtil;
 import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
-
+import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
+import com.google.common.collect.Lists;
+import dev.langchain4j.data.image.Image;
+import dev.langchain4j.data.message.*;
+import dev.langchain4j.model.output.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
-import dev.langchain4j.data.image.Image;
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.ImageContent;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.output.Response;
+import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.DOUBLE_COLON;
+import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.YES_STR;
+import static com.github.hambuger.memory.chat.memory.constants.Constants.GENERATE_IMAGE_FUNCTION_NAME;
+import static com.github.hambuger.memory.chat.memory.constants.Constants.IMAGE_TYPE;
 
 
 /**
@@ -110,8 +102,8 @@ public class ChatCompletionsApi {
             memoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
             memoryDTO.setMessageParentIds(Lists.newArrayList("0"));
             memoryDTO.setUseToken(OpenAiTokenizerUtil.getMessageToken(convertMemoryMsg2ModelMsg(memoryDTO)));
-            String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + memoryDTO.getMessageCreatorId();
-            String msgListKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + memoryDTO.getMessageCreatorId() + Constants.MSG_LIST_KEY_SUFFIX;
+            String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
+            String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + Constants.MSG_LIST_KEY_SUFFIX;
             RedisLikeCounter.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
@@ -231,7 +223,7 @@ public class ChatCompletionsApi {
         for (int i = memoryDTOS.size() - 1; i >= 0; i--) {
             MemoryDTO memoryDTO = memoryDTOS.get(i);
             ChatMessage chatMessage;
-            if (memoryDTO.getAiResponseFlag().equals(CommonConstants.YES_STR)) {
+            if (memoryDTO.getAiResponseFlag().equals(YES_STR)) {
                 chatMessage = new AiMessage(memoryDTO.getMessageContent());
                 sumMsgToken = sumMsgToken + OpenAiTokenizerUtil.getMessageToken(chatMessage);
             } else {
@@ -274,7 +266,7 @@ public class ChatCompletionsApi {
         aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
         aiMemoryDTO.setUseToken(token);
         aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
-        aiMemoryDTO.setAiResponseFlag(CommonConstants.YES_STR);
+        aiMemoryDTO.setAiResponseFlag(YES_STR);
         aiMemoryDTO.setGroupMsgFlag(memoryDTO.getGroupMsgFlag());
         aiMemoryDTO.setRealCreatorId(CreatorEnum.Andrew.getUserId());
         aiMemoryDTO.setRealCreatorName(CreatorEnum.Andrew.getUserName());
