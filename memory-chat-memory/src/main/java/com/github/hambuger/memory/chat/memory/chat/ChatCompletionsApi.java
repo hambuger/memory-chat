@@ -105,7 +105,7 @@ public class ChatCompletionsApi {
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + Constants.MSG_LIST_KEY_SUFFIX;
             RedisLikeCounter.addMsg(msgListKey,
-                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
+                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
             CHAT_POOL.execute(() -> MemoryInsert.insertNewMemory(memoryDTO));
             // 更新最后一条消息id
