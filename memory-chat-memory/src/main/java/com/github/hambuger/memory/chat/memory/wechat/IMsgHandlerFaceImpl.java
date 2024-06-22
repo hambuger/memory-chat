@@ -3,6 +3,7 @@ package com.github.hambuger.memory.chat.memory.wechat;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
 import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
+import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.util.FileUtil;
 import com.github.hambuger.memory.chat.wechat.api.ContactsTools;
@@ -344,6 +345,9 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
             baseMemoryDTO.setMessageContent(msg.getFilePath());
         }
         baseMemoryDTO.setMessageCreatorName(StringUtils.isNoneBlank(msg.getFromRemarkname()) ? msg.getFromRemarkname() : msg.getFromNickname());
+        baseMemoryDTO.setGroupMsgFlag(msg.isGroup() ? CommonConstants.YES_STR : CommonConstants.NO_STR);
+        baseMemoryDTO.setRealCreatorId(StringUtils.isNoneBlank(msg.getFromMemberOfGroupNickname()) ? msg.getFromMemberOfGroupNickname() : msg.getFromMemberOfGroupDisplayname());
+        baseMemoryDTO.setRealCreatorName(baseMemoryDTO.getRealCreatorId());
         ChatResponse response = chatCompletionsApi.chat(baseMemoryDTO);
         if (response == null) {
             return null;
@@ -428,7 +432,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
 
     @Override
     public List<Message> emotionMsgHandle(Message msg) {
-        return null;
+        return dealNewMsg(msg);
     }
 
 
