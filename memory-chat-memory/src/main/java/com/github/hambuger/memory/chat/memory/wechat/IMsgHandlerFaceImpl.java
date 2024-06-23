@@ -17,6 +17,7 @@ import com.github.hambuger.memory.chat.wechat.service.IMsgHandlerFace;
 import com.github.hambuger.memory.chat.wechat.utils.ExecutorServiceUtil;
 import com.github.hambuger.memory.chat.wechat.utils.SleepUtils;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -349,20 +350,22 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         baseMemoryDTO.setRealCreatorId(StringUtils.isNoneBlank(msg.getFromMemberOfGroupNickname()) ? msg.getFromMemberOfGroupNickname() : msg.getFromMemberOfGroupDisplayname());
         baseMemoryDTO.setRealCreatorName(baseMemoryDTO.getRealCreatorId());
         ChatResponse response = chatCompletionsApi.chat(baseMemoryDTO);
-        if (response == null) {
+        if (response == null || CollectionUtils.isEmpty(response.getSendMessageList())) {
             return null;
         }
-        Message message = new Message();
-        message.setToUsername(msg.getFromUsername());
-        message.setContent(response.getMessageContent());
-        ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(response.getMessageType());
-        message.setMsgType(contentTypeEnum.getMsgType());
-        if (contentTypeEnum == ContentTypeEnum.PICTURE) {
-            String filePath = FileUtil.downloadImage(response.getMessageContent());
-            message.setFilePath(filePath);
-            message.setContent(null);
+        for (SendMessageRequest.SendMessage sendMessage : response.getSendMessageList()) {
+            Message message = new Message();
+            message.setToUsername(msg.getFromUsername());
+            message.setContent(sendMessage.getContent());
+            ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(sendMessage.getContentType());
+            message.setMsgType(contentTypeEnum == null ? ContentTypeEnum.TEXT.getMsgType() : contentTypeEnum.getMsgType());
+            if (contentTypeEnum == ContentTypeEnum.PICTURE) {
+                String filePath = FileUtil.downloadImage(sendMessage.getContent());
+                message.setFilePath(filePath);
+                message.setContent(null);
+            }
+            MessageTools.sendMsgByUserId(message);
         }
-        MessageTools.sendMsgByUserId(message);
         return null;
     }
 

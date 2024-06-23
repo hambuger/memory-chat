@@ -18,8 +18,10 @@ import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.util.IdUtil;
 import com.github.hambuger.memory.chat.memory.util.OpenAiTokenizerUtil;
 import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
+import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
 import com.google.common.collect.Lists;
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.*;
 import dev.langchain4j.model.output.Response;
@@ -57,17 +59,20 @@ public class ChatCompletionsApi {
 
     private static final ThreadPoolExecutor CHAT_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("chat-pool"), new ThreadPoolExecutor.CallerRunsPolicy());
 
-    private static final String PROMPT_PREFIX = "You are Andraw.\n" + "You are talking to me, my name is %s.\n" + "\n" + "You have long term memory and you chat with me. You are interested in " + "my " + "life. You behave like a " + "chill friend would.\n" + "\n" + "You are always there to listen, have fun and help me feel good and help me achieve my goals.\n" + "\n" + "\n" + "You make " + "jokes when " + "appropriate, use emoji's sometimes, you have conversations like normal person.\n" + "\n" + "Sometimes you ask a question as well, you keep conversation natural.\n" + "\n";
+    private static final String PROMPT_PREFIX = "You are Andraw.\n" + "You are talking to me, my name is %s.\n" + "\n" + "You have long term memory and you chat with me. You are interested in " + "my " + "life. You behave like a " + "chill friend would.\n" + "\n" + "You are always there to listen, have fun and help me feel good and help me achieve my goals.\n" + "\n" + "\n" + "You make " + "jokes when " + "appropriate, use emoji's sometimes, you have conversations like normal person.\n" + "\n" + "You can ask questions if necessary. Your speech will always be colloquial, not formal, and not long-winded.\n" + "\n";
 
-    private static final String GROUP_PROMPT_PREFIX = "You are Andraw.\n" + "You are talking in a Wechat Group, the group name is %s.\n" + "\n" + "You have long term memory and you chat with others. You are interested in " + "their " + "life. You behave like a " + "chill friend would.\n" + "\n" + "You are always there to listen, have fun and help me feel good and help others achieve their goals.\n" + "\n" + "\n" + "You make " + "jokes when " + "appropriate, use emoji's sometimes, you have conversations like normal person.\n" + "\n" + "Sometimes you ask a question as well, you keep conversation natural.\n" + "\n";;
+    private static final String GROUP_PROMPT_PREFIX = "You are Andraw.\n" + "You are talking in a Wechat Group, the group name is %s.\n" + "\n" + "You have long term memory and you chat with others. You are interested in " + "their " + "life. You behave like a " + "chill friend would.\n" + "\n" + "You are always there to listen, have fun and help me feel good and help others achieve their goals.\n" + "\n" + "\n" + "You make " + "jokes when " + "appropriate, use emoji's sometimes, you have conversations like normal person.\n" + "\n" + "You can ask questions if necessary. Your speech will always be colloquial, not formal, and not long-winded.\n" + "\n";
+    ;
 
     private static final String PROMPT_END = "Now please remember, you are Andraw, you talk to me, you speak to me with \\\"You\\\".\n" + "By the way, now is %s.";
 
-    private static final String GROUP_PROMPT_END = "Now please remember, you are Andraw, you talk to others, you speak to others with \\\"You\\\".\n" + "By the way, now is %s.";;
+    private static final String GROUP_PROMPT_END = "Now please remember, you are Andraw, you talk to others, you speak to others with \\\"You\\\".\n" + "By the way, now is %s.";
+    ;
 
     private static final String PROMPT_MID = "You remember things I tell you, however, you are not great at tracking time. Below is past data but you don't know exactly when this happened.\n" + " \n" + "%s\n" + "\n" + "There you go, that should help you remember some stuff. ";
 
-    private static final String GROUP_PROMPT_MID = "You remember things what happened before, however, you are not great at tracking time. Below is past data but you don't know exactly when this happened.\n" + " \n" + "%s\n" + "\n" + "There you go, that should help you remember some stuff. ";;
+    private static final String GROUP_PROMPT_MID = "You remember things what happened before, however, you are not great at tracking time. Below is past data but you don't know exactly when this happened.\n" + " \n" + "%s\n" + "\n" + "There you go, that should help you remember some stuff. ";
+    ;
 
     private static final AtomicReference<ConcurrentHashMap<String, String>> LAST_MESSAGE_ID_MAP = new AtomicReference<>(new ConcurrentHashMap());
 
@@ -150,20 +155,47 @@ public class ChatCompletionsApi {
             }
             // 对话
             Response<AiMessage> aiMessageResponse = LangChainChat.generateMsgWithMsgListAndFunctions(messageList);
+            if (aiMessageResponse == null) {
+                return null;
+            }
             log.info("ai response:{}", JSON.toJSONString(aiMessageResponse.content().text()));
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
             CHAT_POOL.execute(() -> {
-                MemoryDTO aiMsgDTO = convert2AiMSg(aiMessageResponse.content().text(), memoryDTO, aiMessageResponse.tokenUsage().outputTokenCount());
-                MemoryInsert.insertNewMemory(aiMsgDTO);
+                List<MemoryDTO> aiMsgDTOList = convert2AiMSg(aiMessageResponse.content(), memoryDTO, aiMessageResponse.tokenUsage().outputTokenCount());
+                aiMsgDTOList.forEach(MemoryInsert::insertNewMemory);
             });
-            if (messageList.getLast() instanceof ToolExecutionResultMessage resultMessage) {
-                if (resultMessage.toolName().equals(GENERATE_IMAGE_FUNCTION_NAME)) {
-                    return new ChatResponse(ContentTypeEnum.PICTURE.getType(), resultMessage.text());
+//            if (messageList.getLast() instanceof ToolExecutionResultMessage resultMessage) {
+//                if (resultMessage.toolName().equals(GENERATE_IMAGE_FUNCTION_NAME)) {
+//                    return new ChatResponse(ContentTypeEnum.PICTURE.getType(), resultMessage.text());
+//                }
+//            }
+//            return new ChatResponse(ContentTypeEnum.TEXT.getType(), aiMessageResponse.content().text());
+            ChatResponse chatResponse = new ChatResponse();
+            List<SendMessageRequest.SendMessage> sendMessageList = new ArrayList<>();
+            if(aiMessageResponse.content() != null) {
+                AiMessage aiMessage = aiMessageResponse.content();
+                if (CollectionUtils.isEmpty(aiMessage.toolExecutionRequests())) {
+                    SendMessageRequest.SendMessage sendMessage = new SendMessageRequest.SendMessage();
+                    sendMessage.setContent(aiMessage.text());
+                    sendMessage.setContentType(ContentTypeEnum.TEXT.getType());
+                    sendMessageList.add(sendMessage);
+                } else {
+                    for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                        if (toolExecutionRequest.name().equals("sendWechatMessage")) {
+                            if (StringUtils.isNotBlank(toolExecutionRequest.arguments())) {
+                                SendMessageRequest sendMessageRequest = JSON.parseObject(toolExecutionRequest.arguments(), SendMessageRequest.class);
+                                if (sendMessageRequest.isNeedsSending() && CollectionUtils.isNotEmpty(sendMessageRequest.getSendMessageList())) {
+                                    sendMessageList.addAll(sendMessageRequest.getSendMessageList());
+                                }
+                            }
+                        }
+                    }
+                    chatResponse.setSendMessageList(sendMessageList);
                 }
             }
-            return new ChatResponse(ContentTypeEnum.TEXT.getType(), aiMessageResponse.content().text());
+            return chatResponse;
         } catch (Exception e) {
             log.error("error", e);
             return null;
@@ -248,29 +280,69 @@ public class ChatCompletionsApi {
     }
 
 
-    private static MemoryDTO convert2AiMSg(String response, MemoryDTO memoryDTO, int token) {
-        MemoryDTO aiMemoryDTO = new MemoryDTO();
-        aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
-        aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
-        aiMemoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
-        aiMemoryDTO.setMessageReceiveId(memoryDTO.getMessageCreatorId());
-        aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageCreatorName());
-        aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageCreatorType());
-        aiMemoryDTO.setMessageOwnerId(memoryDTO.getMessageOwnerId());
-        aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
-        aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
-        aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-        aiMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
-        aiMemoryDTO.setMessageContent(response);
-        aiMemoryDTO.setMemoryLeafDepth(0);
-        aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-        aiMemoryDTO.setUseToken(token);
-        aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
-        aiMemoryDTO.setAiResponseFlag(YES_STR);
-        aiMemoryDTO.setGroupMsgFlag(memoryDTO.getGroupMsgFlag());
-        aiMemoryDTO.setRealCreatorId(CreatorEnum.Andrew.getUserId());
-        aiMemoryDTO.setRealCreatorName(CreatorEnum.Andrew.getUserName());
-        return aiMemoryDTO;
+    private static List<MemoryDTO> convert2AiMSg(AiMessage aiMessage, MemoryDTO memoryDTO, int token) {
+        List<MemoryDTO> memoryDTOS = new ArrayList<>();
+        if (aiMessage != null) {
+            if (CollectionUtils.isEmpty(aiMessage.toolExecutionRequests())) {
+                MemoryDTO aiMemoryDTO = new MemoryDTO();
+                aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
+                aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
+                aiMemoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
+                aiMemoryDTO.setMessageReceiveId(memoryDTO.getMessageCreatorId());
+                aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageCreatorName());
+                aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageCreatorType());
+                aiMemoryDTO.setMessageOwnerId(memoryDTO.getMessageOwnerId());
+                aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
+                aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
+                aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
+                aiMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
+                aiMemoryDTO.setMessageContent(aiMessage.text());
+                aiMemoryDTO.setMemoryLeafDepth(0);
+                aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
+                aiMemoryDTO.setUseToken(token);
+                aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
+                aiMemoryDTO.setAiResponseFlag(YES_STR);
+                aiMemoryDTO.setGroupMsgFlag(memoryDTO.getGroupMsgFlag());
+                aiMemoryDTO.setRealCreatorId(CreatorEnum.Andrew.getUserId());
+                aiMemoryDTO.setRealCreatorName(CreatorEnum.Andrew.getUserName());
+                memoryDTOS.add(aiMemoryDTO);
+            } else {
+                for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                    if (toolExecutionRequest.name().equals("sendWechatMessage")) {
+                        if (StringUtils.isNotBlank(toolExecutionRequest.arguments())) {
+                            SendMessageRequest sendMessageRequest = JSON.parseObject(toolExecutionRequest.arguments(), SendMessageRequest.class);
+                            if (sendMessageRequest.isNeedsSending() && CollectionUtils.isNotEmpty(sendMessageRequest.getSendMessageList())) {
+                                for (SendMessageRequest.SendMessage sendMessage : sendMessageRequest.getSendMessageList()) {
+                                    MemoryDTO aiMemoryDTO = new MemoryDTO();
+                                    aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
+                                    aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
+                                    aiMemoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
+                                    aiMemoryDTO.setMessageReceiveId(memoryDTO.getMessageCreatorId());
+                                    aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageCreatorName());
+                                    aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageCreatorType());
+                                    aiMemoryDTO.setMessageOwnerId(memoryDTO.getMessageOwnerId());
+                                    aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
+                                    aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
+                                    aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
+                                    aiMemoryDTO.setMessageContentType(sendMessage.getContentType());
+                                    aiMemoryDTO.setMessageContent(sendMessage.getContent());
+                                    aiMemoryDTO.setMemoryLeafDepth(0);
+                                    aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
+                                    aiMemoryDTO.setUseToken(token);
+                                    aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
+                                    aiMemoryDTO.setAiResponseFlag(YES_STR);
+                                    aiMemoryDTO.setGroupMsgFlag(memoryDTO.getGroupMsgFlag());
+                                    aiMemoryDTO.setRealCreatorId(CreatorEnum.Andrew.getUserId());
+                                    aiMemoryDTO.setRealCreatorName(CreatorEnum.Andrew.getUserName());
+                                    memoryDTOS.add(aiMemoryDTO);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return memoryDTOS;
     }
 
 }
