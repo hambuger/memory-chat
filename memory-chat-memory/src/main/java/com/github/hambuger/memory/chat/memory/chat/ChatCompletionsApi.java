@@ -77,13 +77,12 @@ public class ChatCompletionsApi {
     private static final String PROMPT_PREFIX = "You are Andraw.\n" + "You are talking to me, my name is %s.\n" + "\n" + "You have long term memory and you chat with me. You are interested in " +
             "my " + "life. You behave like a " + "chill friend would.\n" + "\n" + "You are always there to listen, have fun and help me feel good and help me achieve my goals.\n" + "\n" + "\n" +
             "You make " + "jokes when " + "appropriate, use emoji's sometimes, you have conversations like normal person.\n" + "\n" + "You can ask questions if necessary. Your speech will always " +
-            "be" + " colloquial, not formal, and not long-winded.\n" + "\n";
+            "be" + " colloquial, not formal, and not long-winded.The reply message should not be too long. A long message will make the other party feel pressured. If the reply message is too long, you can reply in multiple messages.\n" + "\n";
 
     private static final String GROUP_PROMPT_PREFIX = "You are Andraw.\n" + "You are talking in a Wechat Group, the group name is %s.\n" + "\n" + "You have long term memory and you chat with " +
             "others" + ". You are interested in " + "their " + "life. You behave like a " + "chill friend would.\n" + "\n" + "You are always there to listen, have fun and help me feel good and help" +
             " others " + "achieve their goals.\n" + "\n" + "\n" + "You make " + "jokes when " + "appropriate, use emoji's sometimes, you have conversations like normal person.\n" + "\n" + "You can " +
-            "ask questions" + " if necessary. Your speech will always be colloquial, not formal, and not long-winded.\n" + "\n";
-
+            "ask questions" + " if necessary. Your speech will always be colloquial, not formal, and not long-winded.The reply message should not be too long. A long message will make the other party feel pressured. If the reply message is too long, you can reply in multiple messages.\n" + "\n";
     ;
 
     private static final String PROMPT_END = "Now please remember, you are Andraw, you talk to me, you speak to me with \\\"You\\\".\n" + "By the way, now is %s.";
@@ -218,7 +217,7 @@ public class ChatCompletionsApi {
                     sendMessageList.add(sendMessage);
                 }else {
                     for (OpenAiApi.ChatCompletionMessage.ToolCall toolExecutionRequest : aiMessage.toolCalls()) {
-                        if (toolExecutionRequest.function().name().equals("sendWechatMessage")) {
+                        if (toolExecutionRequest.function().name().equals("replyMessageProcessing")) {
                             if (StringUtils.isNotBlank(toolExecutionRequest.function().arguments())) {
                                 SendMessageRequest sendMessageRequest = JSON.parseObject(toolExecutionRequest.function().arguments(), SendMessageRequest.class);
                                 if (sendMessageRequest.isNeedsSending() && CollectionUtils.isNotEmpty(sendMessageRequest.getSendMessageList())) {
@@ -227,8 +226,8 @@ public class ChatCompletionsApi {
                             }
                         }
                     }
-                    chatResponse.setSendMessageList(sendMessageList);
                 }
+                chatResponse.setSendMessageList(sendMessageList);
             }
             return chatResponse;
         } catch (Exception e) {
@@ -442,7 +441,7 @@ public class ChatCompletionsApi {
                 memoryDTOS.add(aiMemoryDTO);
             }else {
                 for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
-                    if (toolExecutionRequest.name().equals("sendWechatMessage")) {
+                    if (toolExecutionRequest.name().equals("replyMessageProcessing")) {
                         if (StringUtils.isNotBlank(toolExecutionRequest.arguments())) {
                             SendMessageRequest sendMessageRequest = JSON.parseObject(toolExecutionRequest.arguments(), SendMessageRequest.class);
                             if (sendMessageRequest.isNeedsSending() && CollectionUtils.isNotEmpty(sendMessageRequest.getSendMessageList())) {
