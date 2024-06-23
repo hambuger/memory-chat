@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -16,20 +15,12 @@ public class SendMessageRequest {
     @JsonProperty(required = true)
     private boolean needsSending;
 
-    @JsonPropertyDescription("发送的消息列表")
-    @JsonProperty()
-    private List<SendMessage> sendMessageList;
+    @JsonPropertyDescription("发送的文本消息列表")
+    @JsonProperty(required = false)
+    private List<String> sendTextMessageList;
 
+    @JsonPropertyDescription("发送的图片消息列表，图片url")
+    @JsonProperty(required = false)
+    private List<String> sendPictureMessageList;
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class SendMessage {
-        @JsonPropertyDescription("消息内容，如果是图片消息，为图片url")
-        @JsonProperty(required = true)
-        private String content;
-        @JsonPropertyDescription("消息类型，支持 [TEXT, PICTURE]")
-        @JsonProperty(required = true)
-        private String contentType;
-    }
 }

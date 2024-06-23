@@ -1,6 +1,7 @@
 package com.github.hambuger.memory.chat.memory.chat.dto;
 
-import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
+import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,6 @@ import java.util.List;
 @NoArgsConstructor
 public class ChatResponse {
 
-    List<SendMessageRequest.SendMessage> sendMessageList;
+    List<SendMessage> sendMessageList;
 
 }

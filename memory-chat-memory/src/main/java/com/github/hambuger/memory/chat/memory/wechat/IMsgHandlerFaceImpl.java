@@ -353,14 +353,14 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         if (response == null || CollectionUtils.isEmpty(response.getSendMessageList())) {
             return null;
         }
-        for (SendMessageRequest.SendMessage sendMessage : response.getSendMessageList()) {
+        for (SendMessage sendMessage : response.getSendMessageList()) {
             Message message = new Message();
             message.setToUsername(msg.getFromUsername());
-            message.setContent(sendMessage.getContent());
-            ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(sendMessage.getContentType());
+            message.setContent(sendMessage.getMessageContent());
+            ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(sendMessage.getMessageContentType());
             message.setMsgType(contentTypeEnum == null ? ContentTypeEnum.TEXT.getMsgType() : contentTypeEnum.getMsgType());
             if (contentTypeEnum == ContentTypeEnum.PICTURE) {
-                String filePath = FileUtil.downloadImage(sendMessage.getContent());
+                String filePath = FileUtil.downloadImage(sendMessage.getMessageContent());
                 message.setFilePath(filePath);
                 message.setContent(null);
             }

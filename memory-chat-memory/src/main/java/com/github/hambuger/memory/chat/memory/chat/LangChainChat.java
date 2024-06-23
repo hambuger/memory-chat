@@ -50,7 +50,7 @@ public class LangChainChat {
         }
         Response<AiMessage> response = COMMON_CHAT_MODEL.generate(messageList, toolSpecifications);
         AiMessage aiMessage = response.content();
-        if (aiMessage == null || CollectionUtils.isEmpty(aiMessage.toolExecutionRequests()) || aiMessage.toolExecutionRequests().stream().anyMatch(tool -> tool.name().equals("sendWechatMessage"))) {
+        if (aiMessage == null || CollectionUtils.isEmpty(aiMessage.toolExecutionRequests()) || aiMessage.toolExecutionRequests().stream().anyMatch(tool -> tool.name().equals("replyMessageProcessing"))) {
             return response;
         }
         List<ToolExecutionResultMessage> executionResultMessages = new ArrayList<>();

@@ -17,6 +17,7 @@ import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.util.IdUtil;
 import com.github.hambuger.memory.chat.memory.util.OpenAiTokenizerUtil;
 import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
+import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
 
@@ -207,21 +208,36 @@ public class ChatCompletionsApi {
             //            }
             //            return new ChatResponse(ContentTypeEnum.TEXT.getType(), aiMessageResponse.content().text());
             ChatResponse chatResponse = new ChatResponse();
-            List<SendMessageRequest.SendMessage> sendMessageList = new ArrayList<>();
+            List<SendMessage> sendMessageList = new ArrayList<>();
             if (aiMessageResponse.choices().get(0).message() != null) {
                 OpenAiApi.ChatCompletionMessage aiMessage = aiMessageResponse.choices().get(0).message();
                 if (CollectionUtils.isEmpty(aiMessage.toolCalls())) {
-                    SendMessageRequest.SendMessage sendMessage = new SendMessageRequest.SendMessage();
-                    sendMessage.setContent(aiMessage.content());
-                    sendMessage.setContentType(ContentTypeEnum.TEXT.getType());
+                    SendMessage sendMessage = new SendMessage();
+                    sendMessage.setMessageContent(aiMessage.content());
+                    sendMessage.setMessageContentType(ContentTypeEnum.TEXT.getType());
                     sendMessageList.add(sendMessage);
                 }else {
                     for (OpenAiApi.ChatCompletionMessage.ToolCall toolExecutionRequest : aiMessage.toolCalls()) {
                         if (toolExecutionRequest.function().name().equals("replyMessageProcessing")) {
                             if (StringUtils.isNotBlank(toolExecutionRequest.function().arguments())) {
                                 SendMessageRequest sendMessageRequest = JSON.parseObject(toolExecutionRequest.function().arguments(), SendMessageRequest.class);
-                                if (sendMessageRequest.isNeedsSending() && CollectionUtils.isNotEmpty(sendMessageRequest.getSendMessageList())) {
-                                    sendMessageList.addAll(sendMessageRequest.getSendMessageList());
+                                if (sendMessageRequest.isNeedsSending()) {
+                                    if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendTextMessageList())) {
+                                        for (String text : sendMessageRequest.getSendTextMessageList()) {
+                                            SendMessage sendMessage = new SendMessage();
+                                            sendMessage.setMessageContent(text);
+                                            sendMessage.setMessageContentType(ContentTypeEnum.TEXT.getType());
+                                            sendMessageList.add(sendMessage);
+                                        }
+                                    }
+                                    if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendPictureMessageList())) {
+                                        for (String pic : sendMessageRequest.getSendPictureMessageList()) {
+                                            SendMessage sendMessage = new SendMessage();
+                                            sendMessage.setMessageContent(pic);
+                                            sendMessage.setMessageContentType(ContentTypeEnum.PICTURE.getType());
+                                            sendMessageList.add(sendMessage);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -252,14 +268,16 @@ public class ChatCompletionsApi {
                 message = new OpenAiApi.ChatCompletionMessage(chatMessage.text(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
             }else if (chatMessage instanceof UserMessage) {
                 UserMessage userMessage = (UserMessage) chatMessage;
+                List<OpenAiApi.ChatCompletionMessage.MediaContent> mediaContents = new ArrayList<>();
                 for (Content content : userMessage.contents()) {
                     if (content instanceof TextContent) {
-                        message = new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent(((TextContent) content).text()), OpenAiApi.ChatCompletionMessage.Role.USER);
+                        mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(((TextContent) content).text()));
                     }else if (content instanceof ImageContent) {
-                        message = new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(((ImageContent) content).image().base64Data(),
-                                ((ImageContent) content).detailLevel().name().toLowerCase()), OpenAiApi.ChatCompletionMessage.Role.USER);
+                        mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(((ImageContent) content).image().base64Data(),
+                                ((ImageContent) content).detailLevel().name().toLowerCase())));
                     }
                 }
+                message = new OpenAiApi.ChatCompletionMessage(mediaContents, OpenAiApi.ChatCompletionMessage.Role.USER);
             }else {
                 continue;
             }
@@ -297,11 +315,21 @@ public class ChatCompletionsApi {
                 memoryDTOS.add(aiMemoryDTO);
             }else {
                 for (OpenAiApi.ChatCompletionMessage.ToolCall toolExecutionRequest : aiMessage.toolCalls()) {
-                    if (toolExecutionRequest.function().name().equals("sendWechatMessage")) {
+                    if (toolExecutionRequest.function().name().equals("replyMessageProcessing")) {
                         if (StringUtils.isNotBlank(toolExecutionRequest.function().name())) {
                             SendMessageRequest sendMessageRequest = JSON.parseObject(toolExecutionRequest.function().arguments(), SendMessageRequest.class);
-                            if (sendMessageRequest.isNeedsSending() && CollectionUtils.isNotEmpty(sendMessageRequest.getSendMessageList())) {
-                                for (SendMessageRequest.SendMessage sendMessage : sendMessageRequest.getSendMessageList()) {
+                            if (sendMessageRequest.isNeedsSending()) {
+                                List<SendMessage> sendMessageList = new ArrayList<>();
+                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendTextMessageList())) {
+                                    sendMessageRequest.getSendTextMessageList().stream().forEach(text -> sendMessageList.add(new SendMessage(text, ContentTypeEnum.TEXT.getType())));
+                                }
+                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendPictureMessageList())) {
+                                    sendMessageRequest.getSendPictureMessageList().stream().forEach(pic -> sendMessageList.add(new SendMessage(pic, ContentTypeEnum.PICTURE.getType())));
+                                }
+                                for (SendMessage sendMessage : sendMessageList) {
+                                    if (StringUtils.isBlank(sendMessage.getMessageContentType()) || StringUtils.isBlank(sendMessage.getMessageContent())) {
+                                        continue;
+                                    }
                                     MemoryDTO aiMemoryDTO = new MemoryDTO();
                                     aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
                                     aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
@@ -313,8 +341,8 @@ public class ChatCompletionsApi {
                                     aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
                                     aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
                                     aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-                                    aiMemoryDTO.setMessageContentType(sendMessage.getContentType());
-                                    aiMemoryDTO.setMessageContent(sendMessage.getContent());
+                                    aiMemoryDTO.setMessageContentType(sendMessage.getMessageContentType());
+                                    aiMemoryDTO.setMessageContent(sendMessage.getMessageContent());
                                     aiMemoryDTO.setMemoryLeafDepth(0);
                                     aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
                                     aiMemoryDTO.setUseToken(token);
@@ -444,8 +472,15 @@ public class ChatCompletionsApi {
                     if (toolExecutionRequest.name().equals("replyMessageProcessing")) {
                         if (StringUtils.isNotBlank(toolExecutionRequest.arguments())) {
                             SendMessageRequest sendMessageRequest = JSON.parseObject(toolExecutionRequest.arguments(), SendMessageRequest.class);
-                            if (sendMessageRequest.isNeedsSending() && CollectionUtils.isNotEmpty(sendMessageRequest.getSendMessageList())) {
-                                for (SendMessageRequest.SendMessage sendMessage : sendMessageRequest.getSendMessageList()) {
+                            if (sendMessageRequest.isNeedsSending()) {
+                                List<SendMessage> sendMessageList = new ArrayList<>();
+                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendTextMessageList())) {
+                                    sendMessageRequest.getSendTextMessageList().stream().forEach(text -> sendMessageList.add(new SendMessage(text, ContentTypeEnum.TEXT.getType())));
+                                }
+                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendPictureMessageList())) {
+                                    sendMessageRequest.getSendPictureMessageList().stream().forEach(pic -> sendMessageList.add(new SendMessage(pic, ContentTypeEnum.PICTURE.getType())));
+                                }
+                                for (SendMessage sendMessage : sendMessageList) {
                                     MemoryDTO aiMemoryDTO = new MemoryDTO();
                                     aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
                                     aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
@@ -457,8 +492,8 @@ public class ChatCompletionsApi {
                                     aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
                                     aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
                                     aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-                                    aiMemoryDTO.setMessageContentType(sendMessage.getContentType());
-                                    aiMemoryDTO.setMessageContent(sendMessage.getContent());
+                                    aiMemoryDTO.setMessageContentType(sendMessage.getMessageContentType());
+                                    aiMemoryDTO.setMessageContent(sendMessage.getMessageContent());
                                     aiMemoryDTO.setMemoryLeafDepth(0);
                                     aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
                                     aiMemoryDTO.setUseToken(token);
