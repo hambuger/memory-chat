@@ -273,7 +273,7 @@ public class ChatCompletionsApi {
                     if (content instanceof TextContent) {
                         mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(((TextContent) content).text()));
                     }else if (content instanceof ImageContent) {
-                        mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(((ImageContent) content).image().base64Data(),
+                        mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl("data:image/jpeg;base64,"+(((ImageContent) content).image().base64Data()),
                                 ((ImageContent) content).detailLevel().name().toLowerCase())));
                     }
                 }
