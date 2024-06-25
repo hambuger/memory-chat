@@ -12,6 +12,7 @@ public enum ContentTypeEnum {
     TEXT(1, "TEXT", "文本"),
     PICTURE(3, "PICTURE", "图片"),
     AUDIO(34, "AUDIO", "语音"),
+    EMOJI(47, "EMOJI", "表情"),
     NOTE(10000, "NOTE", "提醒"),
     ;
 

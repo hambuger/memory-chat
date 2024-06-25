@@ -19,6 +19,8 @@ import java.util.Map;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.github.hambuger.memory.chat.memory.constants.Constants.REPLY_MESSAGE_FUNCTION_NAME;
+
 
 /**
  * @author hanjiabao
@@ -50,7 +52,7 @@ public class SpringAiChat {
                 OpenAiChatOptions.builder().withModel(Constants.MODEL_NAME).withTools(tools).withToolChoice("required").withTemperature(0.0f).build();
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
-        if (response == null || CollectionUtils.isEmpty(response.getBody().choices()) || response.getBody().choices().get(0).message().toolCalls().stream().anyMatch(tool -> tool.function().name().equals("replyMessageProcessing"))) {
+        if (response == null || CollectionUtils.isEmpty(response.getBody().choices()) || response.getBody().choices().get(0).message().toolCalls().stream().anyMatch(tool -> tool.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME))) {
             return response.getBody();
         }
         List<OpenAiApi.ChatCompletionMessage> executionResultMessages = new ArrayList<>();
