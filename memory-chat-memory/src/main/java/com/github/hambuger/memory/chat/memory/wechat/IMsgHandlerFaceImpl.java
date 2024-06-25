@@ -340,9 +340,13 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         BaseMemoryDTO baseMemoryDTO = new BaseMemoryDTO();
         baseMemoryDTO.setMessageContent(msg.getContent());
         ContentTypeEnum sendMsgContentTypeEnum = ContentTypeEnum.getByWxType(msg.getMsgType());
+        if(sendMsgContentTypeEnum == null){
+            // 不支持类型处理
+            return null;
+        }
         baseMemoryDTO.setMessageContentType(sendMsgContentTypeEnum.getType());
-        // 对于语音和图片，特殊处理文件路径
-        if (sendMsgContentTypeEnum == ContentTypeEnum.AUDIO || sendMsgContentTypeEnum == ContentTypeEnum.PICTURE) {
+        // 对于语音和图片,表情，特殊处理文件路径
+        if (sendMsgContentTypeEnum == ContentTypeEnum.AUDIO || sendMsgContentTypeEnum == ContentTypeEnum.PICTURE || sendMsgContentTypeEnum == ContentTypeEnum.EMOJI) {
             baseMemoryDTO.setMessageContent(msg.getFilePath());
         }
         baseMemoryDTO.setMessageCreatorName(StringUtils.isNoneBlank(msg.getFromRemarkname()) ? msg.getFromRemarkname() : msg.getFromNickname());

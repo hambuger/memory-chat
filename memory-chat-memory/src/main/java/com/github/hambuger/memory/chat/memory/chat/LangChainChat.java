@@ -5,18 +5,20 @@ import com.github.hambuger.memory.chat.memory.util.CallFunctionRegistryFactory;
 
 import org.apache.commons.collections4.CollectionUtils;
 
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.openai.OpenAiChatModel;
-import dev.langchain4j.model.output.Response;
-
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
+
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.output.Response;
+
+import static com.github.hambuger.memory.chat.memory.constants.Constants.REPLY_MESSAGE_FUNCTION_NAME;
 
 
 /**
@@ -50,7 +52,7 @@ public class LangChainChat {
         }
         Response<AiMessage> response = COMMON_CHAT_MODEL.generate(messageList, toolSpecifications);
         AiMessage aiMessage = response.content();
-        if (aiMessage == null || CollectionUtils.isEmpty(aiMessage.toolExecutionRequests()) || aiMessage.toolExecutionRequests().stream().anyMatch(tool -> tool.name().equals("replyMessageProcessing"))) {
+        if (aiMessage == null || CollectionUtils.isEmpty(aiMessage.toolExecutionRequests()) || aiMessage.toolExecutionRequests().stream().anyMatch(tool -> tool.name().equals(REPLY_MESSAGE_FUNCTION_NAME))) {
             return response;
         }
         List<ToolExecutionResultMessage> executionResultMessages = new ArrayList<>();
