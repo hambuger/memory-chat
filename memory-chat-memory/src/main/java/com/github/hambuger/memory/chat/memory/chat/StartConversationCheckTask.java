@@ -3,53 +3,39 @@ package com.github.hambuger.memory.chat.memory.chat;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.*;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Slf4j
 public class StartConversationCheckTask {
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(20); // 线程池大小
-    private final ConcurrentHashMap<String, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(20); // 线程池大小
+    private static final ConcurrentHashMap<String, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
 
 
-    public void startTaskForContact(String contact, Supplier<Boolean> checkIfNeedToSendMessage, Consumer<String> sendMessage) {
-        long initialDelay = 1; // 初始延迟时间为 1 秒
-        scheduleTask(contact, initialDelay, checkIfNeedToSendMessage, sendMessage);
+    public static void startTaskForContact(String taskKey, Supplier<Boolean> checkIfNeedToSendMessage) {
+        long initialDelay = 60; // 初始延迟时间为 60秒
+        scheduleTask(taskKey, initialDelay, checkIfNeedToSendMessage);
     }
 
-    private void scheduleTask(String contact, long delay, Supplier<Boolean> checkIfNeedToSendMessage, Consumer<String> sendMessage) {
+    private static void scheduleTask(String taskKey, long delay, Supplier<Boolean> checkIfNeedToSendMessage) {
+        // 取消现有任务（如果存在）
+        ScheduledFuture<?> existingTask = tasks.get(taskKey);
+        if (existingTask != null && !existingTask.isDone()) {
+            existingTask.cancel(false);
+        }
         Runnable task = () -> {
             boolean needToSendMessage = checkIfNeedToSendMessage.get();
+            log.info("taskKey:{}, checkIfNeedToSendMessage:{}",taskKey, needToSendMessage);
             long newDelay;
             if (needToSendMessage) {
-                sendMessage.accept(contact);
-                newDelay = 1L; // 重置延迟时间
+                newDelay = 60L; // 重置延迟时间
             } else {
                 newDelay = delay * 2L; // 使用指数退避策略增加延迟时间
             }
 
             // 重新调度任务
-            scheduleTask(contact, newDelay, checkIfNeedToSendMessage, sendMessage);
+            scheduleTask(taskKey, newDelay, checkIfNeedToSendMessage);
         };
         ScheduledFuture<?> scheduledTask = scheduler.schedule(task, delay, TimeUnit.SECONDS);
-        tasks.put(contact, scheduledTask);
-    }
-
-    private boolean checkIfNeedToSendMessage(String contact) {
-        // 实现检查逻辑
-        double a = Math.random();
-        log.info(contact + " random:" + a);
-        return a > 0.8; // 模拟检查是否需要发送消息
-    }
-
-    private void sendMessage(String contact) {
-        // 实现发送消息逻辑
-        log.info("Sending message to " + contact);
-    }
-
-    public static void main(String[] args) {
-        StartConversationCheckTask bot = new StartConversationCheckTask();
-        bot.startTaskForContact("contact1", () -> bot.checkIfNeedToSendMessage("contact1"), bot::sendMessage);
-        bot.startTaskForContact("contact2", () -> bot.checkIfNeedToSendMessage("contact2"), bot::sendMessage);
+        tasks.put(taskKey, scheduledTask);
     }
 }

@@ -1,5 +1,7 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
+import com.github.hambuger.memory.chat.wechat.api.MessageTools;
+import com.github.hambuger.memory.chat.wechat.entity.Message;
 import com.google.common.collect.Lists;
 
 import com.alibaba.fastjson.JSON;
@@ -105,7 +107,7 @@ public class ChatCompletionsApi {
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + Constants.MSG_LIST_KEY_SUFFIX;
             RedisLikeCounter.addMsg(msgListKey,
-                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).realCreatorId(memoryDTO.getRealCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
+                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
             CHAT_POOL.execute(() -> MemoryInsert.insertNewMemory(memoryDTO));
             // 更新最后一条消息id
@@ -150,12 +152,74 @@ public class ChatCompletionsApi {
             ChatResponse chatResponse = new ChatResponse();
             // 转换成发送消息
             List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
+            if (CollectionUtils.isEmpty(sendMessageList)) {
+                return null;
+            } else {
+                startNewTaskForContact(memoryDTO.getMessageCreatorName(), msgListKey);
+            }
             chatResponse.setSendMessageList(sendMessageList);
             return chatResponse;
         } catch (Exception e) {
             log.error("error", e);
             return null;
         }
+    }
+
+    private void startNewTaskForContact(String toUserName, String msgListKey) {
+        StartConversationCheckTask.startTaskForContact(msgListKey, () -> {
+            List<MemoryDTO> memoryDTOS = RedisLikeCounter.getMsg(msgListKey);
+            if(CollectionUtils.isEmpty(memoryDTOS)){
+                return false;
+            }
+            String prompt = getCheckStartMsgPrompt(toUserName, memoryDTOS);
+            if(StringUtils.isBlank(prompt)){
+                return false;
+            }
+            String aiResponse = LangChainChat.generateJsonWithSingleMsgAndPrompt(prompt);
+            if(StringUtils.isBlank(aiResponse)){
+                return false;
+            }
+            SendMessageRequest sendMessageRequest = JSON.parseObject(aiResponse, SendMessageRequest.class);
+            if(sendMessageRequest == null || !sendMessageRequest.isNeedsSending() || (CollectionUtils.isEmpty(sendMessageRequest.getSendPictureMessageList()) && CollectionUtils.isEmpty(sendMessageRequest.getSendTextMessageList()))){
+                return false;
+            }
+            List<Message> sendMessageList = new ArrayList<>();
+            if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendTextMessageList())) {
+                for (String text : sendMessageRequest.getSendTextMessageList()) {
+                    Message sendMessage = new Message();
+                    sendMessage.setToUsername(toUserName);
+                    sendMessage.setContent(text);
+                    sendMessage.setMsgType(ContentTypeEnum.TEXT.getMsgType());
+                    sendMessageList.add(sendMessage);
+                }
+            }else{
+                return false;
+            }
+            MessageTools.sendMsgByUserId(sendMessageList);
+            return true;
+        });
+    }
+
+    private String getCheckStartMsgPrompt(String toUserName, List<MemoryDTO> memoryDTOS) {
+        try {
+            StringBuilder promptBuilder = new StringBuilder().append("你是Andrew,下面是你和%s的离当前时间最近的对话内容。【%s】\n判断一下是否需要给%s发送一个新的消息。")
+                    .append("应该是在确实有必要的情况下才发起会话,尽量不要打扰别人，尤其是在夜晚时间。长时间没有联系的人也要谨慎判断是否发起消息。")
+                    .append("如果需要发送消息，给出需要发送的消息内容。你给出的发送消息的判断和消息内容应该是如下的json格式：\n %s\n")
+                    .append("注意：现在时间是%s");
+            SendMessageRequest sendMessageRequest = new SendMessageRequest();
+            sendMessageRequest.setNeedsSending(false);
+            sendMessageRequest.setSendTextMessageList(new ArrayList<>());
+            String msgJsonStr = JSON.toJSONString(sendMessageRequest);
+            StringBuilder memoryStr = new StringBuilder();
+            for (int i = 1; i < memoryDTOS.size(); i++) {
+                MemoryDTO memorySingle = memoryDTOS.get(i);
+                memoryStr.append(i).append(".(").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(":").append(memorySingle.getMessageContent()).append("\n");
+            }
+            return String.format(promptBuilder.toString(), toUserName, memoryStr, toUserName, msgJsonStr, DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
+        } catch (Exception e) {
+            log.error("getCheckStartMsgPrompt error", e);
+        }
+        return null;
     }
 
 
