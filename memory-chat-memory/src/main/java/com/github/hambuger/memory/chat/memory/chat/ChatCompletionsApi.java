@@ -119,7 +119,6 @@ public class ChatCompletionsApi {
                     memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent()) : new ArrayList<>();
             LinkedList<ChatMessage> messageList = new LinkedList<>();
             List<MemoryDTO> memoryDTOS = RedisLikeCounter.getMsg(msgListKey);
-            log.info("msgListKey :{} ", JSON.toJSONString(memoryDTOS));
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
