@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
+import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
 import com.github.hambuger.memory.chat.wechat.entity.Message;
 import com.google.common.collect.Lists;
@@ -100,7 +101,7 @@ public class ChatCompletionsApi {
     }
 
 
-    public ChatResponse chat(BaseMemoryDTO baseMemoryDTO) {
+    public ChatResponse chat(ExtraBaseMemoryDTO baseMemoryDTO) {
         try {
             log.info("get a new msg:{}", JSON.toJSONString(baseMemoryDTO));
             MemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
@@ -155,7 +156,7 @@ public class ChatCompletionsApi {
             if (CollectionUtils.isEmpty(sendMessageList)) {
                 return null;
             } else {
-                startNewTaskForContact(memoryDTO.getMessageCreatorName(), msgListKey);
+                startNewTaskForContact(baseMemoryDTO.getFromUserName(), memoryDTO, msgListKey);
             }
             chatResponse.setSendMessageList(sendMessageList);
             return chatResponse;
@@ -165,13 +166,13 @@ public class ChatCompletionsApi {
         }
     }
 
-    private void startNewTaskForContact(String toUserName, String msgListKey) {
+    private void startNewTaskForContact(String toUserId, MemoryDTO memoryDTO, String msgListKey) {
         StartConversationCheckTask.startTaskForContact(msgListKey, () -> {
             List<MemoryDTO> memoryDTOS = RedisLikeCounter.getMsg(msgListKey);
             if(CollectionUtils.isEmpty(memoryDTOS)){
                 return false;
             }
-            String prompt = getCheckStartMsgPrompt(toUserName, memoryDTOS);
+            String prompt = getCheckStartMsgPrompt(memoryDTO.getMessageCreatorName(), memoryDTOS);
             if(StringUtils.isBlank(prompt)){
                 return false;
             }
@@ -187,10 +188,12 @@ public class ChatCompletionsApi {
             if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendTextMessageList())) {
                 for (String text : sendMessageRequest.getSendTextMessageList()) {
                     Message sendMessage = new Message();
-                    sendMessage.setToUsername(toUserName);
+                    sendMessage.setToUsername(toUserId);
                     sendMessage.setContent(text);
                     sendMessage.setMsgType(ContentTypeEnum.TEXT.getMsgType());
                     sendMessageList.add(sendMessage);
+                    MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), text, 0);
+                    CHAT_POOL.execute(() ->MemoryInsert.insertNewMemory(aiMemoryDTO));
                 }
             }else{
                 return false;
@@ -202,9 +205,11 @@ public class ChatCompletionsApi {
 
     private String getCheckStartMsgPrompt(String toUserName, List<MemoryDTO> memoryDTOS) {
         try {
-            StringBuilder promptBuilder = new StringBuilder().append("你是Andrew,下面是你和%s的离当前时间最近的对话内容。【%s】\n判断一下是否需要给%s发送一个新的消息。")
-                    .append("应该是在确实有必要的情况下才发起会话,尽量不要打扰别人，尤其是在夜晚时间。长时间没有联系的人也要谨慎判断是否发起消息。")
-                    .append("如果需要发送消息，给出需要发送的消息内容。你给出的发送消息的判断和消息内容应该是如下的json格式：\n %s\n")
+            StringBuilder promptBuilder = new StringBuilder().append("你是Andrew,下面是你和%s的离当前时间最近的对话内容。【%s】\n判断一下是否需要给%s发送一个新的消息。\n")
+                    .append("应该是在确实有必要的情况下才发起会话,尽量不要打扰别人，尤其是在夜晚时间。长时间没有联系的人也要谨慎判断是否发起消息。\n")
+                    .append("即使需要发送消息，也不要频繁发送重复的信息\n")
+                    .append("如果需要发送消息，给出需要发送的消息内容。你给出的发送消息的判断和消息内容应该类似如下的json格式：\n %s\n")
+                    .append("其中needsSending字段表示是否需要发送消息，sendTextMessageList字段表示需要发送的消息内容\n")
                     .append("注意：现在时间是%s");
             SendMessageRequest sendMessageRequest = new SendMessageRequest();
             sendMessageRequest.setNeedsSending(false);
@@ -348,27 +353,7 @@ public class ChatCompletionsApi {
         List<MemoryDTO> memoryDTOS = new ArrayList<>();
         if (aiMessage != null) {
             if (CollectionUtils.isEmpty(aiMessage.toolCalls())) {
-                MemoryDTO aiMemoryDTO = new MemoryDTO();
-                aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
-                aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
-                aiMemoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
-                aiMemoryDTO.setMessageReceiveId(memoryDTO.getMessageCreatorId());
-                aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageCreatorName());
-                aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageCreatorType());
-                aiMemoryDTO.setMessageOwnerId(memoryDTO.getMessageOwnerId());
-                aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
-                aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
-                aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-                aiMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
-                aiMemoryDTO.setMessageContent(aiMessage.content());
-                aiMemoryDTO.setMemoryLeafDepth(0);
-                aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-                aiMemoryDTO.setUseToken(token);
-                aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
-                aiMemoryDTO.setAiResponseFlag(YES_STR);
-                aiMemoryDTO.setGroupMsgFlag(memoryDTO.getGroupMsgFlag());
-                aiMemoryDTO.setRealCreatorId(CreatorEnum.Andrew.getUserId());
-                aiMemoryDTO.setRealCreatorName(CreatorEnum.Andrew.getUserName());
+                MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), aiMessage.content(), token);
                 memoryDTOS.add(aiMemoryDTO);
             }else {
                 for (OpenAiApi.ChatCompletionMessage.ToolCall toolExecutionRequest : aiMessage.toolCalls()) {
@@ -387,27 +372,7 @@ public class ChatCompletionsApi {
                                     if (StringUtils.isBlank(sendMessage.getMessageContentType()) || StringUtils.isBlank(sendMessage.getMessageContent())) {
                                         continue;
                                     }
-                                    MemoryDTO aiMemoryDTO = new MemoryDTO();
-                                    aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
-                                    aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
-                                    aiMemoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
-                                    aiMemoryDTO.setMessageReceiveId(memoryDTO.getMessageCreatorId());
-                                    aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageCreatorName());
-                                    aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageCreatorType());
-                                    aiMemoryDTO.setMessageOwnerId(memoryDTO.getMessageOwnerId());
-                                    aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
-                                    aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
-                                    aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-                                    aiMemoryDTO.setMessageContentType(sendMessage.getMessageContentType());
-                                    aiMemoryDTO.setMessageContent(sendMessage.getMessageContent());
-                                    aiMemoryDTO.setMemoryLeafDepth(0);
-                                    aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-                                    aiMemoryDTO.setUseToken(token);
-                                    aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
-                                    aiMemoryDTO.setAiResponseFlag(YES_STR);
-                                    aiMemoryDTO.setGroupMsgFlag(memoryDTO.getGroupMsgFlag());
-                                    aiMemoryDTO.setRealCreatorId(CreatorEnum.Andrew.getUserId());
-                                    aiMemoryDTO.setRealCreatorName(CreatorEnum.Andrew.getUserName());
+                                    MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, sendMessage.getMessageContentType(), sendMessage.getMessageContent(), token);
                                     memoryDTOS.add(aiMemoryDTO);
                                 }
                             }
@@ -417,6 +382,32 @@ public class ChatCompletionsApi {
             }
         }
         return memoryDTOS;
+    }
+
+    @NotNull
+    private static MemoryDTO getAiResponseMemoryDTO(MemoryDTO memoryDTO, String TEXT, String aiMessage, Integer token) {
+        MemoryDTO aiMemoryDTO = new MemoryDTO();
+        aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
+        aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
+        aiMemoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
+        aiMemoryDTO.setMessageReceiveId(memoryDTO.getMessageCreatorId());
+        aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageCreatorName());
+        aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageCreatorType());
+        aiMemoryDTO.setMessageOwnerId(memoryDTO.getMessageOwnerId());
+        aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
+        aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
+        aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
+        aiMemoryDTO.setMessageContentType(TEXT);
+        aiMemoryDTO.setMessageContent(aiMessage);
+        aiMemoryDTO.setMemoryLeafDepth(0);
+        aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
+        aiMemoryDTO.setUseToken(token);
+        aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
+        aiMemoryDTO.setAiResponseFlag(YES_STR);
+        aiMemoryDTO.setGroupMsgFlag(memoryDTO.getGroupMsgFlag());
+        aiMemoryDTO.setRealCreatorId(CreatorEnum.Andrew.getUserId());
+        aiMemoryDTO.setRealCreatorName(CreatorEnum.Andrew.getUserName());
+        return aiMemoryDTO;
     }
 
 
@@ -501,27 +492,7 @@ public class ChatCompletionsApi {
         List<MemoryDTO> memoryDTOS = new ArrayList<>();
         if (aiMessage != null) {
             if (CollectionUtils.isEmpty(aiMessage.toolExecutionRequests())) {
-                MemoryDTO aiMemoryDTO = new MemoryDTO();
-                aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
-                aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
-                aiMemoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
-                aiMemoryDTO.setMessageReceiveId(memoryDTO.getMessageCreatorId());
-                aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageCreatorName());
-                aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageCreatorType());
-                aiMemoryDTO.setMessageOwnerId(memoryDTO.getMessageOwnerId());
-                aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
-                aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
-                aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-                aiMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
-                aiMemoryDTO.setMessageContent(aiMessage.text());
-                aiMemoryDTO.setMemoryLeafDepth(0);
-                aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-                aiMemoryDTO.setUseToken(token);
-                aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
-                aiMemoryDTO.setAiResponseFlag(YES_STR);
-                aiMemoryDTO.setGroupMsgFlag(memoryDTO.getGroupMsgFlag());
-                aiMemoryDTO.setRealCreatorId(CreatorEnum.Andrew.getUserId());
-                aiMemoryDTO.setRealCreatorName(CreatorEnum.Andrew.getUserName());
+                MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), aiMessage.text(), token);
                 memoryDTOS.add(aiMemoryDTO);
             }else {
                 for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
@@ -537,27 +508,7 @@ public class ChatCompletionsApi {
                                     sendMessageRequest.getSendPictureMessageList().stream().forEach(pic -> sendMessageList.add(new SendMessage(pic, ContentTypeEnum.PICTURE.getType())));
                                 }
                                 for (SendMessage sendMessage : sendMessageList) {
-                                    MemoryDTO aiMemoryDTO = new MemoryDTO();
-                                    aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
-                                    aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
-                                    aiMemoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
-                                    aiMemoryDTO.setMessageReceiveId(memoryDTO.getMessageCreatorId());
-                                    aiMemoryDTO.setMessageReceiveName(memoryDTO.getMessageCreatorName());
-                                    aiMemoryDTO.setMessageReceiveType(memoryDTO.getMessageCreatorType());
-                                    aiMemoryDTO.setMessageOwnerId(memoryDTO.getMessageOwnerId());
-                                    aiMemoryDTO.setMessageOwnerName(memoryDTO.getMessageOwnerName());
-                                    aiMemoryDTO.setMessageOwnerType(memoryDTO.getMessageOwnerType());
-                                    aiMemoryDTO.setMessageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-                                    aiMemoryDTO.setMessageContentType(sendMessage.getMessageContentType());
-                                    aiMemoryDTO.setMessageContent(sendMessage.getMessageContent());
-                                    aiMemoryDTO.setMemoryLeafDepth(0);
-                                    aiMemoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
-                                    aiMemoryDTO.setUseToken(token);
-                                    aiMemoryDTO.setMessageParentIds(Lists.newArrayList(memoryDTO.getMessageId()));
-                                    aiMemoryDTO.setAiResponseFlag(YES_STR);
-                                    aiMemoryDTO.setGroupMsgFlag(memoryDTO.getGroupMsgFlag());
-                                    aiMemoryDTO.setRealCreatorId(CreatorEnum.Andrew.getUserId());
-                                    aiMemoryDTO.setRealCreatorName(CreatorEnum.Andrew.getUserName());
+                                    MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, sendMessage.getMessageContentType(), sendMessage.getMessageContent(), token);
                                     memoryDTOS.add(aiMemoryDTO);
                                 }
                             }
