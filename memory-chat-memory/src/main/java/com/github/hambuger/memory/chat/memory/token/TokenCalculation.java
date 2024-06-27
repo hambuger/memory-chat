@@ -85,7 +85,7 @@ public class TokenCalculation {
         return tokenCount;
     }
 
-    private int getUserMessageToken(OpenAiApi.ChatCompletionMessage message) {
+    public int getUserMessageToken(OpenAiApi.ChatCompletionMessage message) {
         int tokenCount = 0;
 //        Iterator var3 = message.rawContent();
 //

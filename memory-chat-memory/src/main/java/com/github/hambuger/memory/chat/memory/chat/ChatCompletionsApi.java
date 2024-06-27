@@ -1,16 +1,12 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
-import com.github.hambuger.memory.chat.memory.chat.dto.SpringAiChatMessageMemoryDTO;
-import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
-import com.github.hambuger.memory.chat.wechat.api.MessageTools;
-import com.github.hambuger.memory.chat.wechat.entity.Message;
-import com.google.common.collect.Lists;
-
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.Pair;
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.audio.SpringAiAudio;
-import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
-import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
-import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
+import com.github.hambuger.memory.chat.memory.chat.dto.*;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.constants.Constants;
 import com.github.hambuger.memory.chat.memory.memory.MemoryInsert;
@@ -18,13 +14,17 @@ import com.github.hambuger.memory.chat.memory.memory.MemorySearch;
 import com.github.hambuger.memory.chat.memory.memory.MemoryUpdate;
 import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
+import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
 import com.github.hambuger.memory.chat.memory.util.IdUtil;
-import com.github.hambuger.memory.chat.memory.util.OpenAiTokenizerUtil;
 import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
+import com.github.hambuger.memory.chat.memory.util.VideoUtil;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
-
+import com.github.hambuger.memory.chat.wechat.api.MessageTools;
+import com.github.hambuger.memory.chat.wechat.entity.Message;
+import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -37,38 +37,13 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
-
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.data.image.Image;
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.Content;
-import dev.langchain4j.data.message.ImageContent;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.TextContent;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.data.message.UserMessage;
-import lombok.extern.slf4j.Slf4j;
 
 import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.DOUBLE_COLON;
 import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.YES_STR;
-import static com.github.hambuger.memory.chat.memory.constants.Constants.EMOJI_TYPE;
-import static com.github.hambuger.memory.chat.memory.constants.Constants.IMAGE_TYPE;
-import static com.github.hambuger.memory.chat.memory.constants.Constants.REPLY_MESSAGE_FUNCTION_NAME;
+import static com.github.hambuger.memory.chat.memory.constants.Constants.*;
 import static java.lang.String.format;
 
 
@@ -80,8 +55,7 @@ import static java.lang.String.format;
 @Component
 public class ChatCompletionsApi {
 
-    private static final ThreadPoolExecutor CHAT_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("chat-pool"),
-            new ThreadPoolExecutor.CallerRunsPolicy());
+    private static final ThreadPoolExecutor CHAT_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("chat-pool"), new ThreadPoolExecutor.CallerRunsPolicy());
 
 
     private static final AtomicReference<ConcurrentHashMap<String, String>> LAST_MESSAGE_ID_MAP = new AtomicReference<>(new ConcurrentHashMap());
@@ -92,13 +66,14 @@ public class ChatCompletionsApi {
     @Autowired
     private SpringAiChat springAiChat;
 
+    @Autowired
+    private VideoUtil videoUtil;
+
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
-        String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageReceiveId() :
-                memoryDTO.getMessageCreatorId());
+        String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageReceiveId() : memoryDTO.getMessageCreatorId());
         String oldMsgId = LAST_MESSAGE_ID_MAP.get().get(lastMsgIdMapKey);
-        return StringUtils.isNotBlank(oldMsgId) && !StringUtils.equals(oldMsgId, StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageParentIds().get(0) :
-                memoryDTO.getMessageId());
+        return StringUtils.isNotBlank(oldMsgId) && !StringUtils.equals(oldMsgId, StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageParentIds().get(0) : memoryDTO.getMessageId());
     }
 
 
@@ -108,8 +83,7 @@ public class ChatCompletionsApi {
             SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + Constants.MSG_LIST_KEY_SUFFIX;
-            RedisLikeCounter.addMsg(msgListKey,
-                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
+            RedisLikeCounter.addMsg(msgListKey, MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
             CHAT_POOL.execute(() -> MemoryInsert.insertNewMemory(memoryDTO));
             // 更新最后一条消息id
@@ -119,26 +93,26 @@ public class ChatCompletionsApi {
                 return null;
             }
             // 查询相关性最高的历史消息
-            List<MemoryDTO> searchMemoryList = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) ? MemorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(),
-                    memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent()) : new ArrayList<>();
-            LinkedList<ChatMessage> messageList = new LinkedList<>();
+            List<MemoryDTO> searchMemoryList = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) ? MemorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(), memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent()) : new ArrayList<>();
+
             List<MemoryDTO> memoryDTOS = RedisLikeCounter.getMsg(msgListKey);
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
             // 获取最近时间的聊天记录
-            List<String> existMsgIds = getMinMemoryContext(msgListKey, messageList, memoryDTOS);
+            Pair<List<String>, LinkedList<OpenAiApi.ChatCompletionMessage>> listPair = getMinMemoryContext(msgListKey, memoryDTOS);
+            List<String> existMsgIds = listPair.getKey();
+            LinkedList<OpenAiApi.ChatCompletionMessage> messageList = listPair.getValue();
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
-            SystemMessage systemMessage = getSystemMessage(memoryDTO, searchMemoryList, existMsgIds);
+            OpenAiApi.ChatCompletionMessage systemMessage = getSystemMessage(memoryDTO, searchMemoryList, existMsgIds);
             messageList.addFirst(systemMessage);
-            List<OpenAiApi.ChatCompletionMessage> springAiMessages = convertMessage(messageList);
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
             // 获取AI回复
-            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(springAiMessages);
+            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList);
             if (aiMessageResponse == null || CollectionUtils.isEmpty(aiMessageResponse.choices())) {
                 return null;
             }
@@ -170,19 +144,19 @@ public class ChatCompletionsApi {
     private void startNewTaskForContact(String toUserId, MemoryDTO memoryDTO, String msgListKey) {
         StartConversationCheckTask.startTaskForContact(msgListKey, () -> {
             List<MemoryDTO> memoryDTOS = RedisLikeCounter.getMsg(msgListKey);
-            if(CollectionUtils.isEmpty(memoryDTOS)){
+            if (CollectionUtils.isEmpty(memoryDTOS)) {
                 return false;
             }
             String prompt = getCheckStartMsgPrompt(memoryDTO.getMessageCreatorName(), memoryDTOS);
-            if(StringUtils.isBlank(prompt)){
+            if (StringUtils.isBlank(prompt)) {
                 return false;
             }
             String aiResponse = LangChainChat.generateJsonWithSingleMsgAndPrompt(prompt);
-            if(StringUtils.isBlank(aiResponse)){
+            if (StringUtils.isBlank(aiResponse)) {
                 return false;
             }
             SendMessageRequest sendMessageRequest = JSON.parseObject(aiResponse, SendMessageRequest.class);
-            if(sendMessageRequest == null || !sendMessageRequest.isNeedsSending() || (CollectionUtils.isEmpty(sendMessageRequest.getSendPictureMessageList()) && CollectionUtils.isEmpty(sendMessageRequest.getSendTextMessageList()))){
+            if (sendMessageRequest == null || !sendMessageRequest.isNeedsSending() || (CollectionUtils.isEmpty(sendMessageRequest.getSendPictureMessageList()) && CollectionUtils.isEmpty(sendMessageRequest.getSendTextMessageList()))) {
                 return false;
             }
             List<Message> sendMessageList = new ArrayList<>();
@@ -194,9 +168,9 @@ public class ChatCompletionsApi {
                     sendMessage.setMsgType(ContentTypeEnum.TEXT.getMsgType());
                     sendMessageList.add(sendMessage);
                     MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), text, 0);
-                    CHAT_POOL.execute(() ->MemoryInsert.insertNewMemory(aiMemoryDTO));
+                    CHAT_POOL.execute(() -> MemoryInsert.insertNewMemory(aiMemoryDTO));
                 }
-            }else{
+            } else {
                 return false;
             }
             MessageTools.sendMsgByUserId(sendMessageList);
@@ -206,12 +180,7 @@ public class ChatCompletionsApi {
 
     private String getCheckStartMsgPrompt(String toUserName, List<MemoryDTO> memoryDTOS) {
         try {
-            StringBuilder promptBuilder = new StringBuilder().append("你是Andrew,下面是你和%s的离当前时间最近的对话内容。【%s】\n判断一下是否需要给%s发送一个新的消息。\n")
-                    .append("应该是在确实有必要的情况下才发起会话,尽量不要打扰别人，尤其是在夜晚时间。长时间没有联系的人也要谨慎判断是否发起消息。\n")
-                    .append("即使需要发送消息，也不要频繁发送重复的信息\n")
-                    .append("如果需要发送消息，给出需要发送的消息内容。你给出的发送消息的判断和消息内容应该类似如下的json格式：\n %s\n")
-                    .append("其中needsSending字段表示是否需要发送消息，sendTextMessageList字段表示需要发送的消息内容\n")
-                    .append("注意：现在时间是%s");
+            StringBuilder promptBuilder = new StringBuilder().append("你是Andrew,下面是你和%s的离当前时间最近的对话内容。【%s】\n判断一下是否需要给%s发送一个新的消息。\n").append("应该是在确实有必要的情况下才发起会话,尽量不要打扰别人，尤其是在夜晚时间。长时间没有联系的人也要谨慎判断是否发起消息。\n").append("即使需要发送消息，也不要频繁发送重复的信息\n").append("如果需要发送消息，给出需要发送的消息内容。你给出的发送消息的判断和消息内容应该类似如下的json格式：\n %s\n").append("其中needsSending字段表示是否需要发送消息，sendTextMessageList字段表示需要发送的消息内容\n").append("注意：现在时间是%s");
             SendMessageRequest sendMessageRequest = new SendMessageRequest();
             sendMessageRequest.setNeedsSending(false);
             sendMessageRequest.setSendTextMessageList(new ArrayList<>());
@@ -237,7 +206,7 @@ public class ChatCompletionsApi {
                 sendMessage.setMessageContent(responseMessage.content());
                 sendMessage.setMessageContentType(ContentTypeEnum.TEXT.getType());
                 sendMessageList.add(sendMessage);
-            }else {
+            } else {
                 for (OpenAiApi.ChatCompletionMessage.ToolCall toolExecutionRequest : responseMessage.toolCalls()) {
                     if (toolExecutionRequest.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME)) {
                         if (StringUtils.isNotBlank(toolExecutionRequest.function().arguments())) {
@@ -269,15 +238,14 @@ public class ChatCompletionsApi {
     }
 
 
-    private static @NotNull SystemMessage getSystemMessage(MemoryDTO memoryDTO, List<MemoryDTO> searchMemoryList, List<String> existMsgIds) {
-        SystemMessage systemMessage;
+    private static @NotNull OpenAiApi.ChatCompletionMessage getSystemMessage(MemoryDTO memoryDTO, List<MemoryDTO> searchMemoryList, List<String> existMsgIds) {
+        OpenAiApi.ChatCompletionMessage systemMessage;
         boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
         String now = DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT);
         // 选择prompt
         if (CollectionUtils.isEmpty(searchMemoryList)) {
-            systemMessage = new SystemMessage(String.format(groupFlag ? Constants.GROUP_PROMPT_PREFIX : Constants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + String.format(groupFlag ? Constants.GROUP_PROMPT_END :
-                    Constants.PROMPT_END, now));
-        }else {
+            systemMessage = new OpenAiApi.ChatCompletionMessage(String.format(groupFlag ? Constants.GROUP_PROMPT_PREFIX : Constants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + String.format(groupFlag ? Constants.GROUP_PROMPT_END : Constants.PROMPT_END, now), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+        } else {
             StringBuilder memory = new StringBuilder();
             for (int i = 1; i < searchMemoryList.size(); i++) {
                 MemoryDTO memorySingle = searchMemoryList.get(i);
@@ -287,8 +255,7 @@ public class ChatCompletionsApi {
                 memory.append(i).append("(").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorName()).orElse(memorySingle.getMessageCreatorName())).append(":").append(memorySingle.getMessageContent()).append("\n");
                 MemoryUpdate.updateMemoryAccessTime(memorySingle.getMessageId());
             }
-            systemMessage = new SystemMessage(String.format(groupFlag ? Constants.GROUP_PROMPT_PREFIX : Constants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + (StringUtils.isNotBlank(memory) ?
-                    String.format(groupFlag ? Constants.GROUP_PROMPT_MID : Constants.PROMPT_MID, memory) : "") + String.format(groupFlag ? Constants.GROUP_PROMPT_END : Constants.PROMPT_END, now));
+            systemMessage = new OpenAiApi.ChatCompletionMessage(String.format(groupFlag ? Constants.GROUP_PROMPT_PREFIX : Constants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + (StringUtils.isNotBlank(memory) ? String.format(groupFlag ? Constants.GROUP_PROMPT_MID : Constants.PROMPT_MID, memory) : "") + String.format(groupFlag ? Constants.GROUP_PROMPT_END : Constants.PROMPT_END, now), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         }
         return systemMessage;
     }
@@ -311,43 +278,43 @@ public class ChatCompletionsApi {
         memoryDTO.setMemoryLeafDepth(0);
         memoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
         memoryDTO.setMessageParentIds(Lists.newArrayList("0"));
-        memoryDTO.setUseToken(OpenAiTokenizerUtil.getMessageToken(convertMemoryMsg2ModelMsg(memoryDTO)));
+        OpenAiApi.ChatCompletionMessage message = convertMemoryMsg2SpringAiModelMsg(memoryDTO);
+        memoryDTO.setChatMessage(message);
+        memoryDTO.setUseToken(new TokenCalculation(Constants.MODEL_NAME).getUserMessageToken(message));
         return memoryDTO;
     }
 
 
-    private List<OpenAiApi.ChatCompletionMessage> convertMessage(LinkedList<ChatMessage> messageList) {
-        List<OpenAiApi.ChatCompletionMessage> chatCompletionMessages = new ArrayList<>();
-
-        for (ChatMessage chatMessage : messageList) {
-            OpenAiApi.ChatCompletionMessage message = null;
-            if (chatMessage instanceof SystemMessage) {
-                message = new OpenAiApi.ChatCompletionMessage(((SystemMessage) chatMessage).text(), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
-            }else if (chatMessage instanceof ToolExecutionResultMessage) {
-                ToolExecutionResultMessage toolExecutionResultMessage = (ToolExecutionResultMessage) chatMessage;
-                message = new OpenAiApi.ChatCompletionMessage(toolExecutionResultMessage.text(), OpenAiApi.ChatCompletionMessage.Role.TOOL, toolExecutionResultMessage.toolName(),
-                        toolExecutionResultMessage.id(), null);
-            }else if (chatMessage instanceof AiMessage) {
-                message = new OpenAiApi.ChatCompletionMessage(chatMessage.text(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
-            }else if (chatMessage instanceof UserMessage) {
-                UserMessage userMessage = (UserMessage) chatMessage;
-                List<OpenAiApi.ChatCompletionMessage.MediaContent> mediaContents = new ArrayList<>();
-                for (Content content : userMessage.contents()) {
-                    if (content instanceof TextContent) {
-                        mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(((TextContent) content).text()));
-                    }else if (content instanceof ImageContent imageContent) {
-                        mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s",
-                                imageContent.image().mimeType(), imageContent.image().base64Data()), ((ImageContent) content).detailLevel().name().toLowerCase())));
-                    }
-                }
-                message = new OpenAiApi.ChatCompletionMessage(mediaContents, OpenAiApi.ChatCompletionMessage.Role.USER);
-            }else {
-                continue;
-            }
-            chatCompletionMessages.add(message);
-        }
-        return chatCompletionMessages;
-    }
+//    private List<OpenAiApi.ChatCompletionMessage> convertMessage(LinkedList<ChatMessage> messageList) {
+//        List<OpenAiApi.ChatCompletionMessage> chatCompletionMessages = new ArrayList<>();
+//
+//        for (ChatMessage chatMessage : messageList) {
+//            OpenAiApi.ChatCompletionMessage message = null;
+//            if (chatMessage instanceof SystemMessage) {
+//                message = new OpenAiApi.ChatCompletionMessage(((SystemMessage) chatMessage).text(), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+//            } else if (chatMessage instanceof ToolExecutionResultMessage) {
+//                ToolExecutionResultMessage toolExecutionResultMessage = (ToolExecutionResultMessage) chatMessage;
+//                message = new OpenAiApi.ChatCompletionMessage(toolExecutionResultMessage.text(), OpenAiApi.ChatCompletionMessage.Role.TOOL, toolExecutionResultMessage.toolName(), toolExecutionResultMessage.id(), null);
+//            } else if (chatMessage instanceof AiMessage) {
+//                message = new OpenAiApi.ChatCompletionMessage(chatMessage.text(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
+//            } else if (chatMessage instanceof UserMessage) {
+//                UserMessage userMessage = (UserMessage) chatMessage;
+//                List<OpenAiApi.ChatCompletionMessage.MediaContent> mediaContents = new ArrayList<>();
+//                for (Content content : userMessage.contents()) {
+//                    if (content instanceof TextContent) {
+//                        mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(((TextContent) content).text()));
+//                    } else if (content instanceof ImageContent imageContent) {
+//                        mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", imageContent.image().mimeType(), imageContent.image().base64Data()), ((ImageContent) content).detailLevel().name().toLowerCase())));
+//                    }
+//                }
+//                message = new OpenAiApi.ChatCompletionMessage(mediaContents, OpenAiApi.ChatCompletionMessage.Role.USER);
+//            } else {
+//                continue;
+//            }
+//            chatCompletionMessages.add(message);
+//        }
+//        return chatCompletionMessages;
+//    }
 
 
     private List<MemoryDTO> convertSpringMsg2AiMSg(OpenAiApi.ChatCompletionMessage aiMessage, MemoryDTO memoryDTO, Integer token) {
@@ -356,7 +323,7 @@ public class ChatCompletionsApi {
             if (CollectionUtils.isEmpty(aiMessage.toolCalls())) {
                 MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), aiMessage.content(), token);
                 memoryDTOS.add(aiMemoryDTO);
-            }else {
+            } else {
                 for (OpenAiApi.ChatCompletionMessage.ToolCall toolExecutionRequest : aiMessage.toolCalls()) {
                     if (toolExecutionRequest.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME)) {
                         if (StringUtils.isNotBlank(toolExecutionRequest.function().name())) {
@@ -422,20 +389,78 @@ public class ChatCompletionsApi {
     }
 
 
-    public static ChatMessage convertMemoryMsg2ModelMsg(BaseMemoryDTO baseMemoryDTO) {
-        String contentPrefix = StringUtils.equals(baseMemoryDTO.getGroupMsgFlag(), YES_STR) ? baseMemoryDTO.getRealCreatorId() + ":" : "";
-        if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.TEXT.getType())) {
-            return UserMessage.from(contentPrefix + baseMemoryDTO.getMessageContent());
-        }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.PICTURE.getType())) {
-            return new UserMessage(new ImageContent(new Image.Builder().mimeType(IMAGE_TYPE).base64Data(getFileBase64Data(baseMemoryDTO.getMessageContent())).build(), ImageContent.DetailLevel.AUTO));
-        }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.EMOJI.getType())) {
-            return new UserMessage(new ImageContent(new Image.Builder().mimeType(EMOJI_TYPE).base64Data(getFileBase64Data(baseMemoryDTO.getMessageContent())).build(), ImageContent.DetailLevel.AUTO));
-        }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.NOTE.getType())) {
-            return new SystemMessage(baseMemoryDTO.getMessageContent());
-        }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.VIDEO.getType())) {
+//    public static ChatMessage convertMemoryMsg2ModelMsg(BaseMemoryDTO baseMemoryDTO) {
+//        String contentPrefix = StringUtils.equals(baseMemoryDTO.getGroupMsgFlag(), YES_STR) ? baseMemoryDTO.getRealCreatorId() + ":" : "";
+//        if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.TEXT.getType())) {
+//            return UserMessage.from(contentPrefix + baseMemoryDTO.getMessageContent());
+//        } else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.PICTURE.getType())) {
+//            return new UserMessage(new ImageContent(new Image.Builder().mimeType(IMAGE_TYPE).base64Data(getFileBase64Data(baseMemoryDTO.getMessageContent())).build(), ImageContent.DetailLevel.AUTO));
+//        } else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.EMOJI.getType())) {
+//            return new UserMessage(new ImageContent(new Image.Builder().mimeType(EMOJI_TYPE).base64Data(getFileBase64Data(baseMemoryDTO.getMessageContent())).build(), ImageContent.DetailLevel.AUTO));
+//        } else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.NOTE.getType())) {
+//            return new SystemMessage(baseMemoryDTO.getMessageContent());
+//        } else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.VIDEO.getType())) {
+//
+//
+//        }
+//        return null;
+//    }
 
+    public OpenAiApi.ChatCompletionMessage convertMemoryMsg2SpringAiModelMsg(BaseMemoryDTO memoryDTO) {
+        OpenAiApi.ChatCompletionMessage message = null;
+        ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(memoryDTO.getMessageContentType());
+        switch (contentTypeEnum){
+            case NOTE:
+                message = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+                break;
+            case TEXT:
+                message = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.USER);
+                break;
+            case PICTURE:
+                message = new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", IMAGE_TYPE, getFileBase64Data(memoryDTO.getMessageContent())), "auto"), OpenAiApi.ChatCompletionMessage.Role.USER);
+                break;
+            case EMOJI:
+                message = new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", EMOJI_TYPE, getFileBase64Data(memoryDTO.getMessageContent())), "auto"), OpenAiApi.ChatCompletionMessage.Role.USER);
+                break;
+            case VIDEO:
+                message = new OpenAiApi.ChatCompletionMessage(getVideoInfo(memoryDTO), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+                break;
+            default:
+                break;
 
         }
+        return message;
+    }
+
+    private String getVideoInfo(BaseMemoryDTO memoryDTO) {
+        String audioFilePath = null;
+        Future<String> audioTask = CHAT_POOL.submit(() -> videoUtil.extractVideoAudio(memoryDTO.getMessageContent()));
+
+        Future<List<String>> imageTask = CHAT_POOL.submit(() -> videoUtil.getVideoImg(memoryDTO.getMessageContent()));
+        List<String> fileList = new ArrayList<>();
+        try {
+            String audioFile = audioTask.get();
+            List<String> imageList = imageTask.get();
+            fileList.add(audioFile);
+            fileList.addAll(imageList);
+            return getVideInfoText(imageList, audioFile);
+        } catch (Exception e) {
+            log.error("getVideoInfo error", e);
+        } finally {
+            try {
+                for (String path : fileList) {
+                    Files.delete(Paths.get(path));
+                }
+            } catch (IOException e) {
+                log.error("getVideoInfo error", e);
+            }
+        }
+        return null;
+    }
+
+    private String getVideInfoText(List<String> imageList, String audioFile) {
+
+
         return null;
     }
 
@@ -458,32 +483,33 @@ public class ChatCompletionsApi {
     }
 
 
-    private static List<String> getMinMemoryContext(String msgListKey, LinkedList<ChatMessage> messageList, List<MemoryDTO> memoryDTOS) {
+    private Pair<List<String>, LinkedList<OpenAiApi.ChatCompletionMessage>> getMinMemoryContext(String msgListKey, List<MemoryDTO> memoryDTOS) {
         if (CollectionUtils.isEmpty(memoryDTOS)) {
-            return new ArrayList<>();
+            return new Pair<>(new ArrayList<>(), new LinkedList<>());
         }
+        LinkedList<OpenAiApi.ChatCompletionMessage> messageList = new LinkedList<>();
         List<String> existMsgIdList = new ArrayList<>();
         int sumMsgToken = 0;
         for (int i = memoryDTOS.size() - 1; i >= 0; i--) {
             MemoryDTO memoryDTO = memoryDTOS.get(i);
-            ChatMessage chatMessage;
+            OpenAiApi.ChatCompletionMessage chatMessage;
             if (memoryDTO.getAiResponseFlag().equals(YES_STR)) {
-                chatMessage = new AiMessage(memoryDTO.getMessageContent());
-                sumMsgToken = sumMsgToken + OpenAiTokenizerUtil.getMessageToken(chatMessage);
-            }else {
-                chatMessage = convertMemoryMsg2ModelMsg(memoryDTO);
-                sumMsgToken = sumMsgToken + OpenAiTokenizerUtil.getMessageToken(chatMessage);
+                chatMessage = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
+                sumMsgToken = sumMsgToken + new TokenCalculation(Constants.MODEL_NAME).getUserMessageToken(chatMessage);
+            } else {
+                chatMessage = convertMemoryMsg2SpringAiModelMsg(memoryDTO);
+                sumMsgToken = sumMsgToken + new TokenCalculation(Constants.MODEL_NAME).getUserMessageToken(chatMessage);
             }
             if (sumMsgToken < Constants.MAX_MSG_TOKEN) {
                 messageList.addFirst(chatMessage);
                 existMsgIdList.add(memoryDTO.getMessageId());
-            }else {
+            } else {
                 delOldMessageFromCache(msgListKey, i);
                 break;
             }
 
         }
-        return existMsgIdList;
+        return new Pair<>(existMsgIdList, messageList);
     }
 
 
@@ -492,36 +518,36 @@ public class ChatCompletionsApi {
     }
 
 
-    private static List<MemoryDTO> convert2AiMSg(AiMessage aiMessage, MemoryDTO memoryDTO, int token) {
-        List<MemoryDTO> memoryDTOS = new ArrayList<>();
-        if (aiMessage != null) {
-            if (CollectionUtils.isEmpty(aiMessage.toolExecutionRequests())) {
-                MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), aiMessage.text(), token);
-                memoryDTOS.add(aiMemoryDTO);
-            }else {
-                for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
-                    if (toolExecutionRequest.name().equals(REPLY_MESSAGE_FUNCTION_NAME)) {
-                        if (StringUtils.isNotBlank(toolExecutionRequest.arguments())) {
-                            SendMessageRequest sendMessageRequest = JSON.parseObject(toolExecutionRequest.arguments(), SendMessageRequest.class);
-                            if (sendMessageRequest.isNeedsSending()) {
-                                List<SendMessage> sendMessageList = new ArrayList<>();
-                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendTextMessageList())) {
-                                    sendMessageRequest.getSendTextMessageList().stream().forEach(text -> sendMessageList.add(new SendMessage(text, ContentTypeEnum.TEXT.getType())));
-                                }
-                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendPictureMessageList())) {
-                                    sendMessageRequest.getSendPictureMessageList().stream().forEach(pic -> sendMessageList.add(new SendMessage(pic, ContentTypeEnum.PICTURE.getType())));
-                                }
-                                for (SendMessage sendMessage : sendMessageList) {
-                                    MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, sendMessage.getMessageContentType(), sendMessage.getMessageContent(), token);
-                                    memoryDTOS.add(aiMemoryDTO);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return memoryDTOS;
-    }
+//    private static List<MemoryDTO> convert2AiMSg(AiMessage aiMessage, MemoryDTO memoryDTO, int token) {
+//        List<MemoryDTO> memoryDTOS = new ArrayList<>();
+//        if (aiMessage != null) {
+//            if (CollectionUtils.isEmpty(aiMessage.toolExecutionRequests())) {
+//                MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), aiMessage.text(), token);
+//                memoryDTOS.add(aiMemoryDTO);
+//            } else {
+//                for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+//                    if (toolExecutionRequest.name().equals(REPLY_MESSAGE_FUNCTION_NAME)) {
+//                        if (StringUtils.isNotBlank(toolExecutionRequest.arguments())) {
+//                            SendMessageRequest sendMessageRequest = JSON.parseObject(toolExecutionRequest.arguments(), SendMessageRequest.class);
+//                            if (sendMessageRequest.isNeedsSending()) {
+//                                List<SendMessage> sendMessageList = new ArrayList<>();
+//                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendTextMessageList())) {
+//                                    sendMessageRequest.getSendTextMessageList().stream().forEach(text -> sendMessageList.add(new SendMessage(text, ContentTypeEnum.TEXT.getType())));
+//                                }
+//                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendPictureMessageList())) {
+//                                    sendMessageRequest.getSendPictureMessageList().stream().forEach(pic -> sendMessageList.add(new SendMessage(pic, ContentTypeEnum.PICTURE.getType())));
+//                                }
+//                                for (SendMessage sendMessage : sendMessageList) {
+//                                    MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, sendMessage.getMessageContentType(), sendMessage.getMessageContent(), token);
+//                                    memoryDTOS.add(aiMemoryDTO);
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return memoryDTOS;
+//    }
 
 }

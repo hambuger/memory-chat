@@ -1,5 +1,7 @@
 package com.github.hambuger.memory.chat.memory.util;
 
+import com.github.hambuger.memory.chat.wechat.configuration.WechatConfiguration;
+import jakarta.annotation.Resource;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
@@ -12,22 +14,28 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 
 @Slf4j
+@Component
 public class VideoUtil {
 
-    private static List<String> getVideoImg(String filePath, String fileName) {
+    @Resource
+    private WechatConfiguration config;
+
+    public List<String> getVideoImg(String filePath) {
         File folder = new File(filePath);
         if (!folder.exists()) {
             folder.mkdirs(); // 如果文件夹不存在则创建
         }
         try {
-            FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(filePath + File.separator + fileName);
+            FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(filePath);
             grabber.start();
 
             double frameRate = grabber.getFrameRate();
@@ -56,15 +64,15 @@ public class VideoUtil {
                 if (rotate != null) {
                     bufferedImage = rotate(bufferedImage, Integer.parseInt(rotate));
                 }
-                String newFileName = filePath + File.separator + fileName.substring(0, fileName.lastIndexOf(".")) + "_" + count + ".jpeg";
+                String newFileName = config.getBasePath() + File.separator + UUID.randomUUID() + "_VIDEO" + count + ".jpeg";
                 ImageIO.write(bufferedImage, "jpeg", new File(newFileName));
                 frameNumber += frameInterval;
                 count++;
                 imageFilePathList.add(newFileName);
             }
-
             grabber.close();
             grabber.stop();
+            return imageFilePathList;
         } catch (Exception e) {
             log.info("获取视频图片失败", e);
         }
@@ -109,7 +117,7 @@ public class VideoUtil {
     }
 
 
-    public static String extractVideoAudio(String videoFilePath) {
+    public  String extractVideoAudio(String videoFilePath) {
         File file = new File(videoFilePath);
         // 抓取资源
         FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(videoFilePath);
