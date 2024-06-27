@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
+import com.github.hambuger.memory.chat.memory.chat.dto.SpringAiChatMessageMemoryDTO;
 import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
 import com.github.hambuger.memory.chat.wechat.entity.Message;
@@ -104,7 +105,7 @@ public class ChatCompletionsApi {
     public ChatResponse chat(ExtraBaseMemoryDTO baseMemoryDTO) {
         try {
             log.info("get a new msg:{}", JSON.toJSONString(baseMemoryDTO));
-            MemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
+            SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + Constants.MSG_LIST_KEY_SUFFIX;
             RedisLikeCounter.addMsg(msgListKey,
@@ -293,9 +294,9 @@ public class ChatCompletionsApi {
     }
 
 
-    private MemoryDTO getChatMemory(BaseMemoryDTO baseMemoryDTO) {
+    private SpringAiChatMessageMemoryDTO getChatMemory(BaseMemoryDTO baseMemoryDTO) {
         convertAudio2TextMsg(baseMemoryDTO);
-        MemoryDTO memoryDTO = BeanUtil.copyProperties(baseMemoryDTO, MemoryDTO.class);
+        SpringAiChatMessageMemoryDTO memoryDTO = BeanUtil.copyProperties(baseMemoryDTO, SpringAiChatMessageMemoryDTO.class);
         memoryDTO.setMessageId(IdUtil.generateUniqueId());
         memoryDTO.setMessageCreatorId(memoryDTO.getMessageCreatorName());
         memoryDTO.setMessageCreatorType(StringUtils.equals(YES_STR, baseMemoryDTO.getGroupMsgFlag()) ? CreatorEnum.USER.getType() : CreatorEnum.GROUP.getType());
@@ -431,6 +432,9 @@ public class ChatCompletionsApi {
             return new UserMessage(new ImageContent(new Image.Builder().mimeType(EMOJI_TYPE).base64Data(getFileBase64Data(baseMemoryDTO.getMessageContent())).build(), ImageContent.DetailLevel.AUTO));
         }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.NOTE.getType())) {
             return new SystemMessage(baseMemoryDTO.getMessageContent());
+        }else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.VIDEO.getType())) {
+
+
         }
         return null;
     }
