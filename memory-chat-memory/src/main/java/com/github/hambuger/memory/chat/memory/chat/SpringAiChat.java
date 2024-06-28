@@ -35,7 +35,6 @@ public class SpringAiChat {
 
     public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages) {
         OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
-        ;
         List<ToolSpecification> toolSpecifications = CallFunctionRegistryFactory.getAllFunctionCall();
         List<OpenAiApi.FunctionTool> tools = new ArrayList<>();
         for (ToolSpecification toolSpecification : toolSpecifications) {
@@ -65,6 +64,15 @@ public class SpringAiChat {
         messages.add(response.getBody().choices().get(0).message());
         messages.addAll(executionResultMessages);
         return generateMsgWithMsgListAndFunctions(messages);
+    }
+
+    public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages) {
+        OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
+        OpenAiChatOptions chatOptions =
+                OpenAiChatOptions.builder().withModel(Constants.MODEL_NAME).withTemperature(0.0f).build();
+        chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
+        ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
+        return  response.getBody();
     }
 
 }

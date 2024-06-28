@@ -451,7 +451,7 @@ public class ChatCompletionsApi {
                 fileList.add(audioPathAntText.get(0));
             }
             fileList.addAll(imageList);
-            return getVideInfoText(imageList, fileList.get(1));
+            return getVideInfoText(memoryDTO.getMessageCreatorName(), imageList, fileList.get(1));
         } catch (Exception e) {
             log.error("getVideoInfo error", e);
         } finally {
@@ -466,10 +466,27 @@ public class ChatCompletionsApi {
         return null;
     }
 
-    private String getVideInfoText(List<String> imageList, String audioText) {
-
-
-        return null;
+    private String getVideInfoText(String creatorName, List<String> imageList, String audioText) {
+        List<OpenAiApi.ChatCompletionMessage.MediaContent> contentList = new ArrayList<>();
+        List<OpenAiApi.ChatCompletionMessage> messageList = new ArrayList<>();
+        messageList.add(new OpenAiApi.ChatCompletionMessage("现在有一个视频的字幕信息和视频中的截图的图片集。你需要给出这个视频的详细描述，以便让他人能够通过这个描述理解视频的内容。回复只需要给出描述，不要有其他的多余信息.\n", OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+        StringBuilder prompt = new StringBuilder();
+        if (StringUtils.isNotBlank(audioText)) {
+            prompt.append(String.format("视频的字幕信息如下：%s", audioText));
+        }
+        if (CollectionUtils.isNotEmpty(imageList)) {
+            prompt.append("视频的截图集合是下面这些图片");
+        }
+        contentList.add(new OpenAiApi.ChatCompletionMessage.MediaContent(prompt.toString()));
+        if (CollectionUtils.isNotEmpty(imageList)) {
+            for (String image : imageList) {
+                contentList.add(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", IMAGE_TYPE, getFileBase64Data(image)), "auto")));
+            }
+        }
+        messageList.add(new OpenAiApi.ChatCompletionMessage(contentList, OpenAiApi.ChatCompletionMessage.Role.USER));
+        OpenAiApi.ChatCompletion response = springAiChat.generateMsgWithMsgList(messageList);
+        String videoInfo = response.choices().get(0).message().content();
+        return String.format("%s给你发送了一个视频。这个视频的信息如下：%s", creatorName, videoInfo);
     }
 
 
