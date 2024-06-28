@@ -29,6 +29,9 @@ public class SpringAiAudio {
     @Autowired
     private OpenAiAudioTranscriptionModel openAiAudioTranscriptionModel;
 
+    @Autowired
+    private VideoUtil videoUtil;
+
 
     public String generateTextWithAudio(Resource audioFile) {
         OpenAiAudioTranscriptionOptions transcriptionOptions =
@@ -38,9 +41,10 @@ public class SpringAiAudio {
         return Optional.ofNullable(response).map(AudioTranscriptionResponse::getResult).map(AudioTranscription::getOutput).orElse(null);
     }
 
+
     public String generateTextFromVideo(String videoFilePath) {
 
-        String audioFilePath = VideoUtil.extractVideoAudio(videoFilePath);
+        String audioFilePath = videoUtil.extractVideoAudio(videoFilePath);
         if (audioFilePath == null) {
             return null;
         }
