@@ -15,6 +15,8 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -42,13 +44,16 @@ public class SpringAiAudio {
     }
 
 
-    public String generateTextFromVideo(String videoFilePath) {
-
+    public List<String> generateTextFromVideo(String videoFilePath) {
+        List<String> pathAndText = new ArrayList<>();
         String audioFilePath = videoUtil.extractVideoAudio(videoFilePath);
         if (audioFilePath == null) {
-            return null;
+            return pathAndText;
         }
-        return generateTextWithAudio(new FileSystemResource(audioFilePath));
+        pathAndText.add(audioFilePath);
+        String text = generateTextWithAudio(new FileSystemResource(audioFilePath));
+        pathAndText.add(text);
+        return pathAndText;
 
     }
 

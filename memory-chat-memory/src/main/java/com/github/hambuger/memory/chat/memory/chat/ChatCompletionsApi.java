@@ -262,7 +262,15 @@ public class ChatCompletionsApi {
 
 
     private SpringAiChatMessageMemoryDTO getChatMemory(BaseMemoryDTO baseMemoryDTO) {
-        convertAudio2TextMsg(baseMemoryDTO);
+        if (StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.AUDIO.getType())) {
+            DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
+            baseMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
+            baseMemoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(new FileSystemResource(baseMemoryDTO.getMessageContent())));
+        }else if (StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.VIDEO.getType())) {
+            DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
+            baseMemoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
+            baseMemoryDTO.setMessageContent(getVideoInfo(baseMemoryDTO));
+        }
         SpringAiChatMessageMemoryDTO memoryDTO = BeanUtil.copyProperties(baseMemoryDTO, SpringAiChatMessageMemoryDTO.class);
         memoryDTO.setMessageId(IdUtil.generateUniqueId());
         memoryDTO.setMessageCreatorId(memoryDTO.getMessageCreatorName());
@@ -379,14 +387,14 @@ public class ChatCompletionsApi {
     }
 
 
-    public void convertAudio2TextMsg(BaseMemoryDTO baseMemoryDTO) {
-        if (!StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.AUDIO.getType())) {
-            return;
-        }
-        DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
-        baseMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
-        baseMemoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(new FileSystemResource(baseMemoryDTO.getMessageContent())));
-    }
+//    public void convert2TextMsg(BaseMemoryDTO baseMemoryDTO) {
+//        if (!StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.AUDIO.getType())) {
+//            return;
+//        }
+//        DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
+//        baseMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
+//        baseMemoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(new FileSystemResource(baseMemoryDTO.getMessageContent())));
+//    }
 
 
 //    public static ChatMessage convertMemoryMsg2ModelMsg(BaseMemoryDTO baseMemoryDTO) {
@@ -417,14 +425,14 @@ public class ChatCompletionsApi {
                 message = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
             case PICTURE:
-                message = new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", IMAGE_TYPE, getFileBase64Data(memoryDTO.getMessageContent())), "auto"), OpenAiApi.ChatCompletionMessage.Role.USER);
+                message = new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", IMAGE_TYPE, getFileBase64Data(memoryDTO.getMessageContent())), "auto")), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
             case EMOJI:
-                message = new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", EMOJI_TYPE, getFileBase64Data(memoryDTO.getMessageContent())), "auto"), OpenAiApi.ChatCompletionMessage.Role.USER);
+                message = new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", EMOJI_TYPE, getFileBase64Data(memoryDTO.getMessageContent())), "auto")), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
-            case VIDEO:
-                message = new OpenAiApi.ChatCompletionMessage(getVideoInfo(memoryDTO), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
-                break;
+//            case VIDEO:
+//                message = new OpenAiApi.ChatCompletionMessage(getVideoInfo(memoryDTO), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+//                break;
             default:
                 break;
 
@@ -433,17 +441,17 @@ public class ChatCompletionsApi {
     }
 
     private String getVideoInfo(BaseMemoryDTO memoryDTO) {
-        String audioFilePath = null;
-        Future<String> audioTask = CHAT_POOL.submit(() -> videoUtil.extractVideoAudio(memoryDTO.getMessageContent()));
-
+        Future<List<String>> audioTask = CHAT_POOL.submit(() -> springAiAudio.generateTextFromVideo(memoryDTO.getMessageContent()));
         Future<List<String>> imageTask = CHAT_POOL.submit(() -> videoUtil.getVideoImg(memoryDTO.getMessageContent()));
         List<String> fileList = new ArrayList<>();
         try {
-            String audioFile = audioTask.get();
+            List<String> audioPathAntText = audioTask.get();
             List<String> imageList = imageTask.get();
-            fileList.add(audioFile);
+            if (CollectionUtils.isNotEmpty(audioPathAntText)) {
+                fileList.add(audioPathAntText.get(0));
+            }
             fileList.addAll(imageList);
-            return getVideInfoText(imageList, audioFile);
+            return getVideInfoText(imageList, fileList.get(1));
         } catch (Exception e) {
             log.error("getVideoInfo error", e);
         } finally {
@@ -458,7 +466,7 @@ public class ChatCompletionsApi {
         return null;
     }
 
-    private String getVideInfoText(List<String> imageList, String audioFile) {
+    private String getVideInfoText(List<String> imageList, String audioText) {
 
 
         return null;

@@ -344,7 +344,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         }
         baseMemoryDTO.setMessageContentType(sendMsgContentTypeEnum.getType());
         // 对于语音和图片,表情，特殊处理文件路径
-        if (sendMsgContentTypeEnum == ContentTypeEnum.AUDIO || sendMsgContentTypeEnum == ContentTypeEnum.PICTURE || sendMsgContentTypeEnum == ContentTypeEnum.EMOJI) {
+        if (sendMsgContentTypeEnum == ContentTypeEnum.VIDEO || sendMsgContentTypeEnum == ContentTypeEnum.AUDIO || sendMsgContentTypeEnum == ContentTypeEnum.PICTURE || sendMsgContentTypeEnum == ContentTypeEnum.EMOJI) {
             baseMemoryDTO.setMessageContent(msg.getFilePath());
         }
         baseMemoryDTO.setMessageCreatorName(StringUtils.isNoneBlank(msg.getFromRemarkname()) ? msg.getFromRemarkname() : msg.getFromNickname());
