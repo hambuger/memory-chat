@@ -3,7 +3,11 @@ package com.github.hambuger.memory.chat.memory.websearch;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.util.MyHttpUtils;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,11 +26,20 @@ public class SerpSearch {
     @Value("${serp.baseUrl}")
     public String baseUrl;
 
+    @Data
+    static class SerpQuery {
 
-    private String getSerpSearchResult(String query) {
+        @JsonPropertyDescription("搜索关键词")
+        @JsonProperty(required = true)
+        private String queryWord;
+    }
+
+
+    @FunctionCallRegistry(functionDesc = "去谷歌搜索相关信息")
+    private String getSerpSearchResult(SerpQuery query) {
         try {
             Map<String, Object> queryParam = new HashMap<>();
-            queryParam.put("q", query);
+            queryParam.put("q", query.queryWord);
             queryParam.put("api_key", apikey);
             queryParam.put("hl", "zh-cn");
             queryParam.put("gl", "cn");
