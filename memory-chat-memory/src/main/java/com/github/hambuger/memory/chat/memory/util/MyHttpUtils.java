@@ -31,11 +31,11 @@ public class MyHttpUtils {
         throw new UnirestException("Failed after " + MAX_RETRIES + " attempts");
     }
 
-    public static String get(String urlString, Map<String, String> headers) throws UnirestException {
+    public static String get(String urlString, Map<String, String> headers, Map<String, Object> queryParam) throws UnirestException {
         int attempt = 0;
         while (attempt < MAX_RETRIES) {
             try {
-                HttpResponse<String> response = Unirest.get(urlString).headers(headers).asString();
+                HttpResponse<String> response = Unirest.get(urlString).queryString(queryParam).headers(headers).asString();
                 return response.getBody();
             } catch (UnirestException e) {
                 attempt++;
