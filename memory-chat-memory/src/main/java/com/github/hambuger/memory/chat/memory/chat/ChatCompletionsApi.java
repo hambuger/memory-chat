@@ -276,7 +276,7 @@ public class ChatCompletionsApi {
         SpringAiChatMessageMemoryDTO memoryDTO = BeanUtil.copyProperties(baseMemoryDTO, SpringAiChatMessageMemoryDTO.class);
         memoryDTO.setMessageId(IdUtil.generateUniqueId());
         memoryDTO.setMessageCreatorId(memoryDTO.getMessageCreatorName());
-        memoryDTO.setMessageCreatorType(StringUtils.equals(YES_STR, baseMemoryDTO.getGroupMsgFlag()) ? CreatorEnum.USER.getType() : CreatorEnum.GROUP.getType());
+        memoryDTO.setMessageCreatorType(StringUtils.equals(YES_STR, baseMemoryDTO.getGroupMsgFlag()) ? CreatorEnum.GROUP.getType() : CreatorEnum.USER.getType());
         memoryDTO.setMessageReceiveId(CreatorEnum.Andrew.getUserId());
         memoryDTO.setMessageReceiveName(CreatorEnum.Andrew.getUserName());
         memoryDTO.setMessageReceiveType(CreatorEnum.Andrew.getType());
