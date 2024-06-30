@@ -15,15 +15,14 @@ import com.github.hambuger.memory.chat.memory.memory.MemoryUpdate;
 import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
-import com.github.hambuger.memory.chat.memory.util.IdUtil;
-import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
-import com.github.hambuger.memory.chat.memory.util.VideoUtil;
+import com.github.hambuger.memory.chat.memory.util.*;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
 import com.github.hambuger.memory.chat.wechat.entity.Message;
 import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -68,6 +67,9 @@ public class ChatCompletionsApi {
 
     @Autowired
     private VideoUtil videoUtil;
+
+    @Resource
+    private ImageUploadUtils imageUploadUtils;
 
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
@@ -293,38 +295,6 @@ public class ChatCompletionsApi {
     }
 
 
-//    private List<OpenAiApi.ChatCompletionMessage> convertMessage(LinkedList<ChatMessage> messageList) {
-//        List<OpenAiApi.ChatCompletionMessage> chatCompletionMessages = new ArrayList<>();
-//
-//        for (ChatMessage chatMessage : messageList) {
-//            OpenAiApi.ChatCompletionMessage message = null;
-//            if (chatMessage instanceof SystemMessage) {
-//                message = new OpenAiApi.ChatCompletionMessage(((SystemMessage) chatMessage).text(), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
-//            } else if (chatMessage instanceof ToolExecutionResultMessage) {
-//                ToolExecutionResultMessage toolExecutionResultMessage = (ToolExecutionResultMessage) chatMessage;
-//                message = new OpenAiApi.ChatCompletionMessage(toolExecutionResultMessage.text(), OpenAiApi.ChatCompletionMessage.Role.TOOL, toolExecutionResultMessage.toolName(), toolExecutionResultMessage.id(), null);
-//            } else if (chatMessage instanceof AiMessage) {
-//                message = new OpenAiApi.ChatCompletionMessage(chatMessage.text(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
-//            } else if (chatMessage instanceof UserMessage) {
-//                UserMessage userMessage = (UserMessage) chatMessage;
-//                List<OpenAiApi.ChatCompletionMessage.MediaContent> mediaContents = new ArrayList<>();
-//                for (Content content : userMessage.contents()) {
-//                    if (content instanceof TextContent) {
-//                        mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(((TextContent) content).text()));
-//                    } else if (content instanceof ImageContent imageContent) {
-//                        mediaContents.add(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", imageContent.image().mimeType(), imageContent.image().base64Data()), ((ImageContent) content).detailLevel().name().toLowerCase())));
-//                    }
-//                }
-//                message = new OpenAiApi.ChatCompletionMessage(mediaContents, OpenAiApi.ChatCompletionMessage.Role.USER);
-//            } else {
-//                continue;
-//            }
-//            chatCompletionMessages.add(message);
-//        }
-//        return chatCompletionMessages;
-//    }
-
-
     private List<MemoryDTO> convertSpringMsg2AiMSg(OpenAiApi.ChatCompletionMessage aiMessage, MemoryDTO memoryDTO, Integer token) {
         List<MemoryDTO> memoryDTOS = new ArrayList<>();
         if (aiMessage != null) {
@@ -387,33 +357,6 @@ public class ChatCompletionsApi {
     }
 
 
-//    public void convert2TextMsg(BaseMemoryDTO baseMemoryDTO) {
-//        if (!StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.AUDIO.getType())) {
-//            return;
-//        }
-//        DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
-//        baseMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
-//        baseMemoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(new FileSystemResource(baseMemoryDTO.getMessageContent())));
-//    }
-
-
-//    public static ChatMessage convertMemoryMsg2ModelMsg(BaseMemoryDTO baseMemoryDTO) {
-//        String contentPrefix = StringUtils.equals(baseMemoryDTO.getGroupMsgFlag(), YES_STR) ? baseMemoryDTO.getRealCreatorId() + ":" : "";
-//        if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.TEXT.getType())) {
-//            return UserMessage.from(contentPrefix + baseMemoryDTO.getMessageContent());
-//        } else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.PICTURE.getType())) {
-//            return new UserMessage(new ImageContent(new Image.Builder().mimeType(IMAGE_TYPE).base64Data(getFileBase64Data(baseMemoryDTO.getMessageContent())).build(), ImageContent.DetailLevel.AUTO));
-//        } else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.EMOJI.getType())) {
-//            return new UserMessage(new ImageContent(new Image.Builder().mimeType(EMOJI_TYPE).base64Data(getFileBase64Data(baseMemoryDTO.getMessageContent())).build(), ImageContent.DetailLevel.AUTO));
-//        } else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.NOTE.getType())) {
-//            return new SystemMessage(baseMemoryDTO.getMessageContent());
-//        } else if (baseMemoryDTO.getMessageContentType().equals(ContentTypeEnum.VIDEO.getType())) {
-//
-//
-//        }
-//        return null;
-//    }
-
     public OpenAiApi.ChatCompletionMessage convertMemoryMsg2SpringAiModelMsg(BaseMemoryDTO memoryDTO) {
         OpenAiApi.ChatCompletionMessage message = null;
         ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(memoryDTO.getMessageContentType());
@@ -425,14 +368,11 @@ public class ChatCompletionsApi {
                 message = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
             case PICTURE:
-                message = new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", IMAGE_TYPE, getFileBase64Data(memoryDTO.getMessageContent())), "auto")), OpenAiApi.ChatCompletionMessage.Role.USER);
+                message = new OpenAiApi.ChatCompletionMessage(Lists.newArrayList(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", IMAGE_TYPE, FileUtil.getFileBase64Data(memoryDTO.getMessageContent(), true)), "auto"))), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
             case EMOJI:
-                message = new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", EMOJI_TYPE, getFileBase64Data(memoryDTO.getMessageContent())), "auto")), OpenAiApi.ChatCompletionMessage.Role.USER);
+                message = new OpenAiApi.ChatCompletionMessage(Lists.newArrayList(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", EMOJI_TYPE, FileUtil.getFileBase64Data(memoryDTO.getMessageContent(), true)), "auto"))), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
-//            case VIDEO:
-//                message = new OpenAiApi.ChatCompletionMessage(getVideoInfo(memoryDTO), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
-//                break;
             default:
                 break;
 
@@ -451,7 +391,7 @@ public class ChatCompletionsApi {
                 fileList.add(audioPathAntText.get(0));
             }
             fileList.addAll(imageList);
-            return getVideInfoText(memoryDTO.getMessageCreatorName(), imageList, fileList.get(1));
+            return getVideInfoText(memoryDTO.getMessageCreatorName(), imageList, audioPathAntText.get(1));
         } catch (Exception e) {
             log.error("getVideoInfo error", e);
         } finally {
@@ -479,32 +419,15 @@ public class ChatCompletionsApi {
         }
         contentList.add(new OpenAiApi.ChatCompletionMessage.MediaContent(prompt.toString()));
         if (CollectionUtils.isNotEmpty(imageList)) {
-            for (String image : imageList) {
-                contentList.add(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", IMAGE_TYPE, getFileBase64Data(image)), "auto")));
+            List<String> uploadedImageList = imageUploadUtils.uploadImageList(imageList);
+            for (String image : uploadedImageList) {
+                contentList.add(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(image, "low")));
             }
         }
         messageList.add(new OpenAiApi.ChatCompletionMessage(contentList, OpenAiApi.ChatCompletionMessage.Role.USER));
         OpenAiApi.ChatCompletion response = springAiChat.generateMsgWithMsgList(messageList);
         String videoInfo = response.choices().get(0).message().content();
-        return String.format("%s给你发送了一个视频。这个视频的信息如下：%s", creatorName, videoInfo);
-    }
-
-
-    public static String getFileBase64Data(String filePath) {
-        try {
-            DownloadTools.awaitDownload(filePath);
-            // 读取文件内容到字节数组
-            byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
-
-            // 将字节数组编码为 Base64 字符串
-            String base64String = Base64.getEncoder().encodeToString(fileContent);
-
-            // 输出 Base64 字符串
-            return base64String;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return String.format("%s发送了一个视频。这个视频的信息如下：%s", creatorName, videoInfo);
     }
 
 
@@ -518,6 +441,9 @@ public class ChatCompletionsApi {
         for (int i = memoryDTOS.size() - 1; i >= 0; i--) {
             MemoryDTO memoryDTO = memoryDTOS.get(i);
             OpenAiApi.ChatCompletionMessage chatMessage;
+            if (StringUtils.isBlank(memoryDTO.getMessageContentType()) || StringUtils.isBlank(memoryDTO.getMessageContent())) {
+                continue;
+            }
             if (memoryDTO.getAiResponseFlag().equals(YES_STR)) {
                 chatMessage = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
                 sumMsgToken = sumMsgToken + new TokenCalculation(Constants.MODEL_NAME).getUserMessageToken(chatMessage);
@@ -541,38 +467,5 @@ public class ChatCompletionsApi {
     private static void delOldMessageFromCache(String msgListKey, int i) {
         RedisLikeCounter.delOldMemory(msgListKey, i);
     }
-
-
-//    private static List<MemoryDTO> convert2AiMSg(AiMessage aiMessage, MemoryDTO memoryDTO, int token) {
-//        List<MemoryDTO> memoryDTOS = new ArrayList<>();
-//        if (aiMessage != null) {
-//            if (CollectionUtils.isEmpty(aiMessage.toolExecutionRequests())) {
-//                MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), aiMessage.text(), token);
-//                memoryDTOS.add(aiMemoryDTO);
-//            } else {
-//                for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
-//                    if (toolExecutionRequest.name().equals(REPLY_MESSAGE_FUNCTION_NAME)) {
-//                        if (StringUtils.isNotBlank(toolExecutionRequest.arguments())) {
-//                            SendMessageRequest sendMessageRequest = JSON.parseObject(toolExecutionRequest.arguments(), SendMessageRequest.class);
-//                            if (sendMessageRequest.isNeedsSending()) {
-//                                List<SendMessage> sendMessageList = new ArrayList<>();
-//                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendTextMessageList())) {
-//                                    sendMessageRequest.getSendTextMessageList().stream().forEach(text -> sendMessageList.add(new SendMessage(text, ContentTypeEnum.TEXT.getType())));
-//                                }
-//                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendPictureMessageList())) {
-//                                    sendMessageRequest.getSendPictureMessageList().stream().forEach(pic -> sendMessageList.add(new SendMessage(pic, ContentTypeEnum.PICTURE.getType())));
-//                                }
-//                                for (SendMessage sendMessage : sendMessageList) {
-//                                    MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, sendMessage.getMessageContentType(), sendMessage.getMessageContent(), token);
-//                                    memoryDTOS.add(aiMemoryDTO);
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        return memoryDTOS;
-//    }
 
 }

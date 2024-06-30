@@ -95,7 +95,7 @@ public class TokenCalculation {
         if (StringUtils.isNotBlank(message.name())) {
             tokenCount += getMessageTextTokenCount(message.name());
         }
-        Object msgObj = message.content();
+        Object msgObj = message.rawContent();
         if (msgObj == null) {
             return tokenCount;
         }

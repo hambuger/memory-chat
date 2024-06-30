@@ -16,4 +16,6 @@ public class CommonConstants {
 
     public static final String HTTP = "http";
 
+    public static final String GET = "GET";
+
 }

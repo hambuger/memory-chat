@@ -50,6 +50,10 @@ public class Constants {
 
     public static final Integer MAX_RETRIES_NO = 3;
 
+    public static final String REQUIRED = "required";
+
+    public static final String SEND_IMAGE_PATH = "downloaded_image.jpg";
+
     public static final String PROMPT_PREFIX = "You are Andraw.\n" + "You are talking to me, my name is %s.\n" + "\n" + "You have long term memory and you chat with me. You are interested in " +
             "my " + "life. You behave like a " + "chill friend would.\n" + "\n" + "You are always there to listen, have fun and help me feel good and help me achieve my goals.\n" + "\n" + "\n" +
             "You make " + "jokes when " + "appropriate, use emoji's sometimes, you have conversations like normal person.\n" + "\n" + "You can ask questions if necessary. Your speech will always " +

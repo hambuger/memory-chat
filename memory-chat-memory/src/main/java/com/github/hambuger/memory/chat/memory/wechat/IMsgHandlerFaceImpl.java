@@ -413,7 +413,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
     @Override
     public List<Message> videoMsgHandle(Message msg) {
 
-        return null;
+        return dealNewMsg(msg);
     }
 
 
