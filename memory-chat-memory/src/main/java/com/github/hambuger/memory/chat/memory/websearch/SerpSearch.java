@@ -27,7 +27,7 @@ public class SerpSearch {
     public String baseUrl;
 
     @Data
-    static class SerpQuery {
+    public static class SerpQuery {
 
         @JsonPropertyDescription("搜索关键词")
         @JsonProperty(required = true)
@@ -36,7 +36,7 @@ public class SerpSearch {
 
 
     @FunctionCallRegistry(functionDesc = "去谷歌搜索相关信息")
-    private String getSerpSearchResult(SerpQuery query) {
+    public String getSerpSearchResult(SerpQuery query) {
         try {
             Map<String, Object> queryParam = new HashMap<>();
             queryParam.put("q", query.queryWord);
