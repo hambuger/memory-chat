@@ -391,7 +391,7 @@ public class ChatCompletionsApi {
                 fileList.add(audioPathAntText.get(0));
             }
             fileList.addAll(imageList);
-            return getVideInfoText(memoryDTO.getMessageCreatorName(), imageList, audioPathAntText.get(1));
+            return getVideInfoText(Optional.ofNullable(memoryDTO.getRealCreatorName()).orElse(memoryDTO.getMessageCreatorName()), imageList, audioPathAntText.get(1));
         } catch (Exception e) {
             log.error("getVideoInfo error", e);
         } finally {
