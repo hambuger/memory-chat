@@ -8,6 +8,7 @@ package com.github.hambuger.memory.chat.memory.emoji;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -24,43 +25,48 @@ import java.util.Map;
 
 public class Spider {
 
-    public static void main(String[] args) {
+    public static String searchEmoji(String word) {
         String baseUrl = "http://fabiaoqing.com";
-        String searchUrl = baseUrl + "/search/bqb/keyword/药水哥/type/bq/page/1.html";
+        String searchUrl = baseUrl + "/search/bqb/keyword/" + word + "/type/bq/page/1.html";
 
         try {
             // 获取页面内容
             Document doc = Jsoup.connect(searchUrl).userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36").get();
 
             // 创建保存图片的目录
-            String directory = "./images/";
+            String directory = "C:\\Users\\Administrator\\IdeaProjects\\memory-chat\\temp\\emoji";
             Files.createDirectories(Paths.get(directory));
 
             // 解析图片信息
             Elements imgList = doc.select("img.ui.image.bqppsearch.lazy");
-            for (Element img : imgList) {
-                String imgUrl = img.attr("data-original");
-                String imgTitle = img.attr("title");
-
-                System.out.println(imgUrl + " " + imgTitle);
-
-                try {
-                    // 构造图片保存路径
-                    String extension = imgUrl.substring(imgUrl.lastIndexOf("."));
-                    String filePath = directory + imgTitle + extension;
-
-                    // 下载图片
-                    downloadImage(imgUrl, filePath);
-
-                    System.out.println("保存成功: " + imgTitle);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            if (CollectionUtils.isEmpty(imgList)) {
+                return null;
             }
+            Element img = imgList.get(0);
+            String imgUrl = img.attr("data-original");
+            String imgTitle = img.attr("title");
+
+            System.out.println(imgUrl + " " + imgTitle);
+
+            try {
+                // 构造图片保存路径
+                String extension = imgUrl.substring(imgUrl.lastIndexOf("."));
+                String filePath = directory + imgTitle + extension;
+
+                // 下载图片
+                downloadImage(imgUrl, filePath);
+
+                System.out.println("保存成功: " + imgTitle);
+                return filePath;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
 

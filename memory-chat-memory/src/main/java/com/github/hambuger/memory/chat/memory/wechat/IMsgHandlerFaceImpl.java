@@ -5,12 +5,14 @@ import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
 import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
+import com.github.hambuger.memory.chat.memory.emoji.Spider;
 import com.github.hambuger.memory.chat.memory.util.FileUtil;
 import com.github.hambuger.memory.chat.wechat.api.ContactsTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
 import com.github.hambuger.memory.chat.wechat.constant.WxReqParamsConstant;
 import com.github.hambuger.memory.chat.wechat.constant.WxRespConstant;
 import com.github.hambuger.memory.chat.wechat.core.Core;
+import com.github.hambuger.memory.chat.wechat.dto.response.msg.send.WebWXSendMsgResponse;
 import com.github.hambuger.memory.chat.wechat.entity.Message;
 import com.github.hambuger.memory.chat.wechat.entity.Status;
 import com.github.hambuger.memory.chat.wechat.service.IMsgHandlerFace;
@@ -28,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @Log4j2
@@ -75,6 +78,8 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         //            }
         //        }
     }
+
+    private static ConcurrentHashMap<String, String> emojiAndMediaIdMap = new ConcurrentHashMap<>();
 
 
     /**
@@ -134,13 +139,11 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
             case "/h":
                 if (msg.isGroup()) {
                     //群消息
-                    messages.add(Message.builder().content("1、【oauto/cauto】\n\t开启/关闭群消息自动回复\n" + "2、【opundo/cpundo】\n\t开启/关闭群消息防撤回\n" + "3、【ggr】\n\t群成员性别比例图\n" + "4、【gpr】\n\t群成员省市分布图\n" + "5、【op/cp"
-                            + "】\n\t开启/关闭全局个人用户消息自动回复\n" + "6、【gma10】\n\t群成员活跃度TOP10\n" + "7、【mf10】\n\t聊天消息关键词TOP10\n" + "8、【mft10】\n\t聊天消息类型TOP10\n").toUsername(toUserName).msgType(WxReqParamsConstant.WXSendMsgCodeEnum.TEXT.getCode()).build());
+                    messages.add(Message.builder().content("1、【oauto/cauto】\n\t开启/关闭群消息自动回复\n" + "2、【opundo/cpundo】\n\t开启/关闭群消息防撤回\n" + "3、【ggr】\n\t群成员性别比例图\n" + "4、【gpr】\n\t群成员省市分布图\n" + "5、【op/cp" + "】\n\t开启/关闭全局个人用户消息自动回复\n" + "6、【gma10】\n\t群成员活跃度TOP10\n" + "7、【mf10】\n\t聊天消息关键词TOP10\n" + "8、【mft10】\n\t聊天消息类型TOP10\n").toUsername(toUserName).msgType(WxReqParamsConstant.WXSendMsgCodeEnum.TEXT.getCode()).build());
 
-                }else {
+                } else {
                     //个人消息
-                    messages.add(Message.builder().content("1、【oauto/cauto】\n\t开启/关闭当前联系人自动回复\n" + "2、【opundo/cpundo】\n\t开启/关闭当前联系人消息防撤回\n" + "3、【op/cp】\n\t开启/关闭全局个人用户消息自动回复\n" + "4、【mf10】\n\t" +
-                            "聊天消息关键词TOP10\n" + "5、【gma10】\n\t活跃度TOP\n" + "6、【updateinfo】\n\t好友属性更新次数排行\n" + "7、【mft10】\n\t聊天消息类型TOP10\n").toUsername(toUserName).msgType(WxReqParamsConstant.WXSendMsgCodeEnum.TEXT.getCode()).build());
+                    messages.add(Message.builder().content("1、【oauto/cauto】\n\t开启/关闭当前联系人自动回复\n" + "2、【opundo/cpundo】\n\t开启/关闭当前联系人消息防撤回\n" + "3、【op/cp】\n\t开启/关闭全局个人用户消息自动回复\n" + "4、【mf10】\n\t" + "聊天消息关键词TOP10\n" + "5、【gma10】\n\t活跃度TOP\n" + "6、【updateinfo】\n\t好友属性更新次数排行\n" + "7、【mft10】\n\t聊天消息类型TOP10\n").toUsername(toUserName).msgType(WxReqParamsConstant.WXSendMsgCodeEnum.TEXT.getCode()).build());
                 }
                 break;
             case "op":
@@ -225,7 +228,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
                     //                    String imgPath = chartUtil.makeWXMemberOfGroupActivityFile(toUserName);
                     //                    messages.add(MessageTools.toPicMessage(imgPath, toUserName));
                     log.info("计算【" + remarkNameByGroupUserName + "】成员活跃度");
-                }else {
+                } else {
                     //                    String imgPath = chartUtil.makeWXUserActivityFile(toUserName);
                     //                    messages.add(MessageTools.toPicMessage(imgPath, toUserName));
                     log.info("计算聊天双方消息数");
@@ -338,7 +341,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         ExtraBaseMemoryDTO baseMemoryDTO = new ExtraBaseMemoryDTO();
         baseMemoryDTO.setMessageContent(msg.getContent());
         ContentTypeEnum sendMsgContentTypeEnum = ContentTypeEnum.getByWxType(msg.getMsgType());
-        if(sendMsgContentTypeEnum == null){
+        if (sendMsgContentTypeEnum == null) {
             // 不支持类型处理
             return null;
         }
@@ -366,8 +369,23 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
                 String filePath = FileUtil.downloadImage(sendMessage.getMessageContent());
                 message.setFilePath(filePath);
                 message.setContent(null);
+            } else if (contentTypeEnum == ContentTypeEnum.EMOJI) {
+                if (emojiAndMediaIdMap.get(sendMessage.getMessageContent()) == null) {
+                    String emojiPath = Spider.searchEmoji(sendMessage.getMessageContent());
+                    if (StringUtils.isBlank(emojiPath)) {
+                        message.setMsgType(ContentTypeEnum.TEXT.getMsgType());
+                    } else {
+                        message.setFilePath(emojiPath);
+                    }
+                } else {
+                    message.setMediaId(emojiAndMediaIdMap.get(sendMessage.getMessageContent()));
+                }
+                message.setContent(null);
             }
-            MessageTools.sendMsgByUserId(message);
+            WebWXSendMsgResponse webWXSendMsgResponse = MessageTools.sendMsgByUserId(message);
+            if (contentTypeEnum == ContentTypeEnum.EMOJI) {
+                emojiAndMediaIdMap.put(sendMessage.getMessageContent(), webWXSendMsgResponse.getMediaId());
+            }
         }
         return null;
     }

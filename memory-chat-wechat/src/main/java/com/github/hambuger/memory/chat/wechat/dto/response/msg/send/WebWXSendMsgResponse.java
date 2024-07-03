@@ -26,6 +26,7 @@ public class WebWXSendMsgResponse {
     private String MsgID;
     private String LocalID;
     private List<Message> messageList;
+    private String mediaId;
 
     @Data
     @Builder

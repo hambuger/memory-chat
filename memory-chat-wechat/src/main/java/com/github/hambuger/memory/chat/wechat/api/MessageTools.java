@@ -118,7 +118,7 @@ public class MessageTools {
                             sendMsgResponse = sendMapMsgByUserId(toUserName, content);
                             break;
                         case MSGTYPE_EMOTICON:
-                            sendMsgResponse = sendEmotionMsgByUserId(toUserName, message.getFilePath(), content);
+                            sendMsgResponse = sendEmotionMsgByUserId(toUserName, message.getFilePath(), message.getMediaId(), content);
                             break;
                         case MSGTYPE_SHARECARD:
                             sendMsgResponse = sendCardMsgByUserId(toUserName, content);
@@ -476,7 +476,7 @@ public class MessageTools {
      * @author SXS
      * @date 2017年5月7日 下午10:34:24
      */
-    private static WebWXSendMsgResponse sendEmotionMsgByUserId(String userId, String filePath, String content) throws WebWXException, IOException {
+    private static WebWXSendMsgResponse sendEmotionMsgByUserId(String userId, String filePath, String mediaId, String content) throws WebWXException, IOException {
 
         String url = String.format(WxURLEnum.WEB_WX_SEND_EMOTION_MSG.getUrl(),  Core.getLoginResultData().getUrl());
 
@@ -493,8 +493,12 @@ public class MessageTools {
         }
 
         if (md5 == null) {
-            WebWXUploadMediaResponse resp = webWxUploadMedia(filePath, Core.getUserName(), userId);
-            textMsg.MediaId = resp.getMediaId();
+            if (mediaId == null) {
+                WebWXUploadMediaResponse resp = webWxUploadMedia(filePath, Core.getUserName(), userId);
+                textMsg.MediaId = resp.getMediaId();
+            } else {
+                textMsg.MediaId = mediaId;
+            }
             textMsg.EmojiFlag = 2;
         } else {
             textMsg.EMoticonMd5 = md5;
@@ -502,7 +506,9 @@ public class MessageTools {
         textMsg.ToUserName = userId;
         msgRequest.Scene = 2;
         msgRequest.Msg = textMsg;
-        return sendMsg(msgRequest, url);
+        WebWXSendMsgResponse webWXSendMsgResponse = sendMsg(msgRequest, url);
+        webWXSendMsgResponse.setMediaId(textMsg.MediaId);
+        return webWXSendMsgResponse;
 
     }
 

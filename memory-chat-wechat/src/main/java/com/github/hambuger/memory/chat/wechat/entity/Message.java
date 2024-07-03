@@ -54,6 +54,8 @@ public class Message implements Comparable<Message>{
      */
     private String filePath;
 
+    private String mediaId;
+
     private String msgJson;
 
     private String fromUsername;

@@ -230,6 +230,14 @@ public class ChatCompletionsApi {
                                         sendMessageList.add(sendMessage);
                                     }
                                 }
+                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendEmojiMessageList())) {
+                                    for (String emoji : sendMessageRequest.getSendEmojiMessageList()) {
+                                        SendMessage sendMessage = new SendMessage();
+                                        sendMessage.setMessageContent(emoji.replaceAll("[\\[\\]]", ""));
+                                        sendMessage.setMessageContentType(ContentTypeEnum.EMOJI.getType());
+                                        sendMessageList.add(sendMessage);
+                                    }
+                                }
                             }
                         }
                     }
@@ -313,6 +321,9 @@ public class ChatCompletionsApi {
                                 }
                                 if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendPictureMessageList())) {
                                     sendMessageRequest.getSendPictureMessageList().stream().forEach(pic -> sendMessageList.add(new SendMessage(pic, ContentTypeEnum.PICTURE.getType())));
+                                }
+                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendEmojiMessageList())) {
+                                    sendMessageRequest.getSendEmojiMessageList().stream().forEach(emoji -> sendMessageList.add(new SendMessage(String.format("[%s]",emoji), ContentTypeEnum.EMOJI.getType())));
                                 }
                                 for (SendMessage sendMessage : sendMessageList) {
                                     if (StringUtils.isBlank(sendMessage.getMessageContentType()) || StringUtils.isBlank(sendMessage.getMessageContent())) {
