@@ -5,7 +5,7 @@ import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
 import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
-import com.github.hambuger.memory.chat.memory.emoji.Spider;
+import com.github.hambuger.memory.chat.memory.emoji.EmojiSpider;
 import com.github.hambuger.memory.chat.memory.util.FileUtil;
 import com.github.hambuger.memory.chat.wechat.api.ContactsTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
@@ -57,6 +57,9 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
 
     @Resource
     private ChatCompletionsApi chatCompletionsApi;
+
+    @Resource
+    private EmojiSpider emojiSpider;
 
 
     /**
@@ -371,7 +374,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
                 message.setContent(null);
             } else if (contentTypeEnum == ContentTypeEnum.EMOJI) {
                 if (emojiAndMediaIdMap.get(sendMessage.getMessageContent()) == null) {
-                    String emojiPath = Spider.searchEmoji(sendMessage.getMessageContent());
+                    String emojiPath = emojiSpider.searchEmoji(sendMessage.getMessageContent());
                     if (StringUtils.isBlank(emojiPath)) {
                         message.setMsgType(ContentTypeEnum.TEXT.getMsgType());
                     } else {

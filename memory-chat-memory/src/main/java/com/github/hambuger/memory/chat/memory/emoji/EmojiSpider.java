@@ -13,29 +13,45 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 
-public class Spider {
 
-    public static String searchEmoji(String word) {
-        String baseUrl = "http://fabiaoqing.com";
-        String searchUrl = baseUrl + "/search/bqb/keyword/" + word + "/type/bq/page/1.html";
+@Slf4j
+@Component
+public class EmojiSpider {
+
+    @Value("${emoji.baseUrlPrefix}")
+    private String baseUrl;
+
+    @Value("${emoji.urlContent}")
+    private String urlContent;
+
+    @Value("${emoji.userAgent}")
+    private String userAgent;
+
+    @Value("${emoji.directory}")
+    private String directory;
+
+
+    public String searchEmoji(String word) {
+        String searchUrl = baseUrl + String.format(userAgent, word);
 
         try {
             // 获取页面内容
-            Document doc = Jsoup.connect(searchUrl).userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36").get();
-
-            // 创建保存图片的目录
-            String directory = "C:\\Users\\Administrator\\IdeaProjects\\memory-chat\\temp\\emoji";
-            Files.createDirectories(Paths.get(directory));
+            Document doc = Jsoup.connect(searchUrl).userAgent(userAgent).get();
+            if (Files.notExists(Paths.get(directory))) {
+                Files.createDirectories(Paths.get(directory));
+            }
 
             // 解析图片信息
             Elements imgList = doc.select("img.ui.image.bqppsearch.lazy");
@@ -45,9 +61,6 @@ public class Spider {
             Element img = imgList.get(0);
             String imgUrl = img.attr("data-original");
             String imgTitle = img.attr("title");
-
-            System.out.println(imgUrl + " " + imgTitle);
-
             try {
                 // 构造图片保存路径
                 String extension = imgUrl.substring(imgUrl.lastIndexOf("."));
@@ -55,26 +68,23 @@ public class Spider {
 
                 // 下载图片
                 downloadImage(imgUrl, filePath);
-
-                System.out.println("保存成功: " + imgTitle);
                 return filePath;
             } catch (Exception e) {
-                e.printStackTrace();
+                log.warn("searchEmoji error", e);
             }
 
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.warn("searchEmoji error", e);
         }
         return null;
     }
 
 
     // 下载图片方法
-    private static void downloadImage(String imageUrl, String destinationFilePath) throws Exception {
+    private void downloadImage(String imageUrl, String destinationFilePath) throws Exception {
         Map<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
-        headers.put("Referer", "https://fabiaoqing.com/");
+        headers.put("User-Agent", userAgent);
+        headers.put("Referer", baseUrl);
         HttpResponse<InputStream> response = Unirest.get(imageUrl).queryString(null).headers(headers).asBinary();
         try (InputStream in = response.getBody(); FileOutputStream out = new FileOutputStream(destinationFilePath)) {
             byte[] buffer = new byte[4096];
