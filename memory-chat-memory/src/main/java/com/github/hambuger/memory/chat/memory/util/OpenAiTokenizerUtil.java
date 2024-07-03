@@ -1,6 +1,6 @@
 package com.github.hambuger.memory.chat.memory.util;
 
-import com.github.hambuger.memory.chat.memory.constants.Constants;
+import com.github.hambuger.memory.chat.memory.constants.LangChainConstants;
 
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.openai.OpenAiTokenizer;
@@ -12,7 +12,7 @@ import dev.langchain4j.model.openai.OpenAiTokenizer;
  */
 public class OpenAiTokenizerUtil {
 
-    private static OpenAiTokenizer openAiTokenizer = new OpenAiTokenizer(Constants.MODEL_NAME);
+    private static OpenAiTokenizer openAiTokenizer = new OpenAiTokenizer(LangChainConstants.MODEL_NAME);
 
 
     public static int getTextToken(String text) {

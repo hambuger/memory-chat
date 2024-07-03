@@ -1,7 +1,7 @@
 package com.github.hambuger.memory.chat.memory.rag;
 
 import com.github.hambuger.memory.chat.memory.chat.LangChainChat;
-import com.github.hambuger.memory.chat.memory.constants.Constants;
+import com.github.hambuger.memory.chat.memory.constants.LangChainConstants;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -32,7 +32,7 @@ public class LangChainRag {
 
     public static String generateAnswerWithAiRAG(String question) {
 
-        List<Document> documents = FileSystemDocumentLoader.loadDocuments(toPath(Constants.DIRECTORY_PATH));
+        List<Document> documents = FileSystemDocumentLoader.loadDocuments(toPath(LangChainConstants.DIRECTORY_PATH));
 
         EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
 

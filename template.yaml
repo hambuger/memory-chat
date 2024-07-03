@@ -13,6 +13,15 @@ spring:
         options:
           model: gpt-4o
           temperature: 0.0
+      embeddings:
+        options:
+          model: text-embedding-3-small
+      image:
+        options:
+          model: dall-e-3
+          size: 1792x1024
+      temperature: 0.0
+
 wechat:
   app-version: 1.0
   login-title: 微信登录
@@ -44,5 +53,13 @@ emoji:
   userAgent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36
   directory: ${user.dir}/temp/emoji
 
+es:
+  url: 127.0.0.1
+  port: 9200
 
+reflection:
+  tokenLimit: 10000
+
+chatMemoryIndex: chat_memory
+maxMsgToken: 50000
 

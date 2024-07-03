@@ -1,10 +1,11 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
+import com.google.common.collect.Lists;
+
 import com.alibaba.fastjson.JSON;
-import com.github.hambuger.memory.chat.memory.constants.Constants;
+import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.util.CallFunctionRegistryFactory;
 
-import jakarta.annotation.PostConstruct;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -16,20 +17,22 @@ import org.springframework.boot.web.client.ClientHttpRequestFactorySettings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.reactive.function.client.WebClient;
 
-import static com.github.hambuger.memory.chat.memory.constants.Constants.REPLY_MESSAGE_FUNCTION_NAME;
-import static com.github.hambuger.memory.chat.memory.constants.Constants.REQUIRED;
+import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
+import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.REQUIRED;
 
 
 /**
@@ -45,6 +48,12 @@ public class SpringAiChat {
 
     @Value("${spring.ai.openai.base-url}")
     private String baseUrl;
+
+    @Value("${spring.ai.openai.temperature}")
+    private Float temperature;
+
+    @Value("${spring.ai.openai.chat.options.model}")
+    private String modelName;
 
     private OpenAiApi openAiApi;
 
@@ -72,7 +81,7 @@ public class SpringAiChat {
         }
 
         OpenAiChatOptions chatOptions =
-                OpenAiChatOptions.builder().withModel(Constants.MODEL_NAME).withTools(tools).withToolChoice(REQUIRED).withTemperature(0.0f).build();
+                OpenAiChatOptions.builder().withModel(modelName).withTools(tools).withToolChoice(REQUIRED).withTemperature(temperature).build();
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
         if (response == null || CollectionUtils.isEmpty(response.getBody().choices()) || response.getBody().choices().get(0).message().toolCalls().stream().anyMatch(tool -> tool.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME))) {
@@ -90,13 +99,22 @@ public class SpringAiChat {
         return generateMsgWithMsgListAndFunctions(messages);
     }
 
-    public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages) {
+    public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages, boolean jsonFormat) {
         OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
-        OpenAiChatOptions chatOptions =
-                OpenAiChatOptions.builder().withModel(Constants.MODEL_NAME).withTemperature(0.0f).build();
+        OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().withModel(modelName).withTemperature(temperature).build();
+        if (jsonFormat) {
+            chatOptions.setResponseFormat(new OpenAiApi.ChatCompletionRequest.ResponseFormat(MemoryChatConstants.JSON_OBJECT));
+        }
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
         return  response.getBody();
+    }
+
+    public String generateJsonWithSingleMsgAndPrompt(String prompt) {
+        List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(new OpenAiApi.ChatCompletionMessage.MediaContent(prompt),
+                OpenAiApi.ChatCompletionMessage.Role.USER));
+        OpenAiApi.ChatCompletion chatCompletion = generateMsgWithMsgList(messages, true);
+        return Optional.ofNullable(chatCompletion).map(OpenAiApi.ChatCompletion::choices).map(list -> list.get(0)).map(OpenAiApi.ChatCompletion.Choice::message).map(OpenAiApi.ChatCompletionMessage::content).orElse(null);
     }
 
 }

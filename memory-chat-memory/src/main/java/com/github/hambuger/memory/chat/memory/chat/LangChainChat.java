@@ -1,6 +1,7 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
-import com.github.hambuger.memory.chat.memory.constants.Constants;
+import com.github.hambuger.memory.chat.memory.constants.LangChainConstants;
+import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.util.CallFunctionRegistryFactory;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -18,7 +19,7 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.output.Response;
 
-import static com.github.hambuger.memory.chat.memory.constants.Constants.REPLY_MESSAGE_FUNCTION_NAME;
+import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
 
 
 /**
@@ -28,10 +29,10 @@ import static com.github.hambuger.memory.chat.memory.constants.Constants.REPLY_M
 public class LangChainChat {
 
     public static OpenAiChatModel FORMAT_JSON_MODEL =
-            OpenAiChatModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL, Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).temperature(Constants.TEMPLATE).logRequests(true).logResponses(true).modelName(Constants.MODEL_NAME).responseFormat(Constants.JSON_OBJECT).maxRetries(Constants.MAX_RETRIES_NO).build();
+            OpenAiChatModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(LangChainConstants.LOCAL, LangChainConstants.PROXY_PORT))).baseUrl(LangChainConstants.API_HOST).apiKey(LangChainConstants.API_KEY).temperature(LangChainConstants.TEMPLATE).logRequests(true).logResponses(true).modelName(LangChainConstants.MODEL_NAME).responseFormat(MemoryChatConstants.JSON_OBJECT).maxRetries(MemoryChatConstants.MAX_RETRIES_NO).build();
 
     public static OpenAiChatModel COMMON_CHAT_MODEL =
-            OpenAiChatModel.builder().maxRetries(Constants.MAX_RETRIES_NO).proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL, Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).temperature(Constants.TEMPLATE).logRequests(true).logResponses(true).modelName(Constants.MODEL_NAME).build();
+            OpenAiChatModel.builder().maxRetries(MemoryChatConstants.MAX_RETRIES_NO).proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(LangChainConstants.LOCAL, LangChainConstants.PROXY_PORT))).baseUrl(LangChainConstants.API_HOST).apiKey(LangChainConstants.API_KEY).temperature(LangChainConstants.TEMPLATE).logRequests(true).logResponses(true).modelName(LangChainConstants.MODEL_NAME).build();
 
 
     public static String generateJsonWithSingleMsgAndPrompt(String msg) {

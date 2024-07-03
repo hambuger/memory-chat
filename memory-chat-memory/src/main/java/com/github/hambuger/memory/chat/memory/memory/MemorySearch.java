@@ -3,14 +3,13 @@ package com.github.hambuger.memory.chat.memory.memory;
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
-import com.github.hambuger.memory.chat.memory.constants.Constants;
 import com.github.hambuger.memory.chat.memory.elasticsearch.EsClient;
-import com.github.hambuger.memory.chat.memory.embeddings.TextEmbeddings;
+import com.github.hambuger.memory.chat.memory.embeddings.SpringAiEmbeddings;
+import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -23,6 +22,8 @@ import org.elasticsearch.index.query.functionscore.ScriptScoreFunctionBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,17 +32,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
  * @author hamburger
  * @since 2024/6/13
  */
+@Slf4j
+@Component
 public class MemorySearch {
 
-    public static List<MemoryDTO> searchRelationMemory(String ownerId, String creatorId, String content) {
-        List<Float> contentVector = TextEmbeddings.generateTextEmbeddings(content);
+    @Resource
+    private SpringAiEmbeddings springAiEmbeddings;
+
+    @Resource
+    private EsClient esClient;
+
+    @Value("${chatMemoryIndex}")
+    private String chatMemoryIndex;
+
+
+    public List<MemoryDTO> searchRelationMemory(String ownerId, String creatorId, String content) {
+        List<Double> contentVector = springAiEmbeddings.generateTextEmbeddings(content);
         BoolQueryBuilder mustQuery = QueryBuilders.boolQuery();
         // 排除图片和系统消息
         mustQuery.must(new TermQueryBuilder("messageContentType", ContentTypeEnum.TEXT.getType()));
@@ -70,11 +84,11 @@ public class MemorySearch {
             put("query_vector", contentVector);
         }})))}).scoreMode(FunctionScoreQuery.ScoreMode.SUM).boostMode(CombineFunction.REPLACE).setMinScore(10));
 
-        SearchRequest searchRequest = new SearchRequest(Constants.CHAT_MEMORY_INDEX);
+        SearchRequest searchRequest = new SearchRequest(chatMemoryIndex);
         searchRequest.source(searchSourceBuilder);
         try {
             // 执行查询
-            SearchResponse searchResponse = EsClient.client.search(searchRequest, RequestOptions.DEFAULT);
+            SearchResponse searchResponse = esClient.search(searchRequest);
 
             return Arrays.stream(searchResponse.getHits().getHits()).map(hit -> JSON.parseObject(hit.getSourceAsString(), MemoryDTO.class)).collect(Collectors.toList());
         } catch (Exception e) {

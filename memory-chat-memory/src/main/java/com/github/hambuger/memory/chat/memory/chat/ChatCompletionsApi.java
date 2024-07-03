@@ -1,34 +1,39 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.lang.Pair;
+import com.google.common.collect.Lists;
+
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.audio.SpringAiAudio;
-import com.github.hambuger.memory.chat.memory.chat.dto.*;
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
+import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
+import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
+import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
+import com.github.hambuger.memory.chat.memory.chat.dto.SpringAiChatMessageMemoryDTO;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
-import com.github.hambuger.memory.chat.memory.constants.Constants;
+import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.memory.MemoryInsert;
 import com.github.hambuger.memory.chat.memory.memory.MemorySearch;
 import com.github.hambuger.memory.chat.memory.memory.MemoryUpdate;
 import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
-import com.github.hambuger.memory.chat.memory.util.*;
+import com.github.hambuger.memory.chat.memory.util.FileUtil;
+import com.github.hambuger.memory.chat.memory.util.IdUtil;
+import com.github.hambuger.memory.chat.memory.util.ImageUploadUtils;
+import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
+import com.github.hambuger.memory.chat.memory.util.VideoUtil;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
 import com.github.hambuger.memory.chat.wechat.entity.Message;
-import com.google.common.collect.Lists;
-import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
@@ -36,13 +41,30 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.Pair;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.DOUBLE_COLON;
 import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.YES_STR;
-import static com.github.hambuger.memory.chat.memory.constants.Constants.*;
+import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.EMOJI_TYPE;
+import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.IMAGE_TYPE;
+import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
 import static java.lang.String.format;
 
 
@@ -59,6 +81,12 @@ public class ChatCompletionsApi {
 
     private static final AtomicReference<ConcurrentHashMap<String, String>> LAST_MESSAGE_ID_MAP = new AtomicReference<>(new ConcurrentHashMap());
 
+    @Value("${spring.ai.openai.chat.options.model}")
+    private String modelName;
+
+    @Value("${maxMsgToken}")
+    private Integer maxMsgToken;
+
     @Autowired
     private SpringAiAudio springAiAudio;
 
@@ -70,6 +98,15 @@ public class ChatCompletionsApi {
 
     @Resource
     private ImageUploadUtils imageUploadUtils;
+
+    @Resource
+    private MemoryInsert memoryInsert;
+
+    @Resource
+    private MemorySearch memorySearch;
+
+    @Resource
+    private MemoryUpdate memoryUpdate;
 
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
@@ -84,10 +121,10 @@ public class ChatCompletionsApi {
             log.info("get a new msg:{}", JSON.toJSONString(baseMemoryDTO));
             SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
-            String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + Constants.MSG_LIST_KEY_SUFFIX;
+            String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
             RedisLikeCounter.addMsg(msgListKey, MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
-            CHAT_POOL.execute(() -> MemoryInsert.insertNewMemory(memoryDTO));
+            CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(memoryDTO));
             // 更新最后一条消息id
             LAST_MESSAGE_ID_MAP.get().put(lastMsgIdMapKey, memoryDTO.getMessageId());
             // 检查是否是最后一条消息
@@ -95,7 +132,7 @@ public class ChatCompletionsApi {
                 return null;
             }
             // 查询相关性最高的历史消息
-            List<MemoryDTO> searchMemoryList = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) ? MemorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(), memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent()) : new ArrayList<>();
+            List<MemoryDTO> searchMemoryList = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) ? memorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(), memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent()) : new ArrayList<>();
 
             List<MemoryDTO> memoryDTOS = RedisLikeCounter.getMsg(msgListKey);
             if (checkLastMessageId(memoryDTO)) {
@@ -125,7 +162,7 @@ public class ChatCompletionsApi {
             }
             CHAT_POOL.execute(() -> {
                 List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiMessageResponse.usage().completionTokens());
-                aiMsgDTOList.forEach(MemoryInsert::insertNewMemory);
+                aiMsgDTOList.forEach(memoryInsert::insertNewMemory);
             });
             ChatResponse chatResponse = new ChatResponse();
             // 转换成发送消息
@@ -153,7 +190,7 @@ public class ChatCompletionsApi {
             if (StringUtils.isBlank(prompt)) {
                 return false;
             }
-            String aiResponse = LangChainChat.generateJsonWithSingleMsgAndPrompt(prompt);
+            String aiResponse = springAiChat.generateJsonWithSingleMsgAndPrompt(prompt);
             if (StringUtils.isBlank(aiResponse)) {
                 return false;
             }
@@ -170,7 +207,7 @@ public class ChatCompletionsApi {
                     sendMessage.setMsgType(ContentTypeEnum.TEXT.getMsgType());
                     sendMessageList.add(sendMessage);
                     MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), text, 0);
-                    CHAT_POOL.execute(() -> MemoryInsert.insertNewMemory(aiMemoryDTO));
+                    CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(aiMemoryDTO));
                 }
             } else {
                 return false;
@@ -248,13 +285,13 @@ public class ChatCompletionsApi {
     }
 
 
-    private static @NotNull OpenAiApi.ChatCompletionMessage getSystemMessage(MemoryDTO memoryDTO, List<MemoryDTO> searchMemoryList, List<String> existMsgIds) {
+    private @NotNull OpenAiApi.ChatCompletionMessage getSystemMessage(MemoryDTO memoryDTO, List<MemoryDTO> searchMemoryList, List<String> existMsgIds) {
         OpenAiApi.ChatCompletionMessage systemMessage;
         boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
         String now = DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT);
         // 选择prompt
         if (CollectionUtils.isEmpty(searchMemoryList)) {
-            systemMessage = new OpenAiApi.ChatCompletionMessage(String.format(groupFlag ? Constants.GROUP_PROMPT_PREFIX : Constants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + String.format(groupFlag ? Constants.GROUP_PROMPT_END : Constants.PROMPT_END, now), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+            systemMessage = new OpenAiApi.ChatCompletionMessage(String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_PREFIX : MemoryChatConstants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_END : MemoryChatConstants.PROMPT_END, now), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         } else {
             StringBuilder memory = new StringBuilder();
             for (int i = 1; i < searchMemoryList.size(); i++) {
@@ -263,9 +300,9 @@ public class ChatCompletionsApi {
                     continue;
                 }
                 memory.append(i).append("(").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorName()).orElse(memorySingle.getMessageCreatorName())).append(":").append(memorySingle.getMessageContent()).append("\n");
-                MemoryUpdate.updateMemoryAccessTime(memorySingle.getMessageId());
+                memoryUpdate.updateMemoryAccessTime(memorySingle.getMessageId());
             }
-            systemMessage = new OpenAiApi.ChatCompletionMessage(String.format(groupFlag ? Constants.GROUP_PROMPT_PREFIX : Constants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + (StringUtils.isNotBlank(memory) ? String.format(groupFlag ? Constants.GROUP_PROMPT_MID : Constants.PROMPT_MID, memory) : "") + String.format(groupFlag ? Constants.GROUP_PROMPT_END : Constants.PROMPT_END, now), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+            systemMessage = new OpenAiApi.ChatCompletionMessage(String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_PREFIX : MemoryChatConstants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + (StringUtils.isNotBlank(memory) ? String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_MID : MemoryChatConstants.PROMPT_MID, memory) : "") + String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_END : MemoryChatConstants.PROMPT_END, now), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         }
         return systemMessage;
     }
@@ -298,7 +335,7 @@ public class ChatCompletionsApi {
         memoryDTO.setMessageParentIds(Lists.newArrayList("0"));
         OpenAiApi.ChatCompletionMessage message = convertMemoryMsg2SpringAiModelMsg(memoryDTO);
         memoryDTO.setChatMessage(message);
-        memoryDTO.setUseToken(new TokenCalculation(Constants.MODEL_NAME).getUserMessageToken(message));
+        memoryDTO.setUseToken(new TokenCalculation(modelName).getUserMessageToken(message));
         return memoryDTO;
     }
 
@@ -436,7 +473,7 @@ public class ChatCompletionsApi {
             }
         }
         messageList.add(new OpenAiApi.ChatCompletionMessage(contentList, OpenAiApi.ChatCompletionMessage.Role.USER));
-        OpenAiApi.ChatCompletion response = springAiChat.generateMsgWithMsgList(messageList);
+        OpenAiApi.ChatCompletion response = springAiChat.generateMsgWithMsgList(messageList, false);
         String videoInfo = response.choices().get(0).message().content();
         return String.format("%s发送了一个视频。这个视频的信息如下：%s", creatorName, videoInfo);
     }
@@ -457,12 +494,12 @@ public class ChatCompletionsApi {
             }
             if (memoryDTO.getAiResponseFlag().equals(YES_STR)) {
                 chatMessage = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
-                sumMsgToken = sumMsgToken + new TokenCalculation(Constants.MODEL_NAME).getUserMessageToken(chatMessage);
+                sumMsgToken = sumMsgToken + new TokenCalculation(modelName).getUserMessageToken(chatMessage);
             } else {
                 chatMessage = convertMemoryMsg2SpringAiModelMsg(memoryDTO);
-                sumMsgToken = sumMsgToken + new TokenCalculation(Constants.MODEL_NAME).getUserMessageToken(chatMessage);
+                sumMsgToken = sumMsgToken + new TokenCalculation(modelName).getUserMessageToken(chatMessage);
             }
-            if (sumMsgToken < Constants.MAX_MSG_TOKEN) {
+            if (sumMsgToken < maxMsgToken) {
                 messageList.addFirst(chatMessage);
                 existMsgIdList.add(memoryDTO.getMessageId());
             } else {

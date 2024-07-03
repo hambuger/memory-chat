@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.GET;
-import static com.github.hambuger.memory.chat.memory.constants.Constants.SEND_IMAGE_PATH;
+import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.SEND_IMAGE_PATH;
 
 
 /**

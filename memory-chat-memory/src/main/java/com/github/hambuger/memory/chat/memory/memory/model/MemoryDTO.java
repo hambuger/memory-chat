@@ -46,7 +46,7 @@ public class MemoryDTO extends BaseMemoryDTO {
     /**
      * 消息向量
      */
-    private List<Float> messageContentVector;
+    private List<Double> messageContentVector;
 
 
     /**

@@ -2,7 +2,7 @@ package com.github.hambuger.memory.chat.memory.image;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.github.hambuger.memory.chat.memory.constants.Constants;
+import com.github.hambuger.memory.chat.memory.constants.LangChainConstants;
 
 import org.springframework.stereotype.Component;
 
@@ -13,12 +13,11 @@ import java.net.URI;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.openai.OpenAiImageModel;
 import dev.langchain4j.model.output.Response;
-import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import static dev.ai4j.openai4j.image.ImageModel.*;
+import static dev.ai4j.openai4j.image.ImageModel.DALL_E_3;
+import static dev.ai4j.openai4j.image.ImageModel.DALL_E_SIZE_1792_x_1024;
 
 
 /**
@@ -29,7 +28,7 @@ import static dev.ai4j.openai4j.image.ImageModel.*;
 public class LangChainImage {
 
     public static OpenAiImageModel IMAGE_MODEL =
-            OpenAiImageModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Constants.LOCAL, Constants.PROXY_PORT))).baseUrl(Constants.API_HOST).apiKey(Constants.API_KEY).modelName(DALL_E_3.toString()).size(DALL_E_SIZE_1792_x_1024).logRequests(true).logResponses(true).build();
+            OpenAiImageModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(LangChainConstants.LOCAL, LangChainConstants.PROXY_PORT))).baseUrl(LangChainConstants.API_HOST).apiKey(LangChainConstants.API_KEY).modelName(DALL_E_3.toString()).size(DALL_E_SIZE_1792_x_1024).logRequests(true).logResponses(true).build();
 
 
     @Data
@@ -42,7 +41,7 @@ public class LangChainImage {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "生成图片")
+//    @FunctionCallRegistry(functionDesc = "生成图片")
     public static String generateImage(ImageGenerateParam generateParam) {
 
         Response<Image> response = IMAGE_MODEL.generate(generateParam.getGenerateText());

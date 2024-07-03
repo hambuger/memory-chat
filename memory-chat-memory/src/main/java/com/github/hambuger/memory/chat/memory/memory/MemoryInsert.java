@@ -1,7 +1,5 @@
 package com.github.hambuger.memory.chat.memory.memory;
 
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
 import com.google.common.base.Objects;
 
 import com.alibaba.fastjson.JSON;
@@ -9,15 +7,19 @@ import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
-import com.github.hambuger.memory.chat.memory.constants.Constants;
+import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.elasticsearch.EsClient;
-import com.github.hambuger.memory.chat.memory.embeddings.TextEmbeddings;
+import com.github.hambuger.memory.chat.memory.embeddings.SpringAiEmbeddings;
+import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
+import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
+import com.github.hambuger.memory.chat.memory.util.IdUtil;
+import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
@@ -25,12 +27,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import dev.langchain4j.data.message.UserMessage;
-
-import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
-import com.github.hambuger.memory.chat.memory.util.IdUtil;
-import com.github.hambuger.memory.chat.memory.util.OpenAiTokenizerUtil;
-import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -38,17 +38,39 @@ import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
  * @since 2024/6/13
  */
 @Slf4j
+@Component
 public class MemoryInsert {
 
+    @Resource
+    private SpringAiEmbeddings springAiEmbeddings;
 
-    public static Boolean insertNewMemory(MemoryDTO memoryDTO) {
+    @Resource
+    private EsClient esClient;
+
+    @Resource
+    private MemoryImportantScore memoryImportantScore;
+
+    @Resource
+    private MemoryReflection memoryReflection;
+
+    @Value("${spring.ai.openai.chat.options.model}")
+    private String modelName;
+
+    @Value("${reflection.tokenLimit}")
+    private Integer reflectionTokenLimit;
+
+    @Value("${chatMemoryIndex}")
+    private String chatMemoryIndex;
+
+
+    public Boolean insertNewMemory(MemoryDTO memoryDTO) {
         if (StringUtils.isBlank(memoryDTO.getMessageId())) {
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
         }
         boolean userMsgFlag = StringUtils.equals(memoryDTO.getAiResponseFlag(), CommonConstants.NO_STR);
         if (!userMsgFlag) {
             String msgListKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + (Objects.equal(memoryDTO.getAiResponseFlag(), CommonConstants.NO_STR) ? memoryDTO.getMessageCreatorId() :
-                    memoryDTO.getMessageReceiveId()) + Constants.MSG_LIST_KEY_SUFFIX;
+                    memoryDTO.getMessageReceiveId()) + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
             RedisLikeCounter.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
         }
@@ -56,25 +78,25 @@ public class MemoryInsert {
         // 生成重要性分数
         String messageContent = memoryDTO.getMessageContent();
         if (textMsgFlag && userMsgFlag) {
-            Double score = MemoryImportantScore.generateImportantScore(messageContent);
+            Double score = memoryImportantScore.generateImportantScore(messageContent);
             memoryDTO.setMessageImportanceScore(score);
             // 生成消息向量
-            List<Float> vector = TextEmbeddings.generateTextEmbeddings(messageContent);
+            List<Double> vector = springAiEmbeddings.generateTextEmbeddings(messageContent);
             memoryDTO.setMessageContentVector(vector);
         }
         if (!userMsgFlag && ChatCompletionsApi.checkLastMessageId(memoryDTO)) {
             return false;
         }
-        IndexRequest indexRequest = new IndexRequest(Constants.CHAT_MEMORY_INDEX).id(memoryDTO.getMessageId()).source(JSON.toJSONString(memoryDTO), XContentType.JSON);
+        IndexRequest indexRequest = new IndexRequest(chatMemoryIndex).id(memoryDTO.getMessageId()).source(JSON.toJSONString(memoryDTO), XContentType.JSON);
         try {
-            EsClient.client.index(indexRequest, RequestOptions.DEFAULT);
+            esClient.index(indexRequest);
         } catch (IOException e) {
             log.error("insert memory error", e);
         }
         // 检查是否需要提炼
         if (userMsgFlag && textMsgFlag) {
             String depthLeafCountKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + memoryDTO.getMemoryLeafDepth();
-            String depthLeafListKey = memoryDTO.getMessageOwnerId() + Constants.DEPTH_LEAF_LIST_KEY_MID + memoryDTO.getMemoryLeafDepth();
+            String depthLeafListKey = memoryDTO.getMessageOwnerId() + MemoryChatConstants.DEPTH_LEAF_LIST_KEY_MID + memoryDTO.getMemoryLeafDepth();
             RedisLikeCounter.incrBy(depthLeafCountKey, memoryDTO.getUseToken());
             String jsonInfo = getAiUseJsonInfo(memoryDTO);
             RedisLikeCounter.addElement(depthLeafListKey, jsonInfo);
@@ -96,12 +118,12 @@ public class MemoryInsert {
     }
 
 
-    private static void checkAndInsertDepthLeafReflection(Integer leafDepth, String depthLeafKey, String depthLeafListKey, String ownerId, String ownerName, String ownerType) {
+    private void checkAndInsertDepthLeafReflection(Integer leafDepth, String depthLeafKey, String depthLeafListKey, String ownerId, String ownerName, String ownerType) {
         // 总token提炼限制
-        if (RedisLikeCounter.get(depthLeafKey) < Constants.REFLECTION_TOKEN_LIMIT) {
+        if (RedisLikeCounter.get(depthLeafKey) < reflectionTokenLimit) {
             return;
         }
-        List<MemoryReflection.ReflectionResult.Reflection> reflectionList = MemoryReflection.extractReflectionFromMessages(RedisLikeCounter.getList(depthLeafListKey));
+        List<MemoryReflection.ReflectionResult.Reflection> reflectionList = memoryReflection.extractReflectionFromMessages(RedisLikeCounter.getList(depthLeafListKey));
         RedisLikeCounter.reset(depthLeafKey);
         RedisLikeCounter.reset(depthLeafListKey);
         if (CollectionUtils.isEmpty(reflectionList)) {
@@ -117,7 +139,7 @@ public class MemoryInsert {
                             .messageParentIds(parentIdList).messageContent(reflectionText).aiResponseFlag(CommonConstants.NO_STR)
                             .messageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT)).messageReceiveId(ownerId).messageReceiveName(ownerName).messageReceiveType(ownerType)
                             .messageOwnerId(ownerId).messageOwnerName(ownerName).messageOwnerType(ownerType)
-                            .memoryLeafDepth(leafDepth + 1).useToken(OpenAiTokenizerUtil.getMessageToken(new UserMessage(reflectionText))).build();
+                            .memoryLeafDepth(leafDepth + 1).useToken(new TokenCalculation(modelName).getMessageTextTokenCount(reflectionText)).build();
             insertNewMemory(memoryDTO);
         }
     }
