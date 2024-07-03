@@ -44,7 +44,7 @@ public class EmojiSpider {
 
 
     public String searchEmoji(String word) {
-        String searchUrl = baseUrl + String.format(userAgent, word);
+        String searchUrl = baseUrl + String.format(urlContent, word);
 
         try {
             // 获取页面内容
