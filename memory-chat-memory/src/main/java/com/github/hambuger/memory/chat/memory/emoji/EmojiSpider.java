@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,11 +61,11 @@ public class EmojiSpider {
             }
             Element img = imgList.get(0);
             String imgUrl = img.attr("data-original");
-            String imgTitle = img.attr("title");
+//            String imgTitle = img.attr("title");
             try {
                 // 构造图片保存路径
                 String extension = imgUrl.substring(imgUrl.lastIndexOf("."));
-                String filePath = directory + imgTitle + extension;
+                String filePath = directory + UUID.randomUUID() + extension;
 
                 // 下载图片
                 downloadImage(imgUrl, filePath);

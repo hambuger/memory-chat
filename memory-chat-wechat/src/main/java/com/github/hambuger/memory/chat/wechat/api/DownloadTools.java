@@ -123,7 +123,23 @@ public class DownloadTools {
             default:
                 break;
         }
-        entity2File(entity, msg.getFilePath());
+        if(msgTypeEnum == WxRespConstant.WXReceiveMsgCodeEnum.MSGTYPE_EMOTICON){
+            entity2Emoji(entity, msg.getFilePath());
+        }else{
+            entity2File(entity, msg.getFilePath());
+        }
+    }
+
+    private static void entity2Emoji(HttpEntity entity, String filePath) {
+        BufferedImage image = null;
+        try {
+            image = ImageIO.read(entity.getContent());
+            ImageIO.write(image, "gif", new File(filePath));
+            DownloadTools.FILE_DOWNLOAD_STATUS.remove(filePath);
+            DownloadTools.FILE_DOWNLOAD_PROCESS.remove(filePath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

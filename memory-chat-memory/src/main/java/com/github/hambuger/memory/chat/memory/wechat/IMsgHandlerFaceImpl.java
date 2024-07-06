@@ -82,7 +82,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         //        }
     }
 
-    private static ConcurrentHashMap<String, String> emojiAndMediaIdMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, List<String>> emojiAndMediaIdMap = new ConcurrentHashMap<>();
 
 
     /**
@@ -368,26 +368,38 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
             message.setContent(sendMessage.getMessageContent());
             ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(sendMessage.getMessageContentType());
             message.setMsgType(contentTypeEnum == null ? ContentTypeEnum.TEXT.getMsgType() : contentTypeEnum.getMsgType());
+            List<String> emojiTypeAndMediaId = new ArrayList<>();
             if (contentTypeEnum == ContentTypeEnum.PICTURE) {
                 String filePath = FileUtil.downloadImage(sendMessage.getMessageContent());
                 message.setFilePath(filePath);
                 message.setContent(null);
             } else if (contentTypeEnum == ContentTypeEnum.EMOJI) {
-                if (emojiAndMediaIdMap.get(sendMessage.getMessageContent()) == null) {
+                if (CollectionUtils.isEmpty(emojiAndMediaIdMap.get(sendMessage.getMessageContent()))) {
                     String emojiPath = emojiSpider.searchEmoji(sendMessage.getMessageContent());
                     if (StringUtils.isBlank(emojiPath)) {
                         message.setMsgType(ContentTypeEnum.TEXT.getMsgType());
                     } else {
                         message.setFilePath(emojiPath);
+                        if (!emojiPath.endsWith("gif")) {
+                            message.setMsgType(ContentTypeEnum.PICTURE.getMsgType());
+                            emojiTypeAndMediaId.add("png");
+                        } else {
+                            emojiTypeAndMediaId.add("gif");
+                        }
                     }
                 } else {
-                    message.setMediaId(emojiAndMediaIdMap.get(sendMessage.getMessageContent()));
+                    List<String> list = emojiAndMediaIdMap.get(sendMessage.getMessageContent());
+                    if (!list.get(0).equals("gif")) {
+                        message.setMsgType(ContentTypeEnum.PICTURE.getMsgType());
+                    }
+                    message.setMediaId(list.get(1));
                 }
                 message.setContent(null);
             }
             WebWXSendMsgResponse webWXSendMsgResponse = MessageTools.sendMsgByUserId(message);
-            if (contentTypeEnum == ContentTypeEnum.EMOJI) {
-                emojiAndMediaIdMap.put(sendMessage.getMessageContent(), webWXSendMsgResponse.getMediaId());
+            if (contentTypeEnum == ContentTypeEnum.EMOJI && CollectionUtils.isEmpty(emojiAndMediaIdMap.get(sendMessage.getMessageContent()))) {
+                emojiTypeAndMediaId.add(webWXSendMsgResponse.getMediaId());
+                emojiAndMediaIdMap.put(sendMessage.getMessageContent(), emojiTypeAndMediaId);
             }
         }
         return null;

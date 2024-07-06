@@ -106,7 +106,7 @@ public class MessageTools {
                     WxRespConstant.WXReceiveMsgCodeEnum byCode = WxRespConstant.WXReceiveMsgCodeEnum.getByCode(message.getMsgType());
                     switch (byCode) {
                         case MSGTYPE_IMAGE:
-                            sendMsgResponse = sendPicMsgByUserId(toUserName, message.getFilePath(), content);
+                            sendMsgResponse = sendPicMsgByUserId(toUserName, message.getFilePath(), message.getMediaId(), content);
                             break;
                         case MSGTYPE_TEXT:
                             sendMsgResponse = sendTextMsgByUserId(content, toUserName);
@@ -441,9 +441,8 @@ public class MessageTools {
      * @author SXS
      * @date 2017年5月7日 下午10:34:24
      */
-    private static WebWXSendMsgResponse sendPicMsgByUserId(String userId, String filePath, String content) throws WebWXException, IOException {
-        String mediaId = "";
-        if (StringUtils.isEmpty(content) || !content.startsWith("@")) {
+    private static WebWXSendMsgResponse sendPicMsgByUserId(String userId, String filePath, String mediaId, String content) throws WebWXException, IOException {
+        if (StringUtils.isBlank(mediaId) && (StringUtils.isEmpty(content) || !content.startsWith("@"))) {
             WebWXUploadMediaResponse resp = webWxUploadMedia(filePath, Core.getUserName(), userId);
             mediaId = resp.getMediaId();
             content = "";
@@ -458,7 +457,7 @@ public class MessageTools {
         textMsg.Content = content;
         msgRequest.Msg = textMsg;
         WebWXSendMsgResponse webWXSendMsgResponse = sendMsg(msgRequest, url);
-
+        webWXSendMsgResponse.setMediaId(mediaId);
         return webWXSendMsgResponse;
 
     }
@@ -504,7 +503,7 @@ public class MessageTools {
             textMsg.EMoticonMd5 = md5;
         }
         textMsg.ToUserName = userId;
-        msgRequest.Scene = 2;
+        msgRequest.Scene = 0;
         msgRequest.Msg = textMsg;
         WebWXSendMsgResponse webWXSendMsgResponse = sendMsg(msgRequest, url);
         webWXSendMsgResponse.setMediaId(textMsg.MediaId);
@@ -767,6 +766,7 @@ public class MessageTools {
         String paramStr = JSON.toJSONString(webWXSendMsgRequest);
 
         HttpEntity entity = HttpUtil.doPost(url, paramStr);
+        System.out.println(paramStr);
         if (entity == null){
             return  WebWXSendMsgResponse.error("response is null.");
         }
