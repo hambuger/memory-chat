@@ -115,34 +115,38 @@ public class HttpUtil {
                                             Map<String, String> headerMap) {
         HttpEntity entity = null;
         HttpGet httpGet;
-
-        try {
-            if (params != null) {
-                String paramStr = EntityUtils.toString(new UrlEncodedFormEntity(params, Consts.UTF_8));
-                httpGet = new HttpGet(url + "?" + paramStr);
-            } else {
-                httpGet = new HttpGet(url);
-            }
-            if (!redirect) {
-                httpGet.setConfig(RequestConfig.custom().setRedirectsEnabled(false).build()); // 禁止重定向
-            }
-            httpGet.setHeader("User-Agent", UOSConfig.USER_AGENT);
-
-            httpGet.setHeader("client-version", UOSConfig.UOS_PATCH_CLIENT_VERSION);
-            httpGet.setHeader("extspam", UOSConfig.UOS_PATCH_EXTSPAM);
-            httpGet.setHeader("referer", UOSConfig.REFERER);
-
-
-            if (headerMap != null) {
-                Set<Entry<String, String>> entries = headerMap.entrySet();
-                for (Entry<String, String> entry : entries) {
-                    httpGet.setHeader(entry.getKey(), entry.getValue());
+        int count = 1;
+        while (entity == null && count <= 3) {
+            try {
+                if (params != null) {
+                    String paramStr = EntityUtils.toString(new UrlEncodedFormEntity(params, Consts.UTF_8));
+                    httpGet = new HttpGet(url + "?" + paramStr);
+                } else {
+                    httpGet = new HttpGet(url);
                 }
+                if (!redirect) {
+                    httpGet.setConfig(RequestConfig.custom().setRedirectsEnabled(false).build()); // 禁止重定向
+                }
+                httpGet.setHeader("User-Agent", UOSConfig.USER_AGENT);
+
+                httpGet.setHeader("client-version", UOSConfig.UOS_PATCH_CLIENT_VERSION);
+                httpGet.setHeader("extspam", UOSConfig.UOS_PATCH_EXTSPAM);
+                httpGet.setHeader("referer", UOSConfig.REFERER);
+
+
+                if (headerMap != null) {
+                    Set<Entry<String, String>> entries = headerMap.entrySet();
+                    for (Entry<String, String> entry : entries) {
+                        httpGet.setHeader(entry.getKey(), entry.getValue());
+                    }
+                }
+                CloseableHttpResponse response = receiveHttpClient.execute(httpGet);
+                entity = response.getEntity();
+            } catch (IOException e) {
+                // log.error(e.getMessage());
+            } finally {
+                count++;
             }
-            CloseableHttpResponse response = receiveHttpClient.execute(httpGet);
-            entity = response.getEntity();
-        } catch (IOException e) {
-            // log.error(e.getMessage());
         }
 
         return entity;

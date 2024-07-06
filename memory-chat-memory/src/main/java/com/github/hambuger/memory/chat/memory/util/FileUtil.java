@@ -1,6 +1,7 @@
 package com.github.hambuger.memory.chat.memory.util;
 
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
+import com.github.hambuger.memory.chat.wechat.configuration.WechatConfiguration;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -44,7 +45,7 @@ public class FileUtil {
             inputStream = connection.getInputStream();
 
             // 定义文件路径
-            File imageFile = new File(SEND_IMAGE_PATH);
+            File imageFile = new File(WechatConfiguration.getInstance().getBasePath() + File.separator + SEND_IMAGE_PATH);
             outputStream = new FileOutputStream(imageFile);
 
             // 写入文件
@@ -70,7 +71,7 @@ public class FileUtil {
             }
         }
 
-        return SEND_IMAGE_PATH;
+        return WechatConfiguration.getInstance().getBasePath() + File.separator + SEND_IMAGE_PATH;
     }
 
 

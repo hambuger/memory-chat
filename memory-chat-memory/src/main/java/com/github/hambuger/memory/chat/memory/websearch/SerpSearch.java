@@ -45,11 +45,11 @@ public class SerpSearch {
             queryParam.put("gl", "cn");
             queryParam.put("safe", "off");
             queryParam.put("device", "desktop");
-            queryParam.put("tbm", "nws");
+//            queryParam.put("tbm", "nws");
             String json = MyHttpUtils.get(baseUrl, new HashMap<>(), queryParam);
             JSONObject results = JSON.parseObject(json);
             StringBuilder stringBuilder = new StringBuilder();
-            JSONArray jsonArray = results.getJSONArray("news_results");
+            JSONArray jsonArray = results.getJSONArray("organic_results");
             if (CollectionUtils.isEmpty(jsonArray)) {
                 return null;
             }

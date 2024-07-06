@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.chat.dto;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 
 import org.springframework.ai.openai.api.OpenAiApi;
@@ -22,6 +23,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class SpringAiChatMessageMemoryDTO extends MemoryDTO {
 
+    @JSONField(serialize = false)
     private OpenAiApi.ChatCompletionMessage chatMessage;
 
 }
