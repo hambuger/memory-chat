@@ -58,7 +58,7 @@ es:
   port: 9200
 
 reflection:
-  tokenLimit: 10000
+  tokenLimit: 1000
 
 chatMemoryIndex: chat_memory
 maxMsgToken: 50000
