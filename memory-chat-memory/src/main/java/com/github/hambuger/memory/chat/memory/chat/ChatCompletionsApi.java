@@ -219,7 +219,13 @@ public class ChatCompletionsApi {
 
     private String getCheckStartMsgPrompt(String toUserName, List<MemoryDTO> memoryDTOS) {
         try {
-            StringBuilder promptBuilder = new StringBuilder().append("你是Andrew,下面是你和%s的离当前时间最近的对话内容。【%s】\n判断一下是否需要给%s发送一个新的消息。\n").append("应该是在确实有必要的情况下才发起会话,尽量不要打扰别人，尤其是在夜晚时间。长时间没有联系的人也要谨慎判断是否发起消息。\n").append("即使需要发送消息，也不要频繁发送重复的信息\n").append("如果需要发送消息，给出需要发送的消息内容。你给出的发送消息的判断和消息内容应该类似如下的json格式：\n %s\n").append("其中needsSending字段表示是否需要发送消息，sendTextMessageList字段表示需要发送的消息内容\n").append("注意：现在时间是%s");
+            StringBuilder promptBuilder = new StringBuilder()
+                    .append("你是Andrew,下面是你和%s的离当前时间最近的对话内容。【%s】\n判断一下是否需要给%s发送一个新的消息。\n")
+//                    .append("应该是在确实有必要的情况下才发起会话,尽量不要打扰别人，尤其是在夜晚时间。长时间没有联系的人也要谨慎判断是否发起消息。\n")
+                    .append("即使需要发送消息，也不要频繁发送重复的信息\n")
+                    .append("如果需要发送消息，给出需要发送的消息内容。你给出的发送消息的判断和消息内容应该类似如下的json格式：\n %s\n")
+                    .append("其中needsSending字段表示是否需要发送消息，sendTextMessageList字段表示需要发送的消息内容\n")
+                    .append("注意：现在时间是%s");
             SendMessageRequest sendMessageRequest = new SendMessageRequest();
             sendMessageRequest.setNeedsSending(false);
             sendMessageRequest.setSendTextMessageList(new ArrayList<>());
@@ -294,7 +300,7 @@ public class ChatCompletionsApi {
             systemMessage = new OpenAiApi.ChatCompletionMessage(String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_PREFIX : MemoryChatConstants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_END : MemoryChatConstants.PROMPT_END, now), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         } else {
             StringBuilder memory = new StringBuilder();
-            for (int i = 1; i < searchMemoryList.size(); i++) {
+            for (int i = 0; i < searchMemoryList.size(); i++) {
                 MemoryDTO memorySingle = searchMemoryList.get(i);
                 if (existMsgIds.contains(memorySingle.getMessageId())) {
                     continue;

@@ -15,6 +15,7 @@ import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.index.query.functionscore.FieldValueFactorFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
@@ -64,7 +65,7 @@ public class MemorySearch {
             mustQuery.must(new TermQueryBuilder("messageOwnerId", ownerId));
         }
         if (StringUtils.isNotBlank(creatorId)) {
-            mustQuery.must(new TermQueryBuilder("messageCreatorId", creatorId));
+            mustQuery.must(new TermsQueryBuilder("messageCreatorId", creatorId, CreatorEnum.REFLECTION.getUserId()));
         }else {
             // 排除AI回复
             mustQuery.mustNot(new TermQueryBuilder("messageCreatorId", CreatorEnum.Andrew.getUserId()));
