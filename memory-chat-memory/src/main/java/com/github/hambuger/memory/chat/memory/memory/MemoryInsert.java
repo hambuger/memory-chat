@@ -94,7 +94,7 @@ public class MemoryInsert {
             log.error("insert memory error", e);
         }
         // 检查是否需要提炼
-        if (userMsgFlag && textMsgFlag) {
+        if (textMsgFlag) {
             String depthLeafCountKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + memoryDTO.getMemoryLeafDepth();
             String depthLeafListKey = memoryDTO.getMessageOwnerId() + MemoryChatConstants.DEPTH_LEAF_LIST_KEY_MID + memoryDTO.getMemoryLeafDepth();
             RedisLikeCounter.incrBy(depthLeafCountKey, memoryDTO.getUseToken());
