@@ -1,5 +1,7 @@
 package com.github.hambuger.memory.chat.wechat.dto.request.msg.send;
 
+import com.github.hambuger.memory.chat.wechat.dto.request.BaseRequest;
+
 /**
  * @作者 Hamburger
  * @项目 AutoWeChat
@@ -9,7 +11,7 @@ package com.github.hambuger.memory.chat.wechat.dto.request.msg.send;
  */
 
 public class WebWXModifyRemarkNameMsg  extends WebWXSendingMsg {
-
+   public com.github.hambuger.memory.chat.wechat.dto.request.BaseRequest BaseRequest = new BaseRequest();
    public Byte CmdId;
    public String RemarkName;
    public String UserName;

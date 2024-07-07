@@ -743,16 +743,27 @@ public class MessageTools {
      * @param remarkName 备注名称
      * @return 参数
      */
-    public static WebWXSendMsgResponse modifyRemarkName(String userName ,String remarkName) throws IOException {
-        String url = String.format(WxURLEnum.WEB_WX_REMARKNAME.getUrl(),  Core.getLoginResultData().getUrl());
-        WebWXSendMsgRequest msgRequest = new WebWXSendMsgRequest();
+    public static WebWXSendMsgResponse modifyRemarkName(String userName, String remarkName) throws IOException {
+        String url = String.format(WxURLEnum.WEB_WX_REMARKNAME.getUrl(), Core.getLoginResultData().getUrl());
         WebWXModifyRemarkNameMsg msg = new WebWXModifyRemarkNameMsg();
         msg.CmdId = 2;
         msg.RemarkName = remarkName;
         msg.UserName = userName;
-        msgRequest.Msg = msg;
-        return sendMsg(msgRequest, url);
+        return sendModifyRemarkNameMsg(msg, url);
     }
+
+    private static WebWXSendMsgResponse sendModifyRemarkNameMsg(WebWXModifyRemarkNameMsg webWXSendMsgRequest, String url) throws IOException {
+        webWXSendMsgRequest.BaseRequest = Core.getLoginResultData().getBaseRequest();
+        String paramStr = JSON.toJSONString(webWXSendMsgRequest);
+
+        HttpEntity entity = HttpUtil.doPost(url, paramStr);
+        if (entity == null) {
+            return WebWXSendMsgResponse.error("response is null.");
+        }
+        String s = EntityUtils.toString(entity, Consts.UTF_8);
+        return JSON.parseObject(s, WebWXSendMsgResponse.class);
+    }
+
     /**
      * 发送消息
      *

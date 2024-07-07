@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.wechat;
 
+import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
 import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
@@ -26,10 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -458,7 +456,18 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
 
     @Override
     public List<Message> addFriendMsgHandle(Message msg) {
-
+        String nickName = "";
+        if (StringUtils.isNotBlank(msg.getMsgJson())) {
+            JSONObject msgJson = JSONObject.parseObject(msg.getMsgJson());
+            nickName = Optional.ofNullable(msgJson.getJSONObject("recommendInfo")).map(obj -> obj.getString("content")).map(content -> content.replace("我是", "")).orElse("");
+        }
+        MessageTools.addFriend(msg.getContactsUserName(), msg.getContactsTicket());
+        try {
+            MessageTools.modifyRemarkName(msg.getContactsUserName(), nickName);
+            ContactsTools.getContactByUserName(msg.getContactsUserName()).setRemarkname(nickName);
+        } catch (IOException e) {
+            log.error("addFriendMsgHandle error", e);
+        }
         return null;
     }
 

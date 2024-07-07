@@ -100,8 +100,12 @@ public class MemoryInsert {
             RedisLikeCounter.incrBy(depthLeafCountKey, memoryDTO.getUseToken());
             String jsonInfo = getAiUseJsonInfo(memoryDTO);
             RedisLikeCounter.addElement(depthLeafListKey, jsonInfo);
+            boolean botFlag = StringUtils.equals(memoryDTO.getMessageCreatorType(), CreatorEnum.Andrew.getType()) || StringUtils.equals(memoryDTO.getMessageCreatorType(), CreatorEnum.REFLECTION.getType());
             checkAndInsertDepthLeafReflection(memoryDTO.getMemoryLeafDepth(), depthLeafCountKey, depthLeafListKey, memoryDTO.getMessageOwnerId(), memoryDTO.getMessageOwnerName(),
-                    memoryDTO.getMessageOwnerType());
+                    memoryDTO.getMessageOwnerType(),
+                    botFlag ? memoryDTO.getMessageReceiveId() : memoryDTO.getMessageCreatorId(),
+                    botFlag ? memoryDTO.getMessageReceiveName() : memoryDTO.getMessageCreatorName(),
+                    botFlag ? memoryDTO.getMessageReceiveType() : memoryDTO.getMessageCreatorType());
         }
         return true;
     }
@@ -118,7 +122,8 @@ public class MemoryInsert {
     }
 
 
-    private void checkAndInsertDepthLeafReflection(Integer leafDepth, String depthLeafKey, String depthLeafListKey, String ownerId, String ownerName, String ownerType) {
+    private void checkAndInsertDepthLeafReflection(Integer leafDepth, String depthLeafKey, String depthLeafListKey, String ownerId, String ownerName, String ownerType
+            , String receiveId, String receiveName, String receiveType) {
         // 总token提炼限制
         if (RedisLikeCounter.get(depthLeafKey) < reflectionTokenLimit) {
             return;
@@ -137,7 +142,8 @@ public class MemoryInsert {
                             .messageCreatorType(CreatorEnum.REFLECTION.getType())
                             .messageContentType(ContentTypeEnum.TEXT.getType())
                             .messageParentIds(parentIdList).messageContent(reflectionText).aiResponseFlag(CommonConstants.NO_STR)
-                            .messageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT)).messageReceiveId(ownerId).messageReceiveName(ownerName).messageReceiveType(ownerType)
+                            .messageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT))
+                            .messageReceiveId(receiveId).messageReceiveName(receiveName).messageReceiveType(receiveType)
                             .messageOwnerId(ownerId).messageOwnerName(ownerName).messageOwnerType(ownerType)
                             .memoryLeafDepth(leafDepth + 1).useToken(new TokenCalculation(modelName).getMessageTextTokenCount(reflectionText)).build();
             insertNewMemory(memoryDTO);

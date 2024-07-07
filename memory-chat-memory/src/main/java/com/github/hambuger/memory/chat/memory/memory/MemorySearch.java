@@ -65,7 +65,11 @@ public class MemorySearch {
             mustQuery.must(new TermQueryBuilder("messageOwnerId", ownerId));
         }
         if (StringUtils.isNotBlank(creatorId)) {
-            mustQuery.must(new TermsQueryBuilder("messageCreatorId", creatorId, CreatorEnum.REFLECTION.getUserId()));
+            BoolQueryBuilder builder = new BoolQueryBuilder();
+            builder.should(new TermQueryBuilder("messageCreatorId", creatorId));
+            builder.should(new BoolQueryBuilder().must(new TermsQueryBuilder("messageReceiveId", creatorId)).must(new TermsQueryBuilder("messageCreatorType", CreatorEnum.REFLECTION.getType())));
+            builder.minimumShouldMatch(1);
+            mustQuery.must(builder);
         }else {
             // 排除AI回复
             mustQuery.mustNot(new TermQueryBuilder("messageCreatorId", CreatorEnum.Andrew.getUserId()));
