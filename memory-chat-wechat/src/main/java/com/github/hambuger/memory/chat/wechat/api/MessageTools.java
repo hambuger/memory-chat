@@ -127,7 +127,7 @@ public class MessageTools {
                             //其他消息发送文件
                             sendMsgResponse = sendAppMsgByUserId(toUserName, message.getFilePath(), content);
                     }
-                    log.info(LogUtil.printToMeg(byCode.getDesc(), toUserName, StringUtils.isEmpty(message.getFilePath()) ? content : message.getFilePath()));
+//                    log.info(LogUtil.printToMeg(byCode.getDesc(), toUserName, StringUtils.isEmpty(message.getFilePath()) ? content : message.getFilePath()));
                     if (sendMsgResponse == null) {
                         log.error("发送消息失败：{}", message);
                         return WebWXSendMsgResponse.error("null");
@@ -777,7 +777,6 @@ public class MessageTools {
         String paramStr = JSON.toJSONString(webWXSendMsgRequest);
 
         HttpEntity entity = HttpUtil.doPost(url, paramStr);
-        System.out.println(paramStr);
         if (entity == null){
             return  WebWXSendMsgResponse.error("response is null.");
         }
