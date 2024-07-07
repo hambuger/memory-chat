@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.wechat;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 
 @Log4j2
@@ -336,6 +338,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
 
     @Nullable
     private List<Message> dealNewMsg(Message msg) {
+        long receiveMsgTime = System.currentTimeMillis();
         if (msg.getIsSend()) {
             return null;
         }
@@ -393,12 +396,22 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
                     message.setMediaId(list.get(1));
                 }
                 message.setContent(null);
+            } else if (contentTypeEnum == ContentTypeEnum.TEXT) {
+                int waste = message.getContent().length() * 1000 / 4;
+                if (System.currentTimeMillis() < receiveMsgTime + waste) {
+                    try {
+                        Thread.sleep(receiveMsgTime + waste - System.currentTimeMillis());
+                    } catch (InterruptedException e) {
+                        log.warn("sleep error", e);
+                    }
+                }
             }
             WebWXSendMsgResponse webWXSendMsgResponse = MessageTools.sendMsgByUserId(message);
             if (contentTypeEnum == ContentTypeEnum.EMOJI && CollectionUtils.isEmpty(emojiAndMediaIdMap.get(sendMessage.getMessageContent()))) {
                 emojiTypeAndMediaId.add(webWXSendMsgResponse.getMediaId());
                 emojiAndMediaIdMap.put(sendMessage.getMessageContent(), emojiTypeAndMediaId);
             }
+            receiveMsgTime = System.currentTimeMillis();
         }
         return null;
     }
