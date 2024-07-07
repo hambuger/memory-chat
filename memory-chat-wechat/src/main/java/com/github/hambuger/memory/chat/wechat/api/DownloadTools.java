@@ -131,10 +131,25 @@ public class DownloadTools {
     }
 
     private static void entity2Emoji(HttpEntity entity, String filePath) {
-        BufferedImage image = null;
+        BufferedImage image;
         try {
             image = ImageIO.read(entity.getContent());
-            ImageIO.write(image, "gif", new File(filePath));
+            File file = new File(filePath);
+            if (!file.exists()) {
+                File parentFile = file.getParentFile();
+                if (!parentFile.exists()) {
+                    boolean mkdirs = parentFile.mkdirs();
+                    if (!mkdirs) {
+                        log.error("创建目录失败：{}", parentFile.getAbsolutePath());
+                    }
+                }
+                boolean newFile = file.createNewFile();
+                if (!newFile) {
+                    log.error("创建文件失败：{}", filePath);
+                }
+
+            }
+            ImageIO.write(image, "gif", file);
             DownloadTools.FILE_DOWNLOAD_STATUS.remove(filePath);
             DownloadTools.FILE_DOWNLOAD_PROCESS.remove(filePath);
         } catch (IOException e) {

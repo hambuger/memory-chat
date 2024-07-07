@@ -9,6 +9,7 @@ import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.emoji.EmojiSpider;
 import com.github.hambuger.memory.chat.memory.util.FileUtil;
+import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 import com.github.hambuger.memory.chat.wechat.api.ContactsTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
 import com.github.hambuger.memory.chat.wechat.constant.WxReqParamsConstant;
@@ -82,8 +83,8 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         //        }
     }
 
-    private static ConcurrentHashMap<String, List<String>> emojiAndMediaIdMap = new ConcurrentHashMap<>();
-
+    @Resource
+    private RedisUtil redisUtil;
 
     /**
      * 消息控制命令
@@ -375,7 +376,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
                 message.setFilePath(filePath);
                 message.setContent(null);
             } else if (contentTypeEnum == ContentTypeEnum.EMOJI) {
-                if (CollectionUtils.isEmpty(emojiAndMediaIdMap.get(sendMessage.getMessageContent()))) {
+                if (CollectionUtils.isEmpty(redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent()))) {
                     String emojiPath = emojiSpider.searchEmoji(sendMessage.getMessageContent());
                     if (StringUtils.isBlank(emojiPath)) {
                         message.setMsgType(ContentTypeEnum.TEXT.getMsgType());
@@ -389,7 +390,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
                         }
                     }
                 } else {
-                    List<String> list = emojiAndMediaIdMap.get(sendMessage.getMessageContent());
+                    List<String> list = redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent());
                     if (!list.get(0).equals("gif")) {
                         message.setMsgType(ContentTypeEnum.PICTURE.getMsgType());
                     }
@@ -407,9 +408,9 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
                 }
             }
             WebWXSendMsgResponse webWXSendMsgResponse = MessageTools.sendMsgByUserId(message);
-            if (contentTypeEnum == ContentTypeEnum.EMOJI && CollectionUtils.isEmpty(emojiAndMediaIdMap.get(sendMessage.getMessageContent()))) {
+            if (contentTypeEnum == ContentTypeEnum.EMOJI && CollectionUtils.isEmpty(redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent()))) {
                 emojiTypeAndMediaId.add(webWXSendMsgResponse.getMediaId());
-                emojiAndMediaIdMap.put(sendMessage.getMessageContent(), emojiTypeAndMediaId);
+                redisUtil.putEmojiAndMediaId(sendMessage.getMessageContent(), emojiTypeAndMediaId);
             }
             receiveMsgTime = System.currentTimeMillis();
         }

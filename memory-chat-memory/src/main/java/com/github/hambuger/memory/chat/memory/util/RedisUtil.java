@@ -21,6 +21,8 @@ public class RedisUtil {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private static final String EMOJI_AND_MEDIA_ID_MAP_KEY = "emojiAndMediaIdMap";
+
     public void delOldMemory(String msgListKey, int i) {
         String json = redisTemplate.opsForValue().get(msgListKey);
         if (json != null) {
@@ -77,6 +79,27 @@ public class RedisUtil {
             }
         }
         return msgList;
+    }
+
+    public void putEmojiAndMediaId(String key, List<String> value) {
+        try {
+            String json = objectMapper.writeValueAsString(value);
+            redisTemplate.opsForHash().put(EMOJI_AND_MEDIA_ID_MAP_KEY, key, json);
+        } catch (JsonProcessingException e) {
+            log.warn("putEmojiAndMediaId error", e);
+        }
+    }
+
+    public List<String> getEmojiAndMediaId(String key) {
+        String json = (String) redisTemplate.opsForHash().get(EMOJI_AND_MEDIA_ID_MAP_KEY, key);
+        if (json != null) {
+            try {
+                return objectMapper.readValue(json, List.class);
+            } catch (JsonProcessingException e) {
+                log.warn("getEmojiAndMediaId error", e);
+            }
+        }
+        return new ArrayList<>();
     }
 }
 
