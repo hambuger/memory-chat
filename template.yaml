@@ -21,6 +21,9 @@ spring:
           model: dall-e-3
           size: 1792x1024
       temperature: 0.0
+  redis:
+    host: 127.0.0.1
+    port: 6379
 
 wechat:
   app-version: 1.0

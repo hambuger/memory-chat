@@ -20,7 +20,7 @@ import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
 import com.github.hambuger.memory.chat.memory.util.FileUtil;
 import com.github.hambuger.memory.chat.memory.util.IdUtil;
 import com.github.hambuger.memory.chat.memory.util.ImageUploadUtils;
-import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
+import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 import com.github.hambuger.memory.chat.memory.util.VideoUtil;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
@@ -108,6 +108,9 @@ public class ChatCompletionsApi {
     @Resource
     private MemoryUpdate memoryUpdate;
 
+    @Resource
+    private RedisUtil redisUtil;
+
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
         String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageReceiveId() : memoryDTO.getMessageCreatorId());
@@ -122,7 +125,7 @@ public class ChatCompletionsApi {
             SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
-            RedisLikeCounter.addMsg(msgListKey, MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
+            redisUtil.addMsg(msgListKey, MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
             CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(memoryDTO));
             // 更新最后一条消息id
@@ -134,7 +137,7 @@ public class ChatCompletionsApi {
             // 查询相关性最高的历史消息
             List<MemoryDTO> searchMemoryList = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) ? memorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(), memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent()) : new ArrayList<>();
 
-            List<MemoryDTO> memoryDTOS = RedisLikeCounter.getMsg(msgListKey);
+            List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
@@ -182,7 +185,7 @@ public class ChatCompletionsApi {
 
     private void startNewTaskForContact(String toUserId, MemoryDTO memoryDTO, String msgListKey) {
         StartConversationCheckTask.startTaskForContact(msgListKey, () -> {
-            List<MemoryDTO> memoryDTOS = RedisLikeCounter.getMsg(msgListKey);
+            List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
             if (CollectionUtils.isEmpty(memoryDTOS)) {
                 return false;
             }
@@ -518,8 +521,8 @@ public class ChatCompletionsApi {
     }
 
 
-    private static void delOldMessageFromCache(String msgListKey, int i) {
-        RedisLikeCounter.delOldMemory(msgListKey, i);
+    private void delOldMessageFromCache(String msgListKey, int i) {
+        redisUtil.delOldMemory(msgListKey, i);
     }
 
 }

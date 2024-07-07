@@ -13,7 +13,7 @@ import com.github.hambuger.memory.chat.memory.embeddings.SpringAiEmbeddings;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
 import com.github.hambuger.memory.chat.memory.util.IdUtil;
-import com.github.hambuger.memory.chat.memory.util.RedisLikeCounter;
+import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.index.IndexRequest;
@@ -53,6 +53,9 @@ public class MemoryInsert {
     @Resource
     private MemoryReflection memoryReflection;
 
+    @Resource
+    private RedisUtil redisUtil;
+
     @Value("${spring.ai.openai.chat.options.model}")
     private String modelName;
 
@@ -71,7 +74,7 @@ public class MemoryInsert {
         if (!userMsgFlag) {
             String msgListKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + (Objects.equal(memoryDTO.getAiResponseFlag(), CommonConstants.NO_STR) ? memoryDTO.getMessageCreatorId() :
                     memoryDTO.getMessageReceiveId()) + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
-            RedisLikeCounter.addMsg(msgListKey,
+            redisUtil.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
         }
         boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType());
@@ -97,9 +100,9 @@ public class MemoryInsert {
         if (textMsgFlag) {
             String depthLeafCountKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + memoryDTO.getMemoryLeafDepth();
             String depthLeafListKey = memoryDTO.getMessageOwnerId() + MemoryChatConstants.DEPTH_LEAF_LIST_KEY_MID + memoryDTO.getMemoryLeafDepth();
-            RedisLikeCounter.incrBy(depthLeafCountKey, memoryDTO.getUseToken());
+            redisUtil.incrBy(depthLeafCountKey, memoryDTO.getUseToken());
             String jsonInfo = getAiUseJsonInfo(memoryDTO);
-            RedisLikeCounter.addElement(depthLeafListKey, jsonInfo);
+            redisUtil.addElement(depthLeafListKey, jsonInfo);
             boolean botFlag = StringUtils.equals(memoryDTO.getMessageCreatorType(), CreatorEnum.Andrew.getType()) || StringUtils.equals(memoryDTO.getMessageCreatorType(), CreatorEnum.REFLECTION.getType());
             checkAndInsertDepthLeafReflection(memoryDTO.getMemoryLeafDepth(), depthLeafCountKey, depthLeafListKey, memoryDTO.getMessageOwnerId(), memoryDTO.getMessageOwnerName(),
                     memoryDTO.getMessageOwnerType(),
@@ -125,12 +128,12 @@ public class MemoryInsert {
     private void checkAndInsertDepthLeafReflection(Integer leafDepth, String depthLeafKey, String depthLeafListKey, String ownerId, String ownerName, String ownerType
             , String receiveId, String receiveName, String receiveType) {
         // 总token提炼限制
-        if (RedisLikeCounter.get(depthLeafKey) < reflectionTokenLimit) {
+        if (redisUtil.get(depthLeafKey) < reflectionTokenLimit) {
             return;
         }
-        List<MemoryReflection.ReflectionResult.Reflection> reflectionList = memoryReflection.extractReflectionFromMessages(RedisLikeCounter.getList(depthLeafListKey));
-        RedisLikeCounter.reset(depthLeafKey);
-        RedisLikeCounter.reset(depthLeafListKey);
+        List<MemoryReflection.ReflectionResult.Reflection> reflectionList = memoryReflection.extractReflectionFromMessages(redisUtil.getList(depthLeafListKey));
+        redisUtil.reset(depthLeafKey);
+        redisUtil.reset(depthLeafListKey);
         if (CollectionUtils.isEmpty(reflectionList)) {
             return;
         }
