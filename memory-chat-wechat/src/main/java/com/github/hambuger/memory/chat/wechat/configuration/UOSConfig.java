@@ -1,7 +1,7 @@
 package com.github.hambuger.memory.chat.wechat.configuration;
 
 public class UOSConfig {
-    public static final String REFERER = "https://wx.qq.com/?&lang=zh_CN&target=t";
+    public static final String REFERER = "https://wx2.qq.com/?&lang=zh_CN&target=t";
     public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.62 Safari/537.36";
     public static final String UOS_PATCH_CLIENT_VERSION = "2.0.0";
 

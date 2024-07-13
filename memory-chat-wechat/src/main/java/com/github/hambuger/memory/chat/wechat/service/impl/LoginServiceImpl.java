@@ -414,9 +414,28 @@ public class LoginServiceImpl implements LoginService {
         wxStatusNotifyReq.setToUserName(Core.getUserName());
         wxStatusNotifyReq.setClientMsgId(System.currentTimeMillis());
         String paramStr = JSON.toJSONString(wxStatusNotifyReq);
+        Map<String, String> headerMap = new HashMap<>(){
+            {
+                put("Accept","application/json, text/plain, */*");
+                put("Accept-Encoding","gzip, deflate, br, zstd");
+                put("Accept-Language","zh-CN,zh;q=0.9");
+                put("Content-Type","application/json;charset=UTF-8");
+                put("Connection","keep-alive");
+                put("Host","wx2.qq.com");
+                put("Origin","https://wx2.qq.com");
+                put("Referer","https://wx2.qq.com/?target=t");
+                put("Sec-Fetch-Dest","empty");
+                put("Sec-Fetch-Mode","cors");
+                put("Sec-Fetch-Site","same-origin");
+                put("client-version","2.0.0");
+                put("sec-ch-ua","\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"");
+                put("sec-ch-ua-mobile","?0");
+                put("sec-ch-ua-platform","Windows");
+            }
 
+        };
         try {
-            HttpEntity entity = HttpUtil.doPost(url, paramStr);
+            HttpEntity entity = HttpUtil.doPost(url, paramStr, headerMap);
             EntityUtils.toString(entity, Consts.UTF_8);
         } catch (Exception e) {
             log.error("微信状态通知接口失败！", e);
@@ -914,8 +933,27 @@ public class LoginServiceImpl implements LoginService {
                 WxSyncReq.builder().SyncKey(Core.getLoginResultData().getSyncKeyObject()).rr(-System.currentTimeMillis() / 1000).BaseRequest(Core.getLoginResultData().getBaseRequest()).build();
         String paramStr = JSON.toJSONString(wxSyncReq);
 
+        Map<String, String> headerMap = new HashMap<>(){
+            {
+                put("Accept","application/json, text/plain, */*");
+                put("Accept-Encoding","gzip, deflate, br, zstd");
+                put("Accept-Language","zh-CN,zh;q=0.9");
+                put("Content-Type","application/json;charset=UTF-8");
+                put("Connection","keep-alive");
+                put("Host","wx2.qq.com");
+                put("Origin","https://wx2.qq.com");
+                put("Referer","https://wx2.qq.com/?target=t");
+                put("Sec-Fetch-Dest","empty");
+                put("Sec-Fetch-Mode","cors");
+                put("Sec-Fetch-Site","same-origin");
+                put("client-version","2.0.0");
+                put("sec-ch-ua","\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"");
+                put("sec-ch-ua-mobile","?0");
+                put("sec-ch-ua-platform","Windows");
+            }
 
-        HttpEntity entity = HttpUtil.doPost(url, paramStr);
+        };
+        HttpEntity entity = HttpUtil.doPost(url, paramStr, headerMap);
         String text = EntityUtils.toString(entity, Consts.UTF_8);
         WebWxSyncResp webWxSyncMsg = JSON.parseObject(text, WebWxSyncResp.class);
         if (webWxSyncMsg.getBaseResponse().getRet() != 0) {
@@ -944,7 +982,24 @@ public class LoginServiceImpl implements LoginService {
         params.add(new BasicNameValuePair(WxReqParamsConstant.SyncCheckParaEnum.SYNC_KEY.para(), Core.getLoginResultData().getSyncKey()));
         params.add(new BasicNameValuePair(WxReqParamsConstant.SyncCheckParaEnum.X.para(), String.valueOf(System.currentTimeMillis())));
         SleepUtils.sleep(7);
-        HttpEntity entity = HttpUtil.doGetOfReceive(url, params, true, null);
+        Map<String, String> headerMap = new HashMap<>(){
+            {
+                put("Accept","*/*");
+                put("Accept-Encoding","gzip, deflate, br, zstd");
+                put("Accept-Language","zh-CN,zh;q=0.9");
+                put("Connection","keep-alive");
+                put("Host","webpush.wx2.qq.com");
+                put("Referer","https://wx2.qq.com/");
+                put("Sec-Fetch-Dest","script");
+                put("Sec-Fetch-Mode","no-cors");
+                put("Sec-Fetch-Site","same-site");
+                put("sec-ch-ua","\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"");
+                put("sec-ch-ua-mobile","?0");
+                put("sec-ch-ua-platform","Windows");
+            }
+
+        };
+        HttpEntity entity = HttpUtil.doGetOfReceive(url, params, true, headerMap);
         if (entity == null) {
             throw new Exception("Entity is null!");
         }

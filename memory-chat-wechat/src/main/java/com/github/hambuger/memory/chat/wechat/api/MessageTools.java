@@ -775,8 +775,27 @@ public class MessageTools {
     private static WebWXSendMsgResponse sendMsg(WebWXSendMsgRequest webWXSendMsgRequest, String url) throws IOException {
         webWXSendMsgRequest.BaseRequest = Core.getLoginResultData().getBaseRequest();
         String paramStr = JSON.toJSONString(webWXSendMsgRequest);
+        Map<String, String> headerMap = new HashMap<>(){
+            {
+                put("Accept","application/json, text/plain, */*");
+                put("Accept-Encoding","gzip, deflate, br, zstd");
+                put("Accept-Language","zh-CN,zh;q=0.9");
+                put("Content-Type","application/json;charset=UTF-8");
+                put("Connection","keep-alive");
+                put("Host","wx2.qq.com");
+                put("Origin","https://wx2.qq.com");
+                put("Referer","https://wx2.qq.com/?target=t");
+                put("Sec-Fetch-Dest","empty");
+                put("Sec-Fetch-Mode","cors");
+                put("Sec-Fetch-Site","same-origin");
+                put("client-version","2.0.0");
+                put("sec-ch-ua","\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"");
+                put("sec-ch-ua-mobile","?0");
+                put("sec-ch-ua-platform","Windows");
+            }
 
-        HttpEntity entity = HttpUtil.doPost(url, paramStr);
+        };
+        HttpEntity entity = HttpUtil.doPost(url, paramStr, headerMap);
         if (entity == null){
             return  WebWXSendMsgResponse.error("response is null.");
         }
