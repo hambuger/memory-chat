@@ -2,9 +2,13 @@ package com.github.hambuger.memory.chat.memory.token;
 
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
-
+import dev.langchain4j.internal.Exceptions;
+import dev.langchain4j.internal.Json;
+import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Array;
 import java.util.Iterator;
@@ -12,19 +16,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import dev.langchain4j.internal.Exceptions;
-import dev.langchain4j.internal.Json;
 
-
+@Component
 public class TokenCalculation {
 
-    private final Optional<Encoding> encoding;
+    private Optional<Encoding> encoding = Optional.empty();
 
+    @Value("${spring.ai.openai.chat.options.model}")
     private String modelName;
 
-
-    public TokenCalculation(String modelName) {
-        this.modelName = modelName;
+    @PostConstruct
+    public void init() {
         this.encoding = Encodings.newLazyEncodingRegistry().getEncodingForModel(modelName);
     }
 
@@ -44,13 +46,13 @@ public class TokenCalculation {
         tokenCount += 5;
         if (OpenAiApi.ChatCompletionMessage.Role.SYSTEM.equals(message.role())) {
             tokenCount += getMessageTextTokenCount(message.content());
-        }else if (OpenAiApi.ChatCompletionMessage.Role.USER.equals(message.role())) {
+        } else if (OpenAiApi.ChatCompletionMessage.Role.USER.equals(message.role())) {
             tokenCount += this.getUserMessageToken(message);
-        }else if (OpenAiApi.ChatCompletionMessage.Role.ASSISTANT.equals(message.role())) {
+        } else if (OpenAiApi.ChatCompletionMessage.Role.ASSISTANT.equals(message.role())) {
             tokenCount += getAiMessageToken(message);
-        }else if (OpenAiApi.ChatCompletionMessage.Role.TOOL.equals(message.role())) {
+        } else if (OpenAiApi.ChatCompletionMessage.Role.TOOL.equals(message.role())) {
             tokenCount += getMessageTextTokenCount(message.content());
-        }else {
+        } else {
             throw new IllegalArgumentException("Unknown message type: " + message);
         }
         return tokenCount;
@@ -67,7 +69,7 @@ public class TokenCalculation {
                 OpenAiApi.ChatCompletionMessage.ToolCall toolExecutionRequest = aiMessage.toolCalls().get(0);
                 tokenCount += this.getMessageTextTokenCount(toolExecutionRequest.function().name()) * 2;
                 tokenCount += this.getMessageTextTokenCount(toolExecutionRequest.function().arguments());
-            }else {
+            } else {
                 tokenCount += 15;
                 Iterator toolInfo = aiMessage.toolCalls().iterator();
 
@@ -103,7 +105,7 @@ public class TokenCalculation {
             String text = msgObj.toString();
             tokenCount += this.getMessageTextTokenCount(text);
             return tokenCount;
-        }else if (msgObj instanceof OpenAiApi.ChatCompletionMessage.MediaContent) {
+        } else if (msgObj instanceof OpenAiApi.ChatCompletionMessage.MediaContent) {
             tokenCount += countImageToken((OpenAiApi.ChatCompletionMessage.MediaContent) msgObj);
             return tokenCount;
         }
@@ -115,7 +117,7 @@ public class TokenCalculation {
                 Object o = Array.get(obj, i);
                 if (o instanceof String) {
                     tokenCount += this.getMessageTextTokenCount(o.toString());
-                }else if (o instanceof OpenAiApi.ChatCompletionMessage.MediaContent) {
+                } else if (o instanceof OpenAiApi.ChatCompletionMessage.MediaContent) {
                     tokenCount += countImageToken((OpenAiApi.ChatCompletionMessage.MediaContent) o);
                 }
             }
