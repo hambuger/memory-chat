@@ -111,6 +111,9 @@ public class ChatCompletionsApi {
     @Resource
     private RedisUtil redisUtil;
 
+    @Resource
+    private TokenCalculation tokenCalculation;
+
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
         String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageReceiveId() : memoryDTO.getMessageCreatorId());
@@ -344,7 +347,7 @@ public class ChatCompletionsApi {
         memoryDTO.setMessageParentIds(Lists.newArrayList("0"));
         OpenAiApi.ChatCompletionMessage message = convertMemoryMsg2SpringAiModelMsg(memoryDTO);
         memoryDTO.setChatMessage(message);
-        memoryDTO.setUseToken(new TokenCalculation(modelName).getUserMessageToken(message));
+        memoryDTO.setUseToken(tokenCalculation.getUserMessageToken(message));
         return memoryDTO;
     }
 
@@ -503,10 +506,10 @@ public class ChatCompletionsApi {
             }
             if (memoryDTO.getAiResponseFlag().equals(YES_STR)) {
                 chatMessage = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
-                sumMsgToken = sumMsgToken + new TokenCalculation(modelName).getUserMessageToken(chatMessage);
+                sumMsgToken = sumMsgToken + tokenCalculation.getUserMessageToken(chatMessage);
             } else {
                 chatMessage = convertMemoryMsg2SpringAiModelMsg(memoryDTO);
-                sumMsgToken = sumMsgToken + new TokenCalculation(modelName).getUserMessageToken(chatMessage);
+                sumMsgToken = sumMsgToken + tokenCalculation.getUserMessageToken(chatMessage);
             }
             if (sumMsgToken < maxMsgToken) {
                 messageList.addFirst(chatMessage);

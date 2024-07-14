@@ -65,6 +65,9 @@ public class MemoryInsert {
     @Value("${chatMemoryIndex}")
     private String chatMemoryIndex;
 
+    @Resource
+    private TokenCalculation tokenCalculation;
+
 
     public Boolean insertNewMemory(MemoryDTO memoryDTO) {
         if (StringUtils.isBlank(memoryDTO.getMessageId())) {
@@ -148,7 +151,7 @@ public class MemoryInsert {
                             .messageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT))
                             .messageReceiveId(receiveId).messageReceiveName(receiveName).messageReceiveType(receiveType)
                             .messageOwnerId(ownerId).messageOwnerName(ownerName).messageOwnerType(ownerType)
-                            .memoryLeafDepth(leafDepth + 1).useToken(new TokenCalculation(modelName).getMessageTextTokenCount(reflectionText)).build();
+                            .memoryLeafDepth(leafDepth + 1).useToken(tokenCalculation.getMessageTextTokenCount(reflectionText)).build();
             insertNewMemory(memoryDTO);
         }
     }
