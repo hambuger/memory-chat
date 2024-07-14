@@ -24,16 +24,11 @@ public class RedisUtil {
     private static final String EMOJI_AND_MEDIA_ID_MAP_KEY = "emojiAndMediaIdMap";
 
     public void delOldMemory(String msgListKey, int i) {
-        String json = redisTemplate.opsForValue().get(msgListKey);
-        if (json != null) {
-            try {
-                List<MemoryDTO> oldMemoryList = objectMapper.readValue(json, List.class);
-                List<MemoryDTO> newMemoryList = oldMemoryList.subList(i + 1, oldMemoryList.size());
-                redisTemplate.opsForValue().set(msgListKey, objectMapper.writeValueAsString(newMemoryList));
-            } catch (JsonProcessingException e) {
-                log.warn("delOldMemory error", e);
-            }
+        Long listSize = redisTemplate.opsForList().size(msgListKey);
+        if (listSize == null || i < 0 || i > listSize) {
+            throw new IllegalArgumentException("Index out of bounds");
         }
+        redisTemplate.opsForList().trim(msgListKey, i + 1, listSize);
     }
 
     public void incrBy(String key, Integer amount) {

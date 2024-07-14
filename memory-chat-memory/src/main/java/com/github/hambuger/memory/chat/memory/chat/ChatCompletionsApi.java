@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
+import com.github.hambuger.memory.chat.memory.prompt.ChatPrompt;
 import com.google.common.collect.Lists;
 
 import com.alibaba.fastjson.JSON;
@@ -113,6 +114,9 @@ public class ChatCompletionsApi {
 
     @Resource
     private TokenCalculation tokenCalculation;
+
+    @Resource
+    private ChatPrompt chatPrompt;
 
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
@@ -303,7 +307,7 @@ public class ChatCompletionsApi {
         String now = DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT);
         // 选择prompt
         if (CollectionUtils.isEmpty(searchMemoryList)) {
-            systemMessage = new OpenAiApi.ChatCompletionMessage(String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_PREFIX : MemoryChatConstants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_END : MemoryChatConstants.PROMPT_END, now), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+            systemMessage = new OpenAiApi.ChatCompletionMessage(chatPrompt.getFriendChatPrompt(memoryDTO.getMessageCreatorName(), null, groupFlag), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         } else {
             StringBuilder memory = new StringBuilder();
             for (int i = 0; i < searchMemoryList.size(); i++) {
@@ -314,7 +318,7 @@ public class ChatCompletionsApi {
                 memory.append(i).append("(").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorName()).orElse(memorySingle.getMessageCreatorName())).append(":").append(memorySingle.getMessageContent()).append("\n");
                 memoryUpdate.updateMemoryAccessTime(memorySingle.getMessageId());
             }
-            systemMessage = new OpenAiApi.ChatCompletionMessage(String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_PREFIX : MemoryChatConstants.PROMPT_PREFIX, memoryDTO.getMessageCreatorName()) + (StringUtils.isNotBlank(memory) ? String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_MID : MemoryChatConstants.PROMPT_MID, memory) : "") + String.format(groupFlag ? MemoryChatConstants.GROUP_PROMPT_END : MemoryChatConstants.PROMPT_END, now), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+            systemMessage = new OpenAiApi.ChatCompletionMessage(chatPrompt.getFriendChatPrompt(memoryDTO.getMessageCreatorName(), memory.toString(), groupFlag), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         }
         return systemMessage;
     }
@@ -498,6 +502,7 @@ public class ChatCompletionsApi {
         LinkedList<OpenAiApi.ChatCompletionMessage> messageList = new LinkedList<>();
         List<String> existMsgIdList = new ArrayList<>();
         int sumMsgToken = 0;
+        int msgCount = 0;
         for (int i = memoryDTOS.size() - 1; i >= 0; i--) {
             MemoryDTO memoryDTO = memoryDTOS.get(i);
             OpenAiApi.ChatCompletionMessage chatMessage;
@@ -511,7 +516,8 @@ public class ChatCompletionsApi {
                 chatMessage = convertMemoryMsg2SpringAiModelMsg(memoryDTO);
                 sumMsgToken = sumMsgToken + tokenCalculation.getUserMessageToken(chatMessage);
             }
-            if (sumMsgToken < maxMsgToken) {
+            msgCount++;
+            if (sumMsgToken < maxMsgToken && msgCount <= 30) {
                 messageList.addFirst(chatMessage);
                 existMsgIdList.add(memoryDTO.getMessageId());
             } else {
