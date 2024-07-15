@@ -2,14 +2,20 @@ package com.github.hambuger.memory.chat.memory.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.hambuger.memory.chat.memory.chat.dto.FriendPortrait;
+import com.github.hambuger.memory.chat.memory.chat.dto.GroupPortrait;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
-import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+
 
 @Component
 @Slf4j
@@ -23,6 +29,7 @@ public class RedisUtil {
 
     private static final String EMOJI_AND_MEDIA_ID_MAP_KEY = "emojiAndMediaIdMap";
 
+
     public void delOldMemory(String msgListKey, int i) {
         Long listSize = redisTemplate.opsForList().size(msgListKey);
         if (listSize == null || i < 0 || i > listSize) {
@@ -31,26 +38,66 @@ public class RedisUtil {
         redisTemplate.opsForList().trim(msgListKey, i + 1, listSize);
     }
 
+
+    public String getFriendPortrait(String name) {
+        String value = redisTemplate.opsForValue().get(name);
+        if (StringUtils.isNotBlank(value)) {
+            try {
+                FriendPortrait friendPortrait = objectMapper.readValue(value, FriendPortrait.class);
+                return friendPortrait.toMarkDown();
+            } catch (JsonProcessingException e) {
+                log.error("getFriendPortrait error", e);
+            }
+        }
+        return null;
+    }
+
+
+    public String getGroupPortrait(String name) {
+        String value = redisTemplate.opsForValue().get(name);
+        if (StringUtils.isNotBlank(value)) {
+            try {
+                GroupPortrait groupPortrait = objectMapper.readValue(value, GroupPortrait.class);
+                return groupPortrait.toMarkDown();
+            } catch (JsonProcessingException e) {
+                log.error("getGroupPortrait error", e);
+            }
+        }
+        return null;
+    }
+
+
+    public String getString(String selfStatus) {
+
+        return null;
+    }
+
+
     public void incrBy(String key, Integer amount) {
         redisTemplate.opsForValue().increment(key, amount);
     }
+
 
     public long get(String key) {
         String value = redisTemplate.opsForValue().get(key);
         return value != null ? Long.parseLong(value) : 0;
     }
 
+
     public void addElement(String key, String element) {
         redisTemplate.opsForList().rightPush(key, element);
     }
+
 
     public void reset(String key) {
         redisTemplate.delete(key);
     }
 
+
     public List<String> getList(String key) {
         return redisTemplate.opsForList().range(key, 0, -1);
     }
+
 
     public void addMsg(String key, MemoryDTO msg) {
         try {
@@ -60,6 +107,7 @@ public class RedisUtil {
             log.warn("addMsg error", e);
         }
     }
+
 
     public List<MemoryDTO> getMsg(String key) {
         List<String> jsonList = redisTemplate.opsForList().range(key, 0, -1);
@@ -76,6 +124,7 @@ public class RedisUtil {
         return msgList;
     }
 
+
     public void putEmojiAndMediaId(String key, List<String> value) {
         try {
             String json = objectMapper.writeValueAsString(value);
@@ -84,6 +133,7 @@ public class RedisUtil {
             log.warn("putEmojiAndMediaId error", e);
         }
     }
+
 
     public List<String> getEmojiAndMediaId(String key) {
         String json = (String) redisTemplate.opsForHash().get(EMOJI_AND_MEDIA_ID_MAP_KEY, key);

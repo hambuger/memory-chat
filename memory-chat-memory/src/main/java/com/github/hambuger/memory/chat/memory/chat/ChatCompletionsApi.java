@@ -315,7 +315,7 @@ public class ChatCompletionsApi {
                 if (existMsgIds.contains(memorySingle.getMessageId())) {
                     continue;
                 }
-                memory.append(i).append("(").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorName()).orElse(memorySingle.getMessageCreatorName())).append(":").append(memorySingle.getMessageContent()).append("\n");
+                memory.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorName()).orElse(memorySingle.getMessageCreatorName())).append(":").append(memorySingle.getMessageContent()).append("\n");
                 memoryUpdate.updateMemoryAccessTime(memorySingle.getMessageId());
             }
             systemMessage = new OpenAiApi.ChatCompletionMessage(chatPrompt.getFriendChatPrompt(memoryDTO.getMessageCreatorName(), memory.toString(), groupFlag), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
