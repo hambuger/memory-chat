@@ -6,8 +6,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
 import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
@@ -46,7 +48,11 @@ public class AnnotationProcessor implements BeanPostProcessor {
                         throw new RuntimeException(e);
                     }
                 };
-                CallFunctionRegistryFactory.registryFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
+                if (StringUtils.equalsIgnoreCase(functionCallRegistry.scope(), CreatorEnum.GROUP.getType())) {
+                    CallFunctionRegistryFactory.registryGroupFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
+                }else {
+                    CallFunctionRegistryFactory.registryUserFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
+                }
             }
         }
         return bean;

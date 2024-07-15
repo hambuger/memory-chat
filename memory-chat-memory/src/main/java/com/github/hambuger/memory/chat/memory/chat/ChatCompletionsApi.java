@@ -132,6 +132,7 @@ public class ChatCompletionsApi {
             SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
+            boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
             redisUtil.addMsg(msgListKey, MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
             CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(memoryDTO));
@@ -161,7 +162,7 @@ public class ChatCompletionsApi {
                 return null;
             }
             // 获取AI回复
-            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList);
+            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, groupFlag);
             if (aiMessageResponse == null || CollectionUtils.isEmpty(aiMessageResponse.choices())) {
                 return null;
             }

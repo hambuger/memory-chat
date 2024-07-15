@@ -47,7 +47,7 @@ public class LangChainChat {
 
 
     public static Response<AiMessage> generateMsgWithMsgListAndFunctions(List<ChatMessage> messageList) {
-        List<ToolSpecification> toolSpecifications = CallFunctionRegistryFactory.getAllFunctionCall();
+        List<ToolSpecification> toolSpecifications = CallFunctionRegistryFactory.getAllFunctionCall(false);
         if (CollectionUtils.isEmpty(toolSpecifications)) {
             return generateMsgWithMsgList(messageList);
         }

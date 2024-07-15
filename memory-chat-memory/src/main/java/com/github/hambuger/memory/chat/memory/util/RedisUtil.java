@@ -7,6 +7,7 @@ import com.github.hambuger.memory.chat.memory.chat.dto.GroupPortrait;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -40,7 +41,7 @@ public class RedisUtil {
 
 
     public String getFriendPortrait(String name) {
-        String value = redisTemplate.opsForValue().get(name);
+        String value = redisTemplate.opsForValue().get(name + "::Portrait");
         if (StringUtils.isNotBlank(value)) {
             try {
                 FriendPortrait friendPortrait = objectMapper.readValue(value, FriendPortrait.class);
@@ -54,7 +55,7 @@ public class RedisUtil {
 
 
     public String getGroupPortrait(String name) {
-        String value = redisTemplate.opsForValue().get(name);
+        String value = redisTemplate.opsForValue().get(name + "::Portrait");
         if (StringUtils.isNotBlank(value)) {
             try {
                 GroupPortrait groupPortrait = objectMapper.readValue(value, GroupPortrait.class);
@@ -145,6 +146,42 @@ public class RedisUtil {
             }
         }
         return new ArrayList<>();
+    }
+
+
+    public void updateFriendPortrait(String name, String jsonString) {
+        String value = redisTemplate.opsForValue().get(name + "::Portrait");
+        try {
+            if (StringUtils.isBlank(value)) {
+                redisTemplate.opsForValue().set(name + "::Portrait", jsonString);
+                return;
+            }
+            FriendPortrait portrait = objectMapper.readValue(value, FriendPortrait.class);
+            FriendPortrait friendPortrait = objectMapper.readValue(jsonString, FriendPortrait.class);
+            BeanUtils.copyProperties(friendPortrait, portrait);
+            String json = objectMapper.writeValueAsString(portrait);
+            redisTemplate.opsForValue().set(name + "::Portrait", json);
+        } catch (JsonProcessingException e) {
+            log.error("updateFriendPortrait error", e);
+        }
+    }
+
+
+    public void updateGroupPortrait(String name, String jsonString) {
+        String value = redisTemplate.opsForValue().get(name + "::Portrait");
+        try {
+            if (StringUtils.isBlank(value)) {
+                redisTemplate.opsForValue().set(name + "::Portrait", jsonString);
+                return;
+            }
+            GroupPortrait portrait = objectMapper.readValue(value, GroupPortrait.class);
+            GroupPortrait groupPortrait = objectMapper.readValue(jsonString, GroupPortrait.class);
+            BeanUtils.copyProperties(groupPortrait, portrait);
+            String json = objectMapper.writeValueAsString(portrait);
+            redisTemplate.opsForValue().set(name + "::Portrait", json);
+        } catch (JsonProcessingException e) {
+            log.error("updateGroupPortrait error", e);
+        }
     }
 }
 

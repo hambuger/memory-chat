@@ -1,5 +1,8 @@
 package com.github.hambuger.memory.chat.memory.chat.dto;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import lombok.Data;
 
 
@@ -11,5 +14,7 @@ import lombok.Data;
 public class Portrait {
 
     public String name;
+
+    public Map<String, String> otherInfo = new HashMap<>();
 
 }

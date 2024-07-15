@@ -66,9 +66,9 @@ public class SpringAiChat {
         openAiApi = new OpenAiApi(baseUrl, openaiApiKey, clientBuilder, WebClient.builder());
     }
 
-    public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages) {
+    public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages, boolean groupFlag) {
         OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
-        List<ToolSpecification> toolSpecifications = CallFunctionRegistryFactory.getAllFunctionCall();
+        List<ToolSpecification> toolSpecifications = CallFunctionRegistryFactory.getAllFunctionCall(groupFlag);
         List<OpenAiApi.FunctionTool> tools = new ArrayList<>();
         for (ToolSpecification toolSpecification : toolSpecifications) {
             Map<String, Object> toolMap = new HashMap<>();
@@ -80,8 +80,7 @@ public class SpringAiChat {
             tools.add(chatTool);
         }
 
-        OpenAiChatOptions chatOptions =
-                OpenAiChatOptions.builder().withModel(modelName).withTools(tools).withToolChoice(REQUIRED).withTemperature(temperature).build();
+        OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().withModel(modelName).withTools(tools).withToolChoice(REQUIRED).withTemperature(temperature).build();
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
         if (response == null || CollectionUtils.isEmpty(response.getBody().choices()) || response.getBody().choices().get(0).message().toolCalls().stream().anyMatch(tool -> tool.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME))) {
@@ -96,7 +95,7 @@ public class SpringAiChat {
         }
         messages.add(response.getBody().choices().get(0).message());
         messages.addAll(executionResultMessages);
-        return generateMsgWithMsgListAndFunctions(messages);
+        return generateMsgWithMsgListAndFunctions(messages, groupFlag);
     }
 
     public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages, boolean jsonFormat) {

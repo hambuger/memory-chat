@@ -30,20 +30,29 @@ public class CallFunctionRegistryFactory {
     }
 
 
-    public static volatile ConcurrentHashMap<String, ToolSpecification> FUNCTION_CALL_METHOD_MAP = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ToolSpecification> FUNCTION_CALL_METHOD_USER_MAP = new ConcurrentHashMap<>();
+
+    public static volatile ConcurrentHashMap<String, ToolSpecification> FUNCTION_CALL_METHOD_GROUP_MAP = new ConcurrentHashMap<>();
 
     public static volatile ConcurrentHashMap<String, MethodFunction> FUNCTION_CALL_MAP = new ConcurrentHashMap<>();
 
 
-    public static boolean registryFunction(ToolSpecification toolSpecification, Class argClass, Function function) {
-        FUNCTION_CALL_METHOD_MAP.put(toolSpecification.name(), toolSpecification);
+    public static boolean registryUserFunction(ToolSpecification toolSpecification, Class argClass, Function function) {
+        FUNCTION_CALL_METHOD_USER_MAP.put(toolSpecification.name(), toolSpecification);
         FUNCTION_CALL_MAP.put(toolSpecification.name(), new MethodFunction(argClass, function));
         return true;
     }
 
 
-    public static List<ToolSpecification> getAllFunctionCall() {
-        return FUNCTION_CALL_METHOD_MAP.values().stream().toList();
+    public static boolean registryGroupFunction(ToolSpecification toolSpecification, Class argClass, Function function) {
+        FUNCTION_CALL_METHOD_GROUP_MAP.put(toolSpecification.name(), toolSpecification);
+        FUNCTION_CALL_MAP.put(toolSpecification.name(), new MethodFunction(argClass, function));
+        return true;
+    }
+
+
+    public static List<ToolSpecification> getAllFunctionCall(boolean groupFlag) {
+        return (groupFlag ? FUNCTION_CALL_METHOD_GROUP_MAP : FUNCTION_CALL_METHOD_USER_MAP).values().stream().toList();
     }
 
 

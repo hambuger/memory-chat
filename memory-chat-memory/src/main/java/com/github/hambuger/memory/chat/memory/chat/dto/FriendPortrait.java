@@ -15,7 +15,6 @@ import lombok.Data;
 @Data
 public class FriendPortrait extends Portrait {
 
-
     private String age = "Unknown";
 
     private String language = "Unknown";
@@ -30,11 +29,9 @@ public class FriendPortrait extends Portrait {
 
     private String status = "Unknown";
 
-    public Map<String, String> otherInfo = new HashMap<>();
-
     public String toMarkDown() {
         String formatStr = """
-                ## Interlocutor
+                ## FriendPortrait
                 - Name: %s
                 - Age: %s
                 - Language: %s
@@ -51,7 +48,7 @@ public class FriendPortrait extends Portrait {
                 otherInfoStr.append("- ").append(stringEntry.getKey()).append(": ").append(stringEntry.getValue()).append("\n");
             }
         }
-        return String.format(formatStr, this.name, age, language, city, gender, character, relationship, status, otherInfoStr.toString());
+        return String.format(formatStr, this.name, age, language, city, gender, character, relationship, status, otherInfoStr);
     }
 
 }

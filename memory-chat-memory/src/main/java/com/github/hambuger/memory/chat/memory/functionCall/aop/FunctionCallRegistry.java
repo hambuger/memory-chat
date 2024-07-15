@@ -16,4 +16,6 @@ public @interface FunctionCallRegistry {
 
     String functionDesc() default "";
 
+    String scope() default "";
+
 }
