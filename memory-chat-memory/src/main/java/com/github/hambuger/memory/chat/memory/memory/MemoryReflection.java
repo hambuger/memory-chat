@@ -42,14 +42,15 @@ public class MemoryReflection {
 
 
     public List<ReflectionResult.Reflection> extractReflectionFromMessages(List<String> msgList) {
-        String prompt =
-                "The ones between ```` below are past chat records.\n" + "\n" + "These conversations cover a variety of topics, from the trivialities of everyday life to discussions on a " +
-                        "variety of topics.\n" + "\n" + "These memories may include your host's interests, opinions expressed in past conversations, important life events, and more.\n" + "\n" +
-                        "Information similar to human long-term memory is extracted from these historical chat records.\n" + "\n" + "You only need json data like this in your answer, make sure your" +
-                        " answer " + "can be parsed into json data correctly.\n" + JSON.toJSONString(new ReflectionResult()) + "\n" + "Among them, text indicates the content of " +
-                        "the summary and " + "refinement. p_ids represents all the information sources that the abstract relies on, obtained from parentheses at the beginning of each conversation" +
-                        ".\n" + "\n" + "````\n" + StringUtils.join(msgList, ";;") + "\n````";
-        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(prompt);
+        String prompt = """
+                From following historical records, extract information similar to human long-term memory.
+                %s
+                Make sure your answer can be parsed correctly into json data similar to the following.
+                %s
+                The text represents the summarized and refined content. It should be more concise and shorter than the original text.
+                p_ids represents all the information sources that the abstract relies on, obtained from parentheses at the beginning of each conversation.
+                """;
+        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(String.format(prompt, StringUtils.join(msgList, ";;"), JSON.toJSONString(new ReflectionResult())));
         if (StringUtils.isBlank(result)) {
             return new ArrayList<>();
         }
