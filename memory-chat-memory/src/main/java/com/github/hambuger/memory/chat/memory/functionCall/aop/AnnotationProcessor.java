@@ -19,7 +19,7 @@ import java.util.function.Function;
 
 import dev.langchain4j.agent.tool.ToolParameters;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import com.github.hambuger.memory.chat.memory.util.CallFunctionRegistryFactory;
+import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
 
 
 /**
@@ -50,8 +50,11 @@ public class AnnotationProcessor implements BeanPostProcessor {
                 };
                 if (StringUtils.equalsIgnoreCase(functionCallRegistry.scope(), CreatorEnum.GROUP.getType())) {
                     CallFunctionRegistryFactory.registryGroupFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
-                }else {
+                } else if (StringUtils.equalsIgnoreCase(functionCallRegistry.scope(), CreatorEnum.USER.getType())) {
                     CallFunctionRegistryFactory.registryUserFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
+                } else {
+                    CallFunctionRegistryFactory.registryUserFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
+                    CallFunctionRegistryFactory.registryGroupFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
                 }
             }
         }

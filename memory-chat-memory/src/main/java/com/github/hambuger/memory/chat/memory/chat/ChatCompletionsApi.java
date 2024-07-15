@@ -305,7 +305,6 @@ public class ChatCompletionsApi {
     private @NotNull OpenAiApi.ChatCompletionMessage getSystemMessage(MemoryDTO memoryDTO, List<MemoryDTO> searchMemoryList, List<String> existMsgIds) {
         OpenAiApi.ChatCompletionMessage systemMessage;
         boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
-        String now = DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT);
         // 选择prompt
         if (CollectionUtils.isEmpty(searchMemoryList)) {
             systemMessage = new OpenAiApi.ChatCompletionMessage(chatPrompt.getFriendChatPrompt(memoryDTO.getMessageCreatorName(), null, groupFlag), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);

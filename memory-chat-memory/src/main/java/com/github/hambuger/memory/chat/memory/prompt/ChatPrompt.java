@@ -66,9 +66,9 @@ public class ChatPrompt {
         selfStatus = StringUtils.isBlank(selfStatus) ? "Unknown" : selfStatus;
         String talkPortrait;
         if (groupFlag) {
-            talkPortrait = Optional.ofNullable(redisUtil.getFriendPortrait(messageFromName)).orElse(String.format("## GroupPortrait\n" + "- Name: %s", messageFromName));
+            talkPortrait = Optional.ofNullable(redisUtil.getGroupPortrait(messageFromName)).orElse(String.format("## GroupPortrait\n" + "- Name: %s", messageFromName));
         }else {
-            talkPortrait = Optional.ofNullable(redisUtil.getGroupPortrait(messageFromName)).orElse(String.format("## FriendPortrait\n" + "- Name: %s", messageFromName));
+            talkPortrait = Optional.ofNullable(redisUtil.getFriendPortrait(messageFromName)).orElse(String.format("## FriendPortrait\n" + "- Name: %s", messageFromName));
         }
         String talkingDesc;
         if (groupFlag) {

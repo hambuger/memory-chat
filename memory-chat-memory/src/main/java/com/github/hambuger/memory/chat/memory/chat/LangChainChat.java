@@ -2,7 +2,7 @@ package com.github.hambuger.memory.chat.memory.chat;
 
 import com.github.hambuger.memory.chat.memory.constants.LangChainConstants;
 import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
-import com.github.hambuger.memory.chat.memory.util.CallFunctionRegistryFactory;
+import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
 
 import org.apache.commons.collections4.CollectionUtils;
 

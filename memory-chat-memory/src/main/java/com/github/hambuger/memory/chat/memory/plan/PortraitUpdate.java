@@ -5,11 +5,9 @@ import com.github.hambuger.memory.chat.memory.chat.dto.FriendPortrait;
 import com.github.hambuger.memory.chat.memory.chat.dto.GroupPortrait;
 import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.util.RedisUtil;
-
-import org.springframework.stereotype.Component;
-
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 
 /**
@@ -24,16 +22,17 @@ public class PortraitUpdate {
     private RedisUtil redisUtil;
 
 
-    @FunctionCallRegistry(scope = "GROUP")
-    public boolean updateGroupPortrait(String groupName, GroupPortrait portrait) {
-        redisUtil.updateGroupPortrait(groupName, JSON.toJSONString(portrait));
+
+    @FunctionCallRegistry(functionDesc = "更新微信群的画像", scope = "GROUP")
+    public boolean updateGroupPortrait(GroupPortrait portrait) {
+        redisUtil.updateGroupPortrait(portrait.getName(), JSON.toJSONString(portrait));
         return true;
     }
 
 
-    @FunctionCallRegistry
-    public boolean updateFriendPortrait(String friendName, FriendPortrait portrait) {
-        redisUtil.updateFriendPortrait(friendName, JSON.toJSONString(portrait));
+    @FunctionCallRegistry(functionDesc = "更新微信好友的画像", scope = "USER")
+    public boolean updateFriendPortrait(FriendPortrait portrait) {
+        redisUtil.updateFriendPortrait(portrait.getName(), JSON.toJSONString(portrait));
         return true;
     }
 

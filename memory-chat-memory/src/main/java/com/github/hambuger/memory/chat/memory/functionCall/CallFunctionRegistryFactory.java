@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.util;
+package com.github.hambuger.memory.chat.memory.functionCall;
 
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;

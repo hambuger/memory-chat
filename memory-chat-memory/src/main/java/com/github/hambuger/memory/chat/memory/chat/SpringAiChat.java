@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
-import com.github.hambuger.memory.chat.memory.util.CallFunctionRegistryFactory;
+import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.ai.model.ModelOptionsUtils;
