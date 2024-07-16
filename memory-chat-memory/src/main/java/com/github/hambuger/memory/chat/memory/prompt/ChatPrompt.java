@@ -126,10 +126,42 @@ public class ChatPrompt {
     }
 
 
-    public String getScheduleStartPrompt(String... param) {
+    private static final String REFLECTION_PROMPT = """
+            From following historical records, extract information similar to human long-term memory.
+            %s
+            Make sure your answer can be parsed correctly into json data similar to the following.
+            %s
+            The text represents the summarized and refined content. It should be more concise and shorter than the original text.
+            p_ids represents all the information sources that the abstract relies on, obtained from parentheses at the beginning of each conversation.
+            """;
+
+    private static final String SCORE_PROMPT = """
+            作为一款专属的AI聊天机器人，你的任务是建立与用户之间的深度、持久的联系。
+            在````之间的内容是你要分析的信息内容，可能包括个人身份信息、情绪表达、问题询问或其他各种类型的信息。
+            思考这些信息如何可能影响你未来与用户的对话。评估这些信息是否能够帮助你更深入地与用户建立紧密的交流，更准确地理解用户的需求、喜好以及情绪状态。
+            在深入评估的基础上，根据你认为这些信息在未来对话检索中的重要性，为这些信息打分，分数范围为0-1。
+            请注意，0表示这项信息对于长期的对话交流并无任何重要性，而1则表示这项信息极其重要。
+            请忽略这些信息在短期对话情景中的影响。返回一个打分的分数值score字段的json结构，不要提供其他信息。
+
+            例如：
+            用户:````晚安````
+            AI:{\\"score\\":0.1}
+
+            用户:
+            ````
+            %s
+            ````
+            AI:
+            """;
 
 
-        return null;
+    public String getMsgReflectionPrompt(String... param) {
+        return String.format(REFLECTION_PROMPT, param);
+    }
+
+
+    public String getMsgScorePrompt(String... param) {
+        return String.format(SCORE_PROMPT, param);
     }
 
 }

@@ -2,6 +2,7 @@ package com.github.hambuger.memory.chat.memory.memory;
 
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
+import com.github.hambuger.memory.chat.memory.prompt.ChatPrompt;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,10 @@ public class MemoryReflection {
     @Resource
     private SpringAiChat springAiChat;
 
+    @Resource
+    private ChatPrompt chatPrompt;
+
+
     @Data
     public static class ReflectionResult {
 
@@ -42,15 +47,7 @@ public class MemoryReflection {
 
 
     public List<ReflectionResult.Reflection> extractReflectionFromMessages(List<String> msgList) {
-        String prompt = """
-                From following historical records, extract information similar to human long-term memory.
-                %s
-                Make sure your answer can be parsed correctly into json data similar to the following.
-                %s
-                The text represents the summarized and refined content. It should be more concise and shorter than the original text.
-                p_ids represents all the information sources that the abstract relies on, obtained from parentheses at the beginning of each conversation.
-                """;
-        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(String.format(prompt, StringUtils.join(msgList, ";;"), JSON.toJSONString(new ReflectionResult())));
+        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(chatPrompt.getMsgReflectionPrompt(StringUtils.join(msgList, ";;"), JSON.toJSONString(new ReflectionResult())));
         if (StringUtils.isBlank(result)) {
             return new ArrayList<>();
         }
