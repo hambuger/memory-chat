@@ -25,5 +25,7 @@ public class MemoryChatConstants {
     public static final String SEND_IMAGE_PATH = "downloaded_image.jpg";
 
     public static final String PORTRAIT_KEY_SUFFIX = "::Portrait";
+
+    public static final String SELF_STATUS_KEY = "selfStatus";
 }
 

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.hambuger.memory.chat.memory.chat.dto.FriendPortrait;
 import com.github.hambuger.memory.chat.memory.chat.dto.GroupPortrait;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.PORTRAIT_KEY_SUFFIX;
 
@@ -67,10 +69,12 @@ public class RedisUtil {
         return null;
     }
 
-
     public String getString(String selfStatus) {
+        return redisTemplate.opsForValue().get(selfStatus);
+    }
 
-        return null;
+    public void setString(String key, String value) {
+        redisTemplate.opsForValue().set(key, value);
     }
 
 

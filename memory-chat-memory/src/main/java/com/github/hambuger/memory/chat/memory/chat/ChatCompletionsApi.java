@@ -1,6 +1,5 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
-import com.github.hambuger.memory.chat.memory.prompt.ChatPrompt;
 import com.google.common.collect.Lists;
 
 import com.alibaba.fastjson.JSON;
@@ -12,11 +11,13 @@ import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.chat.dto.SpringAiChatMessageMemoryDTO;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
+import com.github.hambuger.memory.chat.memory.emoji.EmojiSpider;
 import com.github.hambuger.memory.chat.memory.memory.MemoryInsert;
 import com.github.hambuger.memory.chat.memory.memory.MemorySearch;
 import com.github.hambuger.memory.chat.memory.memory.MemoryUpdate;
 import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
+import com.github.hambuger.memory.chat.memory.prompt.ChatPrompt;
 import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
 import com.github.hambuger.memory.chat.memory.util.FileUtil;
 import com.github.hambuger.memory.chat.memory.util.IdUtil;
@@ -27,6 +28,7 @@ import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
+import com.github.hambuger.memory.chat.wechat.dto.response.msg.send.WebWXSendMsgResponse;
 import com.github.hambuger.memory.chat.wechat.entity.Message;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -77,7 +79,8 @@ import static java.lang.String.format;
 @Component
 public class ChatCompletionsApi {
 
-    private static final ThreadPoolExecutor CHAT_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("chat-pool"), new ThreadPoolExecutor.CallerRunsPolicy());
+    private static final ThreadPoolExecutor CHAT_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("chat-pool"),
+            new ThreadPoolExecutor.CallerRunsPolicy());
 
 
     private static final AtomicReference<ConcurrentHashMap<String, String>> LAST_MESSAGE_ID_MAP = new AtomicReference<>(new ConcurrentHashMap());
@@ -113,6 +116,9 @@ public class ChatCompletionsApi {
     private RedisUtil redisUtil;
 
     @Resource
+    private EmojiSpider emojiSpider;
+
+    @Resource
     private TokenCalculation tokenCalculation;
 
     @Resource
@@ -120,9 +126,11 @@ public class ChatCompletionsApi {
 
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
-        String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageReceiveId() : memoryDTO.getMessageCreatorId());
+        String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageReceiveId() :
+                memoryDTO.getMessageCreatorId());
         String oldMsgId = LAST_MESSAGE_ID_MAP.get().get(lastMsgIdMapKey);
-        return StringUtils.isNotBlank(oldMsgId) && !StringUtils.equals(oldMsgId, StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageParentIds().get(0) : memoryDTO.getMessageId());
+        return StringUtils.isNotBlank(oldMsgId) && !StringUtils.equals(oldMsgId, StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageParentIds().get(0) :
+                memoryDTO.getMessageId());
     }
 
 
@@ -133,7 +141,8 @@ public class ChatCompletionsApi {
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
             boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
-            redisUtil.addMsg(msgListKey, MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
+            redisUtil.addMsg(msgListKey,
+                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
             CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(memoryDTO));
             // 更新最后一条消息id
@@ -143,7 +152,8 @@ public class ChatCompletionsApi {
                 return null;
             }
             // 查询相关性最高的历史消息
-            List<MemoryDTO> searchMemoryList = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) ? memorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(), memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent()) : new ArrayList<>();
+            List<MemoryDTO> searchMemoryList = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) ?
+                    memorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(), memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent()) : new ArrayList<>();
 
             List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
             if (checkLastMessageId(memoryDTO)) {
@@ -175,14 +185,14 @@ public class ChatCompletionsApi {
                 List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiMessageResponse.usage().completionTokens());
                 aiMsgDTOList.forEach(memoryInsert::insertNewMemory);
             });
-            ChatResponse chatResponse = new ChatResponse();
             // 转换成发送消息
             List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
             if (CollectionUtils.isEmpty(sendMessageList)) {
                 return null;
-            } else {
+            }else {
                 startNewTaskForContact(baseMemoryDTO.getFromUserName(), memoryDTO, msgListKey);
             }
+            ChatResponse chatResponse = new ChatResponse();
             chatResponse.setSendMessageList(sendMessageList);
             return chatResponse;
         } catch (Exception e) {
@@ -191,62 +201,104 @@ public class ChatCompletionsApi {
         }
     }
 
+
+    public void sendWxChatMessageList(String toUserName, List<SendMessage> sendMessageList, long receiveMsgTime) {
+        for (SendMessage sendMessage : sendMessageList) {
+            Message message = new Message();
+            message.setToUsername(toUserName);
+            message.setContent(sendMessage.getMessageContent());
+            ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(sendMessage.getMessageContentType());
+            message.setMsgType(contentTypeEnum == null ? ContentTypeEnum.TEXT.getMsgType() : contentTypeEnum.getMsgType());
+            List<String> emojiTypeAndMediaId = new ArrayList<>();
+            if (contentTypeEnum == ContentTypeEnum.PICTURE) {
+                String filePath = FileUtil.downloadImage(sendMessage.getMessageContent());
+                message.setFilePath(filePath);
+                message.setContent(null);
+            }else if (contentTypeEnum == ContentTypeEnum.EMOJI) {
+                if (CollectionUtils.isEmpty(redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent()))) {
+                    String emojiPath = emojiSpider.searchEmoji(sendMessage.getMessageContent());
+                    if (StringUtils.isBlank(emojiPath)) {
+                        message.setMsgType(ContentTypeEnum.TEXT.getMsgType());
+                    }else {
+                        message.setFilePath(emojiPath);
+                        if (!emojiPath.endsWith("gif")) {
+                            message.setMsgType(ContentTypeEnum.PICTURE.getMsgType());
+                            emojiTypeAndMediaId.add("png");
+                        }else {
+                            emojiTypeAndMediaId.add("gif");
+                        }
+                    }
+                }else {
+                    List<String> list = redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent());
+                    if (!list.get(0).equals("gif")) {
+                        message.setMsgType(ContentTypeEnum.PICTURE.getMsgType());
+                    }
+                    message.setMediaId(list.get(1));
+                }
+                message.setContent(null);
+            }else if (contentTypeEnum == ContentTypeEnum.TEXT) {
+                int waste = message.getContent().length() * 1000 / 4;
+                if (System.currentTimeMillis() < receiveMsgTime + waste) {
+                    try {
+                        Thread.sleep(receiveMsgTime + waste - System.currentTimeMillis());
+                    } catch (InterruptedException e) {
+                        log.warn("sleep error", e);
+                    }
+                }
+            }
+            WebWXSendMsgResponse webWXSendMsgResponse = MessageTools.sendMsgByUserId(message);
+            if (contentTypeEnum == ContentTypeEnum.EMOJI && CollectionUtils.isEmpty(redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent()))) {
+                emojiTypeAndMediaId.add(webWXSendMsgResponse.getMediaId());
+                redisUtil.putEmojiAndMediaId(sendMessage.getMessageContent(), emojiTypeAndMediaId);
+            }
+            receiveMsgTime = System.currentTimeMillis();
+        }
+    }
+
+
     private void startNewTaskForContact(String toUserId, MemoryDTO memoryDTO, String msgListKey) {
         StartConversationCheckTask.startTaskForContact(msgListKey, () -> {
             List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
             if (CollectionUtils.isEmpty(memoryDTOS)) {
                 return false;
             }
-            String prompt = getCheckStartMsgPrompt(memoryDTO.getMessageCreatorName(), memoryDTOS);
+            boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
+            String prompt = getCheckStartMsgPrompt(memoryDTO.getMessageCreatorName(), groupFlag, memoryDTOS);
             if (StringUtils.isBlank(prompt)) {
                 return false;
             }
-            String aiResponse = springAiChat.generateJsonWithSingleMsgAndPrompt(prompt);
-            if (StringUtils.isBlank(aiResponse)) {
+            List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
+            messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+            OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag);
+            if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
                 return false;
             }
-            SendMessageRequest sendMessageRequest = JSON.parseObject(aiResponse, SendMessageRequest.class);
-            if (sendMessageRequest == null || !sendMessageRequest.isNeedsSending() || (CollectionUtils.isEmpty(sendMessageRequest.getSendPictureMessageList()) && CollectionUtils.isEmpty(sendMessageRequest.getSendTextMessageList()))) {
+            OpenAiApi.ChatCompletionMessage responseMessage = aiResponse.choices().get(0).message();
+            log.info("ai response:{}", responseMessage);
+            CHAT_POOL.execute(() -> {
+                List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiResponse.usage().completionTokens());
+                aiMsgDTOList.forEach(memoryInsert::insertNewMemory);
+            });
+            // 转换成发送消息
+            List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
+            if (CollectionUtils.isEmpty(sendMessageList)) {
                 return false;
+            }else {
+                sendWxChatMessageList(toUserId, sendMessageList, System.currentTimeMillis());
             }
-            List<Message> sendMessageList = new ArrayList<>();
-            if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendTextMessageList())) {
-                for (String text : sendMessageRequest.getSendTextMessageList()) {
-                    Message sendMessage = new Message();
-                    sendMessage.setToUsername(toUserId);
-                    sendMessage.setContent(text);
-                    sendMessage.setMsgType(ContentTypeEnum.TEXT.getMsgType());
-                    sendMessageList.add(sendMessage);
-                    MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), text, 0);
-                    CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(aiMemoryDTO));
-                }
-            } else {
-                return false;
-            }
-            MessageTools.sendMsgByUserId(sendMessageList);
             return true;
         });
     }
 
-    private String getCheckStartMsgPrompt(String toUserName, List<MemoryDTO> memoryDTOS) {
+
+    private String getCheckStartMsgPrompt(String toUserName, boolean groupFlag, List<MemoryDTO> memoryDTOS) {
         try {
-            StringBuilder promptBuilder = new StringBuilder()
-                    .append("你是Andrew,下面是你和%s的离当前时间最近的对话内容。【%s】\n判断一下是否需要给%s发送一个新的消息。\n")
-//                    .append("应该是在确实有必要的情况下才发起会话,尽量不要打扰别人，尤其是在夜晚时间。长时间没有联系的人也要谨慎判断是否发起消息。\n")
-                    .append("即使需要发送消息，也不要频繁发送重复的信息\n")
-                    .append("如果需要发送消息，给出需要发送的消息内容。你给出的发送消息的判断和消息内容应该类似如下的json格式：\n %s\n")
-                    .append("其中needsSending字段表示是否需要发送消息，sendTextMessageList字段表示需要发送的消息内容\n")
-                    .append("注意：现在时间是%s");
-            SendMessageRequest sendMessageRequest = new SendMessageRequest();
-            sendMessageRequest.setNeedsSending(false);
-            sendMessageRequest.setSendTextMessageList(new ArrayList<>());
-            String msgJsonStr = JSON.toJSONString(sendMessageRequest);
             StringBuilder memoryStr = new StringBuilder();
             for (int i = 1; i < memoryDTOS.size(); i++) {
                 MemoryDTO memorySingle = memoryDTOS.get(i);
                 memoryStr.append(i).append(".(").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(":").append(memorySingle.getMessageContent()).append("\n");
             }
-            return String.format(promptBuilder.toString(), toUserName, memoryStr, toUserName, msgJsonStr, DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
+            return chatPrompt.getChatPrompt(toUserName, memoryStr.toString(), groupFlag, true);
         } catch (Exception e) {
             log.error("getCheckStartMsgPrompt error", e);
         }
@@ -262,7 +314,7 @@ public class ChatCompletionsApi {
                 sendMessage.setMessageContent(responseMessage.content());
                 sendMessage.setMessageContentType(ContentTypeEnum.TEXT.getType());
                 sendMessageList.add(sendMessage);
-            } else {
+            }else {
                 for (OpenAiApi.ChatCompletionMessage.ToolCall toolExecutionRequest : responseMessage.toolCalls()) {
                     if (toolExecutionRequest.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME)) {
                         if (StringUtils.isNotBlank(toolExecutionRequest.function().arguments())) {
@@ -307,8 +359,8 @@ public class ChatCompletionsApi {
         boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
         // 选择prompt
         if (CollectionUtils.isEmpty(searchMemoryList)) {
-            systemMessage = new OpenAiApi.ChatCompletionMessage(chatPrompt.getFriendChatPrompt(memoryDTO.getMessageCreatorName(), null, groupFlag), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
-        } else {
+            systemMessage = new OpenAiApi.ChatCompletionMessage(chatPrompt.getChatPrompt(memoryDTO.getMessageCreatorName(), null, groupFlag, false), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+        }else {
             StringBuilder memory = new StringBuilder();
             for (int i = 0; i < searchMemoryList.size(); i++) {
                 MemoryDTO memorySingle = searchMemoryList.get(i);
@@ -318,7 +370,8 @@ public class ChatCompletionsApi {
                 memory.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorName()).orElse(memorySingle.getMessageCreatorName())).append(":").append(memorySingle.getMessageContent()).append("\n");
                 memoryUpdate.updateMemoryAccessTime(memorySingle.getMessageId());
             }
-            systemMessage = new OpenAiApi.ChatCompletionMessage(chatPrompt.getFriendChatPrompt(memoryDTO.getMessageCreatorName(), memory.toString(), groupFlag), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+            systemMessage = new OpenAiApi.ChatCompletionMessage(chatPrompt.getChatPrompt(memoryDTO.getMessageCreatorName(), memory.toString(), groupFlag, false),
+                    OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         }
         return systemMessage;
     }
@@ -362,7 +415,7 @@ public class ChatCompletionsApi {
             if (CollectionUtils.isEmpty(aiMessage.toolCalls())) {
                 MemoryDTO aiMemoryDTO = getAiResponseMemoryDTO(memoryDTO, ContentTypeEnum.TEXT.getType(), aiMessage.content(), token);
                 memoryDTOS.add(aiMemoryDTO);
-            } else {
+            }else {
                 for (OpenAiApi.ChatCompletionMessage.ToolCall toolExecutionRequest : aiMessage.toolCalls()) {
                     if (toolExecutionRequest.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME)) {
                         if (StringUtils.isNotBlank(toolExecutionRequest.function().name())) {
@@ -376,7 +429,8 @@ public class ChatCompletionsApi {
                                     sendMessageRequest.getSendPictureMessageList().stream().forEach(pic -> sendMessageList.add(new SendMessage(pic, ContentTypeEnum.PICTURE.getType())));
                                 }
                                 if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendEmojiMessageList())) {
-                                    sendMessageRequest.getSendEmojiMessageList().stream().forEach(emoji -> sendMessageList.add(new SendMessage(String.format("[%s]",emoji), ContentTypeEnum.EMOJI.getType())));
+                                    sendMessageRequest.getSendEmojiMessageList().stream().forEach(emoji -> sendMessageList.add(new SendMessage(String.format("[%s]", emoji),
+                                            ContentTypeEnum.EMOJI.getType())));
                                 }
                                 for (SendMessage sendMessage : sendMessageList) {
                                     if (StringUtils.isBlank(sendMessage.getMessageContentType()) || StringUtils.isBlank(sendMessage.getMessageContent())) {
@@ -393,6 +447,7 @@ public class ChatCompletionsApi {
         }
         return memoryDTOS;
     }
+
 
     @NotNull
     private static MemoryDTO getAiResponseMemoryDTO(MemoryDTO memoryDTO, String TEXT, String aiMessage, Integer token) {
@@ -424,7 +479,7 @@ public class ChatCompletionsApi {
     public OpenAiApi.ChatCompletionMessage convertMemoryMsg2SpringAiModelMsg(BaseMemoryDTO memoryDTO) {
         OpenAiApi.ChatCompletionMessage message = null;
         ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(memoryDTO.getMessageContentType());
-        switch (contentTypeEnum){
+        switch (contentTypeEnum) {
             case NOTE:
                 message = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
                 break;
@@ -432,10 +487,12 @@ public class ChatCompletionsApi {
                 message = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
             case PICTURE:
-                message = new OpenAiApi.ChatCompletionMessage(Lists.newArrayList(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", IMAGE_TYPE, FileUtil.getFileBase64Data(memoryDTO.getMessageContent(), true)), "auto"))), OpenAiApi.ChatCompletionMessage.Role.USER);
+                message = new OpenAiApi.ChatCompletionMessage(Lists.newArrayList(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format(
+                        "data:%s;base64,%s", IMAGE_TYPE, FileUtil.getFileBase64Data(memoryDTO.getMessageContent(), true)), "auto"))), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
             case EMOJI:
-                message = new OpenAiApi.ChatCompletionMessage(Lists.newArrayList(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format("data:%s;base64,%s", EMOJI_TYPE, FileUtil.getFileBase64Data(memoryDTO.getMessageContent(), true)), "auto"))), OpenAiApi.ChatCompletionMessage.Role.USER);
+                message = new OpenAiApi.ChatCompletionMessage(Lists.newArrayList(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format(
+                        "data:%s;base64,%s", EMOJI_TYPE, FileUtil.getFileBase64Data(memoryDTO.getMessageContent(), true)), "auto"))), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
             default:
                 break;
@@ -443,6 +500,7 @@ public class ChatCompletionsApi {
         }
         return message;
     }
+
 
     private String getVideoInfo(BaseMemoryDTO memoryDTO) {
         Future<List<String>> audioTask = CHAT_POOL.submit(() -> springAiAudio.generateTextFromVideo(memoryDTO.getMessageContent()));
@@ -469,6 +527,7 @@ public class ChatCompletionsApi {
         }
         return null;
     }
+
 
     private String getVideInfoText(String creatorName, List<String> imageList, String audioText) {
         List<OpenAiApi.ChatCompletionMessage.MediaContent> contentList = new ArrayList<>();
@@ -512,7 +571,7 @@ public class ChatCompletionsApi {
             if (memoryDTO.getAiResponseFlag().equals(YES_STR)) {
                 chatMessage = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
                 sumMsgToken = sumMsgToken + tokenCalculation.getUserMessageToken(chatMessage);
-            } else {
+            }else {
                 chatMessage = convertMemoryMsg2SpringAiModelMsg(memoryDTO);
                 sumMsgToken = sumMsgToken + tokenCalculation.getUserMessageToken(chatMessage);
             }
@@ -520,7 +579,7 @@ public class ChatCompletionsApi {
             if (sumMsgToken < maxMsgToken && msgCount <= 30) {
                 messageList.addFirst(chatMessage);
                 existMsgIdList.add(memoryDTO.getMessageId());
-            } else {
+            }else {
                 delOldMessageFromCache(msgListKey, i);
                 break;
             }
