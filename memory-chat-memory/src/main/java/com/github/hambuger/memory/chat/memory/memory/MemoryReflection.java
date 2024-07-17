@@ -43,11 +43,25 @@ public class MemoryReflection {
             private List<String> p_ids = new ArrayList<>();
 
         }
+
+        public static String getJsonTemplate(){
+            return """
+                    {
+                         "reflectionList": [
+                             {
+                                 "text": "",
+                                 "p_ids": [
+                                 ]
+                             }
+                         ]
+                     }
+                    """;
+        }
     }
 
 
     public List<ReflectionResult.Reflection> extractReflectionFromMessages(List<String> msgList) {
-        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(chatPrompt.getMsgReflectionPrompt(StringUtils.join(msgList, ";;"), JSON.toJSONString(new ReflectionResult())));
+        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(chatPrompt.getMsgReflectionPrompt(StringUtils.join(msgList, "\n"), ReflectionResult.getJsonTemplate()));
         if (StringUtils.isBlank(result)) {
             return new ArrayList<>();
         }

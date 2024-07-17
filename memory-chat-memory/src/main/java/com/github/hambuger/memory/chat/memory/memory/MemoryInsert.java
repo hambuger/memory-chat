@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -26,6 +27,9 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
@@ -68,6 +72,9 @@ public class MemoryInsert {
     @Resource
     private TokenCalculation tokenCalculation;
 
+    private static final ThreadPoolExecutor MEMORY_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("memory-pool"),
+            new ThreadPoolExecutor.CallerRunsPolicy());
+
 
     public Boolean insertNewMemory(MemoryDTO memoryDTO) {
         if (StringUtils.isBlank(memoryDTO.getMessageId())) {
@@ -100,6 +107,11 @@ public class MemoryInsert {
             log.error("insert memory error", e);
         }
         // 检查是否需要提炼
+        MEMORY_POOL.execute(() ->checkAndGetReflection(memoryDTO, textMsgFlag));
+        return true;
+    }
+
+    private synchronized void checkAndGetReflection(MemoryDTO memoryDTO, boolean textMsgFlag) {
         if (textMsgFlag) {
             String depthLeafCountKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + memoryDTO.getMemoryLeafDepth();
             String depthLeafListKey = memoryDTO.getMessageOwnerId() + MemoryChatConstants.DEPTH_LEAF_LIST_KEY_MID + memoryDTO.getMemoryLeafDepth();
@@ -113,7 +125,6 @@ public class MemoryInsert {
                     botFlag ? memoryDTO.getMessageReceiveName() : memoryDTO.getMessageCreatorName(),
                     botFlag ? memoryDTO.getMessageReceiveType() : memoryDTO.getMessageCreatorType());
         }
-        return true;
     }
 
 

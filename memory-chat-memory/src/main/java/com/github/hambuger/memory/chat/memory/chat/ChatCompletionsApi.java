@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
+import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
 import com.google.common.collect.Lists;
 
 import com.alibaba.fastjson.JSON;
@@ -441,6 +442,8 @@ public class ChatCompletionsApi {
                                 }
                             }
                         }
+                    } else {
+                        CallFunctionRegistryFactory.executeFunctionResult(toolExecutionRequest.function().name(), toolExecutionRequest.function().arguments());
                     }
                 }
             }
