@@ -7,10 +7,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
+import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
 
 
 /**
@@ -51,7 +54,9 @@ public class CallFunctionRegistryFactory {
     }
 
 
-    public static List<ToolSpecification> getAllFunctionCall(boolean groupFlag) {
+    public static List<ToolSpecification> getAllFunctionCall(boolean groupFlag, boolean scheduleFlag) {
+        if (scheduleFlag)
+            return FUNCTION_CALL_METHOD_USER_MAP.values().stream().filter(method -> method.name().equals(REPLY_MESSAGE_FUNCTION_NAME)).collect(Collectors.toList());
         return (groupFlag ? FUNCTION_CALL_METHOD_GROUP_MAP : FUNCTION_CALL_METHOD_USER_MAP).values().stream().toList();
     }
 

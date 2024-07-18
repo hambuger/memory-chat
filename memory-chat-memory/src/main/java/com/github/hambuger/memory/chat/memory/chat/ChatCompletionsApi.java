@@ -1,18 +1,16 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
-import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
-import com.google.common.collect.Lists;
-
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.Pair;
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.audio.SpringAiAudio;
-import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
-import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
-import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
-import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
-import com.github.hambuger.memory.chat.memory.chat.dto.SpringAiChatMessageMemoryDTO;
+import com.github.hambuger.memory.chat.memory.chat.dto.*;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.emoji.EmojiSpider;
+import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
 import com.github.hambuger.memory.chat.memory.memory.MemoryInsert;
 import com.github.hambuger.memory.chat.memory.memory.MemorySearch;
 import com.github.hambuger.memory.chat.memory.memory.MemoryUpdate;
@@ -20,18 +18,16 @@ import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.prompt.ChatPrompt;
 import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
-import com.github.hambuger.memory.chat.memory.util.FileUtil;
-import com.github.hambuger.memory.chat.memory.util.IdUtil;
-import com.github.hambuger.memory.chat.memory.util.ImageUploadUtils;
-import com.github.hambuger.memory.chat.memory.util.RedisUtil;
-import com.github.hambuger.memory.chat.memory.util.VideoUtil;
+import com.github.hambuger.memory.chat.memory.util.*;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
 import com.github.hambuger.memory.chat.wechat.dto.response.msg.send.WebWXSendMsgResponse;
 import com.github.hambuger.memory.chat.wechat.entity.Message;
-
+import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -45,32 +41,13 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
-
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.lang.Pair;
-import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
 
 import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.DOUBLE_COLON;
 import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.YES_STR;
-import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.CHAT_LOCK_KEY;
-import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.EMOJI_TYPE;
-import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.IMAGE_TYPE;
-import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
+import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.*;
 import static java.lang.String.format;
 
 
@@ -177,7 +154,7 @@ public class ChatCompletionsApi {
                 return null;
             }
             // 获取AI回复
-            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, groupFlag);
+            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, groupFlag, false);
             if (aiMessageResponse == null || CollectionUtils.isEmpty(aiMessageResponse.choices())) {
                 return null;
             }
@@ -278,7 +255,7 @@ public class ChatCompletionsApi {
                 }
                 List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
                 messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-                OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag);
+                OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, true);
                 if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
                     return false;
                 }

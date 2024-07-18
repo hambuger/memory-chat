@@ -56,9 +56,9 @@ public class ChatPrompt {
 
     private static final String SCHEDULE_RULES = """            
             ## Rules
-             1. If the reply message is too long, you can reply by multiple messages.
-             2. Never send repetitive questions or repetitive statements.Especially messages that have already been sent on [Memory](#Memory).
-             3. You should only send a new message when it is really necessary, and try not to disturb others, especially at night.
+            1. 如果回复信息过长，可以分多条回复。
+            2. 切勿发送重复的问题或重复的语句。尤其是已经发送过的信息。
+            3. 只有在真正需要时才发送新消息，并尽量不要打扰他人，尤其是在晚上。
 
             """;
 
@@ -72,7 +72,7 @@ public class ChatPrompt {
             ## Steps
             1. For the received message, first determine the intention of the conversation.
             2. Based on all the information and step 1 generate your own ideas.
-            3. Based on steps 1 and 2, determine whether a message needs to be sent.
+            3. Based on steps 1,2 and <Rules>, determine whether a message needs to be sent.
             4. If step 3 determines that a message needs to be sent, strictly follow [Rules](#Rules) to send the message.
             5. The message content style should follow the <SpeakingStyle> in [SelfPortrait](#SelfPortrait)
 
@@ -92,17 +92,18 @@ public class ChatPrompt {
 
     private static final String SCHEDULE_INITIALIZATION = """
             ## Initialization
-            You have to behavior like the [SelfPortrait](#SelfPortrait).
+            你是 Andrew。以下是你和 %s 之间的历史聊天信息。
             %s
-            [Memory](#Memory) is the chat history from the past, it should help you remember something.
-            You must follow and never violate [Rules](#Rules).
-            For whether to send a message, you should think it step by step as [Steps](#Steps).
+            你必须像 [SelfPortrait](#SelfPortrait) 一样行事。
+            %s
+            你必须遵守并且不得违反 [Rules](#Rules)。
+            对于是否发送消息，你应该按照 [Steps](#Steps) 一步一步思考。
             By the way, now is %s.
             """;
 
     private static final String CHAT_PROMPT = SELF_PORTRAIT + PORTRAIT + RULES + MEMORY + STEPS + CHAT_INITIALIZATION;
 
-    private static final String SCHEDULE_PROMPT = SELF_PORTRAIT + PORTRAIT + SCHEDULE_RULES + MEMORY + SCHEDULE_STEPS + SCHEDULE_INITIALIZATION;
+    private static final String SCHEDULE_PROMPT = SELF_PORTRAIT + PORTRAIT + SCHEDULE_RULES + SCHEDULE_STEPS + SCHEDULE_INITIALIZATION;
 
 
     public String getChatPrompt(String messageFromName, String chatHistory, boolean groupFlag, boolean scheduleFlag) {
@@ -111,17 +112,20 @@ public class ChatPrompt {
         String talkPortrait;
         if (groupFlag) {
             talkPortrait = Optional.ofNullable(redisUtil.getGroupPortrait(messageFromName)).orElse(String.format("## GroupPortrait\n" + "- Name: %s", messageFromName));
-        }else {
+        } else {
             talkPortrait = Optional.ofNullable(redisUtil.getFriendPortrait(messageFromName)).orElse(String.format("## FriendPortrait\n" + "- Name: %s", messageFromName));
         }
         String talkingDesc;
         if (groupFlag) {
             talkingDesc = "You are chatting in WeChat Group [GroupPortrait](#GroupPortrait)";
-        }else {
-            talkingDesc = "You are chatting to WeChat Friend [FriendPortrait](#FriendPortrait)";
+        } else {
+            talkingDesc = "[FriendPortrait](#FriendPortrait) is your WeChat Friend";
         }
-        return String.format(scheduleFlag ? SCHEDULE_PROMPT : CHAT_PROMPT, selfPortrait, talkPortrait, chatHistory, talkingDesc,
-                DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT) + "(" + DateUtil.dayOfWeekEnum(new Date()).toString() + ")");
+        if (scheduleFlag) {
+            return String.format(SCHEDULE_PROMPT, selfPortrait, talkPortrait, messageFromName, chatHistory, talkingDesc, DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT) + "(" + DateUtil.dayOfWeekEnum(new Date()).toString() + ")");
+        } else {
+            return String.format(CHAT_PROMPT, selfPortrait, talkPortrait, chatHistory, talkingDesc, DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT) + "(" + DateUtil.dayOfWeekEnum(new Date()).toString() + ")");
+        }
     }
 
 

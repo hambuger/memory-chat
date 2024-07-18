@@ -66,9 +66,9 @@ public class SpringAiChat {
         openAiApi = new OpenAiApi(baseUrl, openaiApiKey, clientBuilder, WebClient.builder());
     }
 
-    public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages, boolean groupFlag) {
+    public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages, boolean groupFlag, boolean scheduleFlag) {
         OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
-        List<ToolSpecification> toolSpecifications = CallFunctionRegistryFactory.getAllFunctionCall(groupFlag);
+        List<ToolSpecification> toolSpecifications = CallFunctionRegistryFactory.getAllFunctionCall(groupFlag, scheduleFlag);
         List<OpenAiApi.FunctionTool> tools = new ArrayList<>();
         for (ToolSpecification toolSpecification : toolSpecifications) {
             Map<String, Object> toolMap = new HashMap<>();
@@ -95,7 +95,7 @@ public class SpringAiChat {
         }
         messages.add(response.getBody().choices().get(0).message());
         messages.addAll(executionResultMessages);
-        return generateMsgWithMsgListAndFunctions(messages, groupFlag);
+        return generateMsgWithMsgListAndFunctions(messages, groupFlag, scheduleFlag);
     }
 
     public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages, boolean jsonFormat) {
