@@ -23,12 +23,17 @@ public class StartConversationCheckTask {
             existingTask.cancel(false);
         }
         Runnable task = () -> {
-            boolean needToSendMessage = checkIfNeedToSendMessage.get();
-            log.info("taskKey:{}, checkIfNeedToSendMessage:{}",taskKey, needToSendMessage);
+            boolean needToSendMessage = false;
+            try {
+                needToSendMessage = checkIfNeedToSendMessage.get();
+            } catch (Exception e) {
+                log.error("scheduleTask error", e);
+            }
+            log.info("taskKey:{}, checkIfNeedToSendMessage:{}", taskKey, needToSendMessage);
             long newDelay;
             if (needToSendMessage) {
                 newDelay = 60L; // 重置延迟时间
-            } else {
+            }else {
                 newDelay = delay * 2L; // 使用指数退避策略增加延迟时间
             }
 
