@@ -27,5 +27,7 @@ public class MemoryChatConstants {
     public static final String PORTRAIT_KEY_SUFFIX = "::Portrait";
 
     public static final String SELF_STATUS_KEY = "selfStatus";
+
+    public static final String CHAT_LOCK_KEY = "chatLock::%s";
 }
 

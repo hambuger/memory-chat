@@ -10,10 +10,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -192,6 +196,34 @@ public class RedisUtil {
         } catch (JsonProcessingException e) {
             log.error("updateGroupPortrait error", e);
         }
+    }
+
+    public boolean acquireLock(String lockKey, String lockValue, long lockMaxTime, long maxWaitTime) {
+        ValueOperations<String, String> ops = redisTemplate.opsForValue();
+        long beginTime = System.currentTimeMillis();
+        while (true) {
+            Boolean success = ops.setIfAbsent(lockKey, lockValue, lockMaxTime, TimeUnit.MILLISECONDS);
+            if (Boolean.TRUE.equals(success)) {
+                return true;
+            }
+            if (System.currentTimeMillis() - beginTime > maxWaitTime) {
+                return false;
+            }
+        }
+    }
+
+    public boolean releaseLock(String lockKey, String lockValue) {
+        String script =
+                "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                        "return redis.call('del', KEYS[1]) " +
+                        "else " +
+                        "return 0 " +
+                        "end";
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+        redisScript.setScriptText(script);
+        redisScript.setResultType(Long.class);
+        Long result = redisTemplate.execute(redisScript, Collections.singletonList(lockKey), lockValue);
+        return result != null && result == 1L;
     }
 }
 

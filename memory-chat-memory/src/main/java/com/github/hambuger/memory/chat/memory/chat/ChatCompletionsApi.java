@@ -50,6 +50,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -66,6 +67,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.DOUBLE_COLON;
 import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.YES_STR;
+import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.CHAT_LOCK_KEY;
 import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.EMOJI_TYPE;
 import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.IMAGE_TYPE;
 import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
@@ -136,8 +138,10 @@ public class ChatCompletionsApi {
 
 
     public ChatResponse chat(ExtraBaseMemoryDTO baseMemoryDTO) {
+        String lockKey = UUID.randomUUID().toString();
         try {
             log.info("get a new msg:{}", JSON.toJSONString(baseMemoryDTO));
+            redisUtil.setString(String.format(CHAT_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
             SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
@@ -199,6 +203,8 @@ public class ChatCompletionsApi {
         } catch (Exception e) {
             log.error("error", e);
             return null;
+        } finally {
+            redisUtil.releaseLock(String.format(CHAT_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
         }
     }
 
@@ -259,35 +265,43 @@ public class ChatCompletionsApi {
 
     private void startNewTaskForContact(String toUserId, MemoryDTO memoryDTO, String msgListKey) {
         StartConversationCheckTask.startTaskForContact(msgListKey, () -> {
-            List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
-            if (CollectionUtils.isEmpty(memoryDTOS)) {
+            try {
+                redisUtil.acquireLock(String.format(CHAT_LOCK_KEY, memoryDTO.getMessageCreatorName()), memoryDTO.getMessageCreatorName(), 30 * 1000L, 60 * 1000L);
+                List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
+                if (CollectionUtils.isEmpty(memoryDTOS)) {
+                    return false;
+                }
+                boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
+                String prompt = getCheckStartMsgPrompt(memoryDTO.getMessageCreatorName(), groupFlag, memoryDTOS);
+                if (StringUtils.isBlank(prompt)) {
+                    return false;
+                }
+                List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
+                messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+                OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag);
+                if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
+                    return false;
+                }
+                OpenAiApi.ChatCompletionMessage responseMessage = aiResponse.choices().get(0).message();
+                log.info("ai response:{}", responseMessage);
+                CHAT_POOL.execute(() -> {
+                    List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiResponse.usage().completionTokens());
+                    aiMsgDTOList.forEach(memoryInsert::insertNewMemory);
+                });
+                // 转换成发送消息
+                List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
+                if (CollectionUtils.isEmpty(sendMessageList)) {
+                    return false;
+                }else {
+                    sendWxChatMessageList(toUserId, sendMessageList, System.currentTimeMillis());
+                }
+                return true;
+            } catch (Exception e) {
+                log.error("startNewTaskForContact error", e);
                 return false;
+            } finally {
+                redisUtil.releaseLock(String.format(CHAT_LOCK_KEY, memoryDTO.getMessageCreatorName()), memoryDTO.getMessageCreatorName());
             }
-            boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
-            String prompt = getCheckStartMsgPrompt(memoryDTO.getMessageCreatorName(), groupFlag, memoryDTOS);
-            if (StringUtils.isBlank(prompt)) {
-                return false;
-            }
-            List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
-            messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-            OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag);
-            if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
-                return false;
-            }
-            OpenAiApi.ChatCompletionMessage responseMessage = aiResponse.choices().get(0).message();
-            log.info("ai response:{}", responseMessage);
-            CHAT_POOL.execute(() -> {
-                List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiResponse.usage().completionTokens());
-                aiMsgDTOList.forEach(memoryInsert::insertNewMemory);
-            });
-            // 转换成发送消息
-            List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
-            if (CollectionUtils.isEmpty(sendMessageList)) {
-                return false;
-            }else {
-                sendWxChatMessageList(toUserId, sendMessageList, System.currentTimeMillis());
-            }
-            return true;
         });
     }
 
