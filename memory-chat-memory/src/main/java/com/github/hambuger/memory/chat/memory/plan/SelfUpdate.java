@@ -45,7 +45,7 @@ public class SelfUpdate {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "更新Andrew的自我画像")
+    @FunctionCallRegistry(functionDesc = "更新Andrew的自我画像，可与回复消息并行执行")
     public boolean updateSelfPortrait(SelfPortrait param) {
         redisUtil.setString(SELF_PORTRAIT_KEY, JSON.toJSONString(param));
         return true;

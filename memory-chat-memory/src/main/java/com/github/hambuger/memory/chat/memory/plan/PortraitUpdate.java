@@ -23,14 +23,14 @@ public class PortraitUpdate {
 
 
 
-    @FunctionCallRegistry(functionDesc = "更新微信群的画像", scope = "GROUP")
+    @FunctionCallRegistry(functionDesc = "更新微信群的画像，可与回复消息并行执行", scope = "GROUP")
     public boolean updateGroupPortrait(GroupPortrait portrait) {
         redisUtil.updateGroupPortrait(portrait.getName(), JSON.toJSONString(portrait));
         return true;
     }
 
 
-    @FunctionCallRegistry(functionDesc = "更新微信好友的画像", scope = "USER")
+    @FunctionCallRegistry(functionDesc = "更新微信好友的画像，可与回复消息并行执行", scope = "USER")
     public boolean updateFriendPortrait(FriendPortrait portrait) {
         redisUtil.updateFriendPortrait(portrait.getName(), JSON.toJSONString(portrait));
         return true;
