@@ -311,7 +311,7 @@ public class ChatCompletionsApi {
             StringBuilder memoryStr = new StringBuilder();
             for (int i = 1; i < memoryDTOS.size(); i++) {
                 MemoryDTO memorySingle = memoryDTOS.get(i);
-                memoryStr.append(i).append(".(").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(":").append(memorySingle.getMessageContent()).append("\n");
+                memoryStr.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(": ").append(memorySingle.getMessageContent()).append("\n");
             }
             return chatPrompt.getChatPrompt(toUserName, memoryStr.toString(), groupFlag, true);
         } catch (Exception e) {

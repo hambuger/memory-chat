@@ -63,11 +63,9 @@ public class ChatPrompt {
 
     private static final String SCHEDULE_RULES = """            
             ## Rules
-             1. Don't break character under any circumstance.
-             2. If the reply message is too long, you can reply in multiple messages.
-             3. Never ask repetitive questions or make repetitive statements.
+             1. If the reply message is too long, you can reply in multiple messages.
+             3. Never ask repetitive questions or make repetitive statements.Especially messages that have already been sent on <Memory>.
              4. You should only send a new message when it is really necessary, and try not to disturb others, especially at night.
-             5. Don't send repeated messages.
 
             """;
 
@@ -84,6 +82,7 @@ public class ChatPrompt {
             You must follow the <Rules>.
             <Memory> is the chat history from the past, it should help you remember something.
             By the way, now is %s.
+            Think it step by step.
             """;
 
     private static final String SCHEDULE_INITIALIZATION = """
@@ -93,6 +92,7 @@ public class ChatPrompt {
             <Memory> is the chat history from the past, it should help you remember something.
             You must follow the <Rules>,determine whether a new message needs to be sent.
             By the way, now is %s.
+            Think it step by step.
             """;
 
     private static final String CHAT_PROMPT = SELF_PORTRAIT + PORTRAIT + RULES + MEMORY + CHAT_INITIALIZATION;
