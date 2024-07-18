@@ -49,6 +49,10 @@ public class FriendPortrait {
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String relationship = "Unknown";
 
+    @JsonPropertyDescription("好友长期计划")
+    @JsonProperty(required = true, defaultValue = "Unknown")
+    private String longPlan = "Unknown";
+
     @JsonPropertyDescription("好友状态")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String status = "Unknown";
@@ -68,6 +72,7 @@ public class FriendPortrait {
                 - Gender: %s
                 - Character: %s
                 - Relationship: %s
+                - LongPlan: %s
                 - Status: %s
                 %s
                 """;
@@ -77,7 +82,7 @@ public class FriendPortrait {
                 otherInfoStr.append("- ").append(stringEntry.getKey()).append(": ").append(stringEntry.getValue()).append("\n");
             }
         }
-        return String.format(formatStr, this.name, age, language, city, gender, character, relationship, status, otherInfoStr);
+        return String.format(formatStr, this.name, age, language, city, gender, character, relationship, longPlan, status, otherInfoStr);
     }
 
 }

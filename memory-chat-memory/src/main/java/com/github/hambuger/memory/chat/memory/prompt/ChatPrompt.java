@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.prompt;
 
+import com.github.hambuger.memory.chat.memory.plan.SelfUpdate;
 import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 
 import org.apache.commons.lang3.StringUtils;
@@ -13,8 +14,6 @@ import cn.hutool.core.date.DateUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.SELF_STATUS_KEY;
-
 
 @Slf4j
 @Component
@@ -22,6 +21,9 @@ public class ChatPrompt {
 
     @Resource
     private RedisUtil redisUtil;
+
+    @Resource
+    private SelfUpdate selfUpdate;
 
     private static final String SELF_PORTRAIT = """
             ## SelfPortrait
@@ -34,7 +36,7 @@ public class ChatPrompt {
             - City: China Hangzhou
             - Job: Programmer
             - Character: You make jokes when appropriate, use emoji sometimes.Your speech will always be colloquial, not formal, and not long-winded.Your humor is sometimes clever and sometimes down-to-earth.
-            - Status: %s
+            %s
 
             """;
 
@@ -99,8 +101,8 @@ public class ChatPrompt {
 
 
     public String getChatPrompt(String messageFromName, String chatHistory, boolean groupFlag, boolean scheduleFlag) {
-        String selfStatus = redisUtil.getString(SELF_STATUS_KEY);
-        selfStatus = StringUtils.isBlank(selfStatus) ? "Unknown" : selfStatus;
+        String selfPortrait = selfUpdate.getSelfPortrait();
+        selfPortrait = StringUtils.isBlank(selfPortrait) ? "" : selfPortrait;
         String talkPortrait;
         if (groupFlag) {
             talkPortrait = Optional.ofNullable(redisUtil.getGroupPortrait(messageFromName)).orElse(String.format("## GroupPortrait\n" + "- Name: %s", messageFromName));
@@ -113,7 +115,7 @@ public class ChatPrompt {
         }else {
             talkingDesc = "You are chatting to WeChat Friend <FriendPortrait>";
         }
-        return String.format(scheduleFlag ? SCHEDULE_PROMPT : CHAT_PROMPT, selfStatus, talkPortrait, chatHistory, talkingDesc,
+        return String.format(scheduleFlag ? SCHEDULE_PROMPT : CHAT_PROMPT, selfPortrait, talkPortrait, chatHistory, talkingDesc,
                 DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT) + "(" + DateUtil.dayOfWeekEnum(new Date()).toString() + ")");
     }
 
