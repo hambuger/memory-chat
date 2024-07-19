@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.functionCall;
+package com.github.hambuger.memory.chat.memory.langchain;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -14,7 +14,6 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.output.Response;
-import com.github.hambuger.memory.chat.memory.chat.LangChainChat;
 
 
 /**

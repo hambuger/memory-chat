@@ -6,6 +6,97 @@ a chat bot with long memory,with Java.
 -Dhttps.proxyPort=7890 
 -DOPENAI_API_KEY=sk-xxx
 
+需要的es索引
+```json
+{
+  "chat_memory": {
+    "mappings": {
+      "properties": {
+        "aiResponseFlag": {
+          "type": "keyword"
+        },
+        "groupMsgFlag": {
+          "type": "keyword"
+        },
+        "memoryLeafDepth": {
+          "type": "integer"
+        },
+        "messageContent": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          },
+          "analyzer": "ik_max_word"
+        },
+        "messageContentType": {
+          "type": "keyword"
+        },
+        "messageContentVector": {
+          "type": "dense_vector",
+          "dims": 1536
+        },
+        "messageCreateAt": {
+          "type": "date",
+          "format": "yyyy-MM-dd HH:mm:ss"
+        },
+        "messageCreatorId": {
+          "type": "keyword"
+        },
+        "messageCreatorName": {
+          "type": "keyword"
+        },
+        "messageCreatorType": {
+          "type": "keyword"
+        },
+        "messageId": {
+          "type": "keyword"
+        },
+        "messageImportanceScore": {
+          "type": "double"
+        },
+        "messageLastAccessTime": {
+          "type": "date",
+          "format": "yyyy-MM-dd HH:mm:ss"
+        },
+        "messageOwnerId": {
+          "type": "keyword"
+        },
+        "messageOwnerName": {
+          "type": "keyword"
+        },
+        "messageOwnerType": {
+          "type": "keyword"
+        },
+        "messageParentIds": {
+          "type": "keyword"
+        },
+        "messageReceiveId": {
+          "type": "keyword"
+        },
+        "messageReceiveName": {
+          "type": "keyword"
+        },
+        "messageReceiveType": {
+          "type": "keyword"
+        },
+        "realCreatorId": {
+          "type": "keyword"
+        },
+        "realCreatorName": {
+          "type": "keyword"
+        },
+        "useToken": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
+```
+
 ### Todo
 
 - [ ] 1.支持传入文件

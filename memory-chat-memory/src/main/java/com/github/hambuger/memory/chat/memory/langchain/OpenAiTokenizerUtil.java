@@ -1,6 +1,4 @@
-package com.github.hambuger.memory.chat.memory.util;
-
-import com.github.hambuger.memory.chat.memory.constants.LangChainConstants;
+package com.github.hambuger.memory.chat.memory.langchain;
 
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.openai.OpenAiTokenizer;

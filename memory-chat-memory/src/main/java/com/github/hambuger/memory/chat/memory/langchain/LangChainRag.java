@@ -1,7 +1,4 @@
-package com.github.hambuger.memory.chat.memory.rag;
-
-import com.github.hambuger.memory.chat.memory.chat.LangChainChat;
-import com.github.hambuger.memory.chat.memory.constants.LangChainConstants;
+package com.github.hambuger.memory.chat.memory.langchain;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;

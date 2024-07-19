@@ -1,8 +1,7 @@
-package com.github.hambuger.memory.chat.memory.image;
+package com.github.hambuger.memory.chat.memory.langchain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.github.hambuger.memory.chat.memory.constants.LangChainConstants;
 
 import org.springframework.stereotype.Component;
 
