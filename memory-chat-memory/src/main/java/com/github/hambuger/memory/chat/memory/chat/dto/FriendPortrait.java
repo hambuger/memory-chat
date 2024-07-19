@@ -67,7 +67,7 @@ public class FriendPortrait {
                 ## FriendPortrait
                 - Name: %s
                 - Age: %s
-                - Language: %s
+                - NativeLanguage: %s
                 - City: %s
                 - Gender: %s
                 - Character: %s
