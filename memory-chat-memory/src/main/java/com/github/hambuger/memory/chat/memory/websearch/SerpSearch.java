@@ -35,7 +35,7 @@ public class SerpSearch {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "去谷歌搜索相关信息")
+//    @FunctionCallRegistry(functionDesc = "去谷歌搜索相关信息")
     public String getSerpSearchResult(SerpQuery query) {
         try {
             Map<String, Object> queryParam = new HashMap<>();
