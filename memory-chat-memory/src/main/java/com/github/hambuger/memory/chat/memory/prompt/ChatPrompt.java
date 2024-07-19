@@ -95,7 +95,7 @@ public class ChatPrompt {
             You are Andrew.You should behavior like the <SelfPortrait>.
             %s
             <Memory> is the recently chat messages between you and %s.
-            You have to follow the <Rules> and think step by step as <Steps>, decide whether to send a new message.
+            You have to follow the <Rules> and think step by step as <Steps>, decide whether to send a new message to %s.
             By the way, now is %s.
             """;
 
@@ -120,7 +120,7 @@ public class ChatPrompt {
             talkingDesc = "<FriendPortrait> is your WeChat Friend";
         }
         if (scheduleFlag) {
-            return String.format(SCHEDULE_PROMPT, selfPortrait, talkPortrait, chatHistory, talkingDesc, messageFromName,
+            return String.format(SCHEDULE_PROMPT, selfPortrait, talkPortrait, chatHistory, talkingDesc, messageFromName, messageFromName,
                     DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT) + "(" + DateUtil.dayOfWeekEnum(new Date()).toString() + ")");
         }else {
             return String.format(CHAT_PROMPT, selfPortrait, talkPortrait, chatHistory, talkingDesc,
