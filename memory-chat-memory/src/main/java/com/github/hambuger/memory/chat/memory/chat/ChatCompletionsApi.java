@@ -45,8 +45,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.DOUBLE_COLON;
-import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.YES_STR;
+import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.*;
 import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.*;
 import static java.lang.String.format;
 
@@ -64,6 +63,8 @@ public class ChatCompletionsApi {
 
 
     private static final AtomicReference<ConcurrentHashMap<String, String>> LAST_MESSAGE_ID_MAP = new AtomicReference<>(new ConcurrentHashMap());
+
+    private static final Map<String, String> nameAndUserIdMap = new HashMap<>();
 
     @Value("${spring.ai.openai.chat.options.model}")
     private String modelName;
@@ -119,6 +120,7 @@ public class ChatCompletionsApi {
         try {
             log.info("get a new msg:{}", JSON.toJSONString(baseMemoryDTO));
             redisUtil.setString(String.format(CHAT_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
+            nameAndUserIdMap.put(baseMemoryDTO.getMessageCreatorName(), baseMemoryDTO.getFromUserName());
             SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
@@ -166,6 +168,10 @@ public class ChatCompletionsApi {
             CHAT_POOL.execute(() -> {
                 List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiMessageResponse.usage().completionTokens());
                 aiMsgDTOList.forEach(memoryInsert::insertNewMemory);
+                ChatMember chatMember = new ChatMember();
+                chatMember.setName(memoryDTO.getMessageCreatorName());
+                chatMember.setGroupFlag(StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR));
+                redisUtil.addMember(chatMember);
             });
             // 转换成发送消息
             List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
@@ -587,4 +593,56 @@ public class ChatCompletionsApi {
         redisUtil.delOldMemory(msgListKey, i);
     }
 
+    public void executeSchedulerTask(ChatMember chatMember) {
+
+        String memberName = chatMember.getName();
+        String userId = nameAndUserIdMap.get(memberName);
+        boolean groupFlag = chatMember.isGroupFlag();
+        String msgListKey = CreatorEnum.Andrew.getUserId() + DOUBLE_COLON + memberName + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
+        try {
+            redisUtil.acquireLock(String.format(CHAT_LOCK_KEY, memberName), memberName, 30 * 1000L, 60 * 1000L);
+            List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
+            if (CollectionUtils.isEmpty(memoryDTOS)) {
+                return;
+            }
+            String prompt = getNewsSchedulerPrompt(memberName, groupFlag, memoryDTOS);
+            if (StringUtils.isBlank(prompt)) {
+                return;
+            }
+            List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
+            messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+            OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, true);
+            if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
+                return;
+            }
+            OpenAiApi.ChatCompletionMessage responseMessage = aiResponse.choices().get(0).message();
+            log.info("ai response:{}", responseMessage);
+            CHAT_POOL.execute(() -> {
+                MemoryDTO memoryDTO = new MemoryDTO();
+                memoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
+                memoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
+                memoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
+                memoryDTO.setMessageOwnerId(CreatorEnum.Andrew.getUserId());
+                memoryDTO.setMessageOwnerName(CreatorEnum.Andrew.getUserName());
+                memoryDTO.setMessageOwnerType(CreatorEnum.Andrew.getType());
+                memoryDTO.setGroupMsgFlag(groupFlag ? YES_STR : NO_STR);
+                List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiResponse.usage().completionTokens());
+                aiMsgDTOList.forEach(memoryInsert::insertNewMemory);
+            });
+            // 转换成发送消息
+            List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
+            if (CollectionUtils.isNotEmpty(sendMessageList)) {
+                sendWxChatMessageList(userId, sendMessageList, System.currentTimeMillis());
+            }
+        } catch (Exception e) {
+            log.error("executeSchedulerTask error", e);
+        } finally {
+            redisUtil.releaseLock(String.format(CHAT_LOCK_KEY, memberName), memberName);
+        }
+    }
+
+    private String getNewsSchedulerPrompt(String memberName, boolean groupFlag, List<MemoryDTO> memoryDTOS) {
+
+        return null;
+    }
 }

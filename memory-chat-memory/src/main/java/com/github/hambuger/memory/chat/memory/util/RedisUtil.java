@@ -9,6 +9,7 @@ import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -32,9 +34,24 @@ public class RedisUtil {
     private StringRedisTemplate redisTemplate;
 
     @Autowired
+    private RedisTemplate<String, Object> commonRedisTemplate;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     private static final String EMOJI_AND_MEDIA_ID_MAP_KEY = "emojiAndMediaIdMap";
+
+    private static final String CHAT_FRIEND_LIST_KEY = "chatFriends";
+
+    // 添加成员到集合
+    public void addMember(Object member) {
+        commonRedisTemplate.opsForSet().add(CHAT_FRIEND_LIST_KEY, member);
+    }
+
+    // 获取集合中的所有成员
+    public Set<Object> getAllMembers() {
+        return commonRedisTemplate.opsForSet().members(CHAT_FRIEND_LIST_KEY);
+    }
 
 
     public void delOldMemory(String msgListKey, int i) {

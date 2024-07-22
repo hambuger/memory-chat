@@ -4,6 +4,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 
 /**
@@ -11,6 +12,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  * @since 2024/6/15
  */
 @SpringBootApplication(scanBasePackages = "com.github.hambuger", exclude = DataSourceAutoConfiguration.class)
+@EnableScheduling
 public class Application {
 
     private static ConfigurableApplicationContext context;
