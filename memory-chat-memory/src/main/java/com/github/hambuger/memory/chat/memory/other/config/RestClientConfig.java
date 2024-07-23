@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.config;
+package com.github.hambuger.memory.chat.memory.other.config;
 
 import org.springframework.boot.web.client.ClientHttpRequestFactories;
 import org.springframework.boot.web.client.ClientHttpRequestFactorySettings;

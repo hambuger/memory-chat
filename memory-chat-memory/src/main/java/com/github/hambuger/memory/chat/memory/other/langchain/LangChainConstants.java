@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.langchain;
+package com.github.hambuger.memory.chat.memory.other.langchain;
 
 /**
  * @author hanjiabao

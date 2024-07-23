@@ -3,7 +3,7 @@ package com.github.hambuger.memory.chat.memory.memory;
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
-import com.github.hambuger.memory.chat.memory.elasticsearch.EsClient;
+import com.github.hambuger.memory.chat.memory.util.EsClient;
 import com.github.hambuger.memory.chat.memory.embeddings.SpringAiEmbeddings;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 

@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.langchain;
+package com.github.hambuger.memory.chat.memory.other.langchain;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;

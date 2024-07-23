@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.config;
+package com.github.hambuger.memory.chat.memory.other.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

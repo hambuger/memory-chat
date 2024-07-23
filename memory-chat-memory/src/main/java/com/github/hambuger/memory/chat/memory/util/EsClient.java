@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.elasticsearch;
+package com.github.hambuger.memory.chat.memory.util;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.index.IndexRequest;

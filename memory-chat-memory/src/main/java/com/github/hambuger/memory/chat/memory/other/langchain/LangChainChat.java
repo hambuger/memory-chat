@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.langchain;
+package com.github.hambuger.memory.chat.memory.other.langchain;
 
 import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;

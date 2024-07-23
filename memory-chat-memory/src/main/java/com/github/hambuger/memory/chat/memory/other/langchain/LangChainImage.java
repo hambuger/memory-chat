@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.langchain;
+package com.github.hambuger.memory.chat.memory.other.langchain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;

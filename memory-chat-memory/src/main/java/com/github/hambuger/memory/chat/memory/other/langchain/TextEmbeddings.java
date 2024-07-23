@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.langchain;
+package com.github.hambuger.memory.chat.memory.other.langchain;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -11,8 +11,6 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.output.Response;
 
-import static com.github.hambuger.memory.chat.memory.langchain.LangChainConstants.TEXT_EMBEDDING_3_SMALL;
-
 
 /**
  * @author hamburger
@@ -21,7 +19,7 @@ import static com.github.hambuger.memory.chat.memory.langchain.LangChainConstant
 public class TextEmbeddings {
 
     public static EmbeddingModel EMBEDDINGS_MODEL =
-            OpenAiEmbeddingModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(LangChainConstants.LOCAL, LangChainConstants.PROXY_PORT))).baseUrl(LangChainConstants.API_HOST).apiKey(LangChainConstants.API_KEY).modelName(TEXT_EMBEDDING_3_SMALL).logRequests(true).logResponses(true).build();
+            OpenAiEmbeddingModel.builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(LangChainConstants.LOCAL, LangChainConstants.PROXY_PORT))).baseUrl(LangChainConstants.API_HOST).apiKey(LangChainConstants.API_KEY).modelName(LangChainConstants.TEXT_EMBEDDING_3_SMALL).logRequests(true).logResponses(true).build();
 
 
     public static List<Float> generateTextEmbeddings(String text) {

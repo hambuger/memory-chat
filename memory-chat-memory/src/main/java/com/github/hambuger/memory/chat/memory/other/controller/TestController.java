@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.controller;
+package com.github.hambuger.memory.chat.memory.other.controller;
 
 
 import com.alibaba.fastjson.JSON;
