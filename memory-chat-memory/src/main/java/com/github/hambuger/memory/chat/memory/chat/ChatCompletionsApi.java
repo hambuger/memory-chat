@@ -128,7 +128,7 @@ public class ChatCompletionsApi {
             redisUtil.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             // 异步插入用户消息
-            CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(memoryDTO));
+            CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(memoryDTO, false));
             // 更新最后一条消息id
             LAST_MESSAGE_ID_MAP.get().put(lastMsgIdMapKey, memoryDTO.getMessageId());
             // 检查是否是最后一条消息
@@ -167,7 +167,7 @@ public class ChatCompletionsApi {
             }
             CHAT_POOL.execute(() -> {
                 List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiMessageResponse.usage().completionTokens());
-                aiMsgDTOList.forEach(memoryInsert::insertNewMemory);
+                aiMsgDTOList.forEach(dto -> memoryInsert.insertNewMemory(dto, false));
                 ChatMember chatMember = new ChatMember();
                 chatMember.setName(memoryDTO.getMessageCreatorName());
                 chatMember.setGroupFlag(StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR));
@@ -269,7 +269,7 @@ public class ChatCompletionsApi {
                 log.info("ai response:{}", responseMessage);
                 CHAT_POOL.execute(() -> {
                     List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiResponse.usage().completionTokens());
-                    aiMsgDTOList.forEach(memoryInsert::insertNewMemory);
+                    aiMsgDTOList.forEach(dto -> memoryInsert.insertNewMemory(dto, true));
                 });
                 // 转换成发送消息
                 List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
@@ -291,11 +291,7 @@ public class ChatCompletionsApi {
 
     private String getCheckStartMsgPrompt(String toUserName, boolean groupFlag, List<MemoryDTO> memoryDTOS) {
         try {
-            StringBuilder memoryStr = new StringBuilder();
-            for (int i = 1; i < memoryDTOS.size(); i++) {
-                MemoryDTO memorySingle = memoryDTOS.get(i);
-                memoryStr.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(": ").append(memorySingle.getMessageContent()).append("\n");
-            }
+            StringBuilder memoryStr = getMemoryStrFromMemoryList(memoryDTOS);
             return chatPrompt.getChatPrompt(toUserName, memoryStr.toString(), groupFlag, true);
         } catch (Exception e) {
             log.error("getCheckStartMsgPrompt error", e);
@@ -616,18 +612,18 @@ public class ChatCompletionsApi {
                 return;
             }
             OpenAiApi.ChatCompletionMessage responseMessage = aiResponse.choices().get(0).message();
-            log.info("ai response:{}", responseMessage);
+            log.info("ai response for news:{}", responseMessage);
             CHAT_POOL.execute(() -> {
                 MemoryDTO memoryDTO = new MemoryDTO();
-                memoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
-                memoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());
-                memoryDTO.setMessageCreatorType(CreatorEnum.Andrew.getType());
+                memoryDTO.setMessageCreatorId(memberName);
+                memoryDTO.setMessageCreatorName(memberName);
+                memoryDTO.setMessageCreatorType(CreatorEnum.USER.getType());
                 memoryDTO.setMessageOwnerId(CreatorEnum.Andrew.getUserId());
                 memoryDTO.setMessageOwnerName(CreatorEnum.Andrew.getUserName());
                 memoryDTO.setMessageOwnerType(CreatorEnum.Andrew.getType());
                 memoryDTO.setGroupMsgFlag(groupFlag ? YES_STR : NO_STR);
                 List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiResponse.usage().completionTokens());
-                aiMsgDTOList.forEach(memoryInsert::insertNewMemory);
+                aiMsgDTOList.forEach(dto -> memoryInsert.insertNewMemory(dto, true));
             });
             // 转换成发送消息
             List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
@@ -643,15 +639,26 @@ public class ChatCompletionsApi {
 
     private String getNewsSchedulerPrompt(String memberName, boolean groupFlag, List<MemoryDTO> memoryDTOS, String news) {
         try {
-            StringBuilder memoryStr = new StringBuilder();
-            for (int i = 1; i < memoryDTOS.size(); i++) {
-                MemoryDTO memorySingle = memoryDTOS.get(i);
-                memoryStr.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(": ").append(memorySingle.getMessageContent()).append("\n");
-            }
+            StringBuilder memoryStr = getMemoryStrFromMemoryList(memoryDTOS);
             return chatPrompt.getNewsSchedulerPrompt(memberName, memoryStr.toString(), news, groupFlag);
         } catch (Exception e) {
             log.error("getCheckStartMsgPrompt error", e);
         }
         return null;
+    }
+
+    @NotNull
+    private static StringBuilder getMemoryStrFromMemoryList(List<MemoryDTO> memoryDTOS) {
+        StringBuilder memoryStr = new StringBuilder();
+        Set<String> existSet = new HashSet<>();
+        for (int i = 1; i < memoryDTOS.size(); i++) {
+            MemoryDTO memorySingle = memoryDTOS.get(i);
+            if (existSet.contains(memorySingle.getMessageContent())) {
+                continue;
+            }
+            existSet.add(memorySingle.getMessageContent());
+            memoryStr.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(": ").append(memorySingle.getMessageContent()).append("\n");
+        }
+        return memoryStr;
     }
 }

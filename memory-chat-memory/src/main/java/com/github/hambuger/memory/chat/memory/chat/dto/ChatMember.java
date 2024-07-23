@@ -2,8 +2,12 @@ package com.github.hambuger.memory.chat.memory.chat.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class ChatMember {
+public class ChatMember implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private String name;
 

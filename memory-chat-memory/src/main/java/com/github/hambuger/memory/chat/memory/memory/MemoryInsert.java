@@ -76,7 +76,7 @@ public class MemoryInsert {
             new ThreadPoolExecutor.CallerRunsPolicy());
 
 
-    public Boolean insertNewMemory(MemoryDTO memoryDTO) {
+    public Boolean insertNewMemory(MemoryDTO memoryDTO, boolean forceInsert) {
         if (StringUtils.isBlank(memoryDTO.getMessageId())) {
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
         }
@@ -97,7 +97,7 @@ public class MemoryInsert {
             List<Double> vector = springAiEmbeddings.generateTextEmbeddings(messageContent);
             memoryDTO.setMessageContentVector(vector);
         }
-        if (!userMsgFlag && ChatCompletionsApi.checkLastMessageId(memoryDTO)) {
+        if (!forceInsert && !userMsgFlag && ChatCompletionsApi.checkLastMessageId(memoryDTO)) {
             return false;
         }
         IndexRequest indexRequest = new IndexRequest(chatMemoryIndex).id(memoryDTO.getMessageId()).source(JSON.toJSONString(memoryDTO), XContentType.JSON);
@@ -163,7 +163,7 @@ public class MemoryInsert {
                             .messageReceiveId(receiveId).messageReceiveName(receiveName).messageReceiveType(receiveType)
                             .messageOwnerId(ownerId).messageOwnerName(ownerName).messageOwnerType(ownerType)
                             .memoryLeafDepth(leafDepth + 1).useToken(tokenCalculation.getMessageTextTokenCount(reflectionText)).build();
-            insertNewMemory(memoryDTO);
+            insertNewMemory(memoryDTO, true);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.websearch;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,7 +27,10 @@ public class HotNews {
             }
             newsBuilder.append(index).append(". ");
             newsBuilder.append("热点标题：" + news.get("word")).append("; ");
-            newsBuilder.append("热点分类：" + news.get("category")).append("\n");
+            if (StringUtils.isNotBlank(news.get("category"))) {
+                newsBuilder.append("热点分类：" + news.get("category"));
+            }
+            newsBuilder.append("\n");
             index++;
         }
         return newsBuilder.toString();

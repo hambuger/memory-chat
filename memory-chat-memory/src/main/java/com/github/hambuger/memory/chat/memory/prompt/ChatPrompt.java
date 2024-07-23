@@ -57,15 +57,15 @@ public class ChatPrompt {
     private static final String SCHEDULE_RULES = """            
             ## Rules
             1. If the reply message is too long, you can reply by multiple messages.
-            2. Never send repetitive questions or repetitive statements.Especially messages that have already been sent in <Memory>.
+            2. Never send repetitive questions or repetitive content.Especially which content that have already been talked in <Memory>.
             3. You should only send a new message when it is really necessary, and try not to disturb others, especially at night.
 
             """;
 
     private static final String NEWS_SCHEDULE_RULES = """            
             ## Rules
-            1. If the reply message is too long, you can reply by multiple messages.
-            2. Never send repetitive questions or repetitive statements.Especially messages that have already been sent in <Memory>.
+            1. If you have already discussed this hot news with the interlocutor, do not discuss it again.
+            2. If the interlocutor is not interested in replying to the hot news message for the time being, do not keep initiating discussions.
 
             """;
 
@@ -94,11 +94,13 @@ public class ChatPrompt {
     private static final String SCHEDULE_STEPS = STEPS;
 
     private static final String NEWS_SCHEDULE_STEPS = """
+            ## Steps
             1. Check whether there is anything you can discuss with the other party in the <News>.
             2. Check whether the same information has been discussed in the past messages. If so, do not initiate the conversation.
             3. Based on steps 1 and 2, decide whether to initiate a conversation about the <News>.
             4. If you need to know more about the news to be discussed, you can use external web search.
             5. The conversation initiated should be natural and based on daily life, rather than stiff and deliberate.
+            
             """;
 
     private static final String CHAT_INITIALIZATION = """
@@ -116,8 +118,17 @@ public class ChatPrompt {
             You are Andrew.You should behavior like the <SelfPortrait>.
             %s
             <Memory> is the recently chat messages between you and %s.
-            <News> is the recently hot news from web.
             You have to follow the <Rules> and think step by step as <Steps>, decide whether to send a new message to %s.
+            By the way, now is %s.
+            """;
+
+    private static final String NEWS_SCHEDULE_INITIALIZATION = """
+            ## Initialization
+            You are Andrew.You should behavior like the <SelfPortrait>.
+            %s
+            <Memory> is the recently chat messages between you and %s.
+            <News> is the recently hot news from web.
+            You have to follow the <Rules> and think step by step as <Steps>, decide whether to talk the hot news with %s.
             By the way, now is %s.
             """;
 
@@ -125,7 +136,7 @@ public class ChatPrompt {
 
     private static final String SCHEDULE_PROMPT = SELF_PORTRAIT + PORTRAIT + SCHEDULE_RULES + MEMORY + SCHEDULE_STEPS + SCHEDULE_INITIALIZATION;
 
-    private static final String NEWS_SCHEDULE_PROMPT = SELF_PORTRAIT + PORTRAIT + NEWS_SCHEDULE_RULES + MEMORY + NEWS + NEWS_SCHEDULE_STEPS + SCHEDULE_INITIALIZATION;
+    private static final String NEWS_SCHEDULE_PROMPT = SELF_PORTRAIT + PORTRAIT + NEWS_SCHEDULE_RULES + MEMORY + NEWS + NEWS_SCHEDULE_STEPS + NEWS_SCHEDULE_INITIALIZATION;
 
 
     public String getChatPrompt(String messageFromName, String chatHistory, boolean groupFlag, boolean scheduleFlag) {
