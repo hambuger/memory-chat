@@ -97,7 +97,8 @@ public class ChatPrompt {
             1. Check whether there is anything you can discuss with the other party in the <News>.
             2. Check whether the same information has been discussed in the past messages. If so, do not initiate the conversation.
             3. Based on steps 1 and 2, decide whether to initiate a conversation about the <News>.
-            4. The conversation initiated should be natural and based on daily life, rather than stiff and deliberate.
+            4. If you need to know more about the news to be discussed, you can use external web search.
+            5. The conversation initiated should be natural and based on daily life, rather than stiff and deliberate.
             """;
 
     private static final String CHAT_INITIALIZATION = """
