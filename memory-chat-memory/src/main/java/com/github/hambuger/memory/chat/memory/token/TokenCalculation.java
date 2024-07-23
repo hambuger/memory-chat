@@ -1,10 +1,9 @@
 package com.github.hambuger.memory.chat.memory.token;
 
+import com.alibaba.fastjson.JSON;
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
-import dev.langchain4j.internal.Exceptions;
-import dev.langchain4j.internal.Json;
-import jakarta.annotation.PostConstruct;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +14,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+
+import jakarta.annotation.PostConstruct;
 
 
 @Component
@@ -37,7 +38,7 @@ public class TokenCalculation {
 
 
     private Supplier<IllegalArgumentException> unknownModelException() {
-        return () -> Exceptions.illegalArgument("Model '%s' is unknown to jtokkit", new Object[]{this.modelName});
+        return () -> new IllegalArgumentException(String.format("Model '%s' is unknown to jtokkit",this.modelName));
     }
 
 
@@ -77,7 +78,7 @@ public class TokenCalculation {
                     OpenAiApi.ChatCompletionMessage.ToolCall toolExecutionRequest = (OpenAiApi.ChatCompletionMessage.ToolCall) toolInfo.next();
                     tokenCount += 7;
                     tokenCount += this.getMessageTextTokenCount(toolExecutionRequest.function().name());
-                    Map<?, ?> arguments = (Map) Json.fromJson(toolExecutionRequest.function().arguments(), Map.class);
+                    Map<?, ?> arguments = JSON.parseObject(toolExecutionRequest.function().arguments(), Map.class);
 
                     Map.Entry argument;
                     for (Iterator var6 = arguments.entrySet().iterator(); var6.hasNext(); tokenCount += this.getMessageTextTokenCount(argument.getValue().toString())) {
