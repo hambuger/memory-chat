@@ -2,6 +2,7 @@ package com.github.hambuger.memory.chat.memory.image;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
 
 import org.springframework.ai.image.Image;
@@ -41,7 +42,7 @@ public class SpringAiImage {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "生成图片")
+    @FunctionCallRegistry(functionDesc = "生成图片", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
     public String generateImage(ImageGenerateParam generateParam) {
         ImagePrompt imagePrompt = new ImagePrompt(generateParam.generateText);
         ImageResponse imageResponse = imageModel.call(imagePrompt);

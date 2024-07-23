@@ -26,10 +26,6 @@ public class DelayedTaskScheduler {
 
     @Scheduled(fixedRate = 1000 * 60 * 5)
     public void processTasks() {
-        String news = getRecentNews();
-        if (StringUtils.isBlank(news)) {
-            return;
-        }
         Set<Object> allMembers = redisUtil.getAllMembers();
         if (CollectionUtils.isEmpty(allMembers)) {
             return;
@@ -39,7 +35,11 @@ public class DelayedTaskScheduler {
 
     private void executeSchedulerTask(Object member) {
         ChatMember chatMember = (ChatMember) member;
-        chatCompletionsApi.executeSchedulerTask(chatMember);
+        String news = getRecentNews();
+        if (StringUtils.isBlank(news)) {
+            return;
+        }
+        chatCompletionsApi.executeSchedulerTask(chatMember, news);
     }
 
     private String getRecentNews() {

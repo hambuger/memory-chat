@@ -62,8 +62,21 @@ public class ChatPrompt {
 
             """;
 
+    private static final String NEWS_SCHEDULE_RULES = """            
+            ## Rules
+            1. If the reply message is too long, you can reply by multiple messages.
+            2. Never send repetitive questions or repetitive statements.Especially messages that have already been sent in <Memory>.
+
+            """;
+
     private static final String MEMORY = """
             ## Memory
+            %s
+
+            """;
+
+    private static final String NEWS = """
+            ## News
             %s
 
             """;
@@ -80,6 +93,13 @@ public class ChatPrompt {
 
     private static final String SCHEDULE_STEPS = STEPS;
 
+    private static final String NEWS_SCHEDULE_STEPS = """
+            1. Check whether there is anything you can discuss with the other party in the <News>.
+            2. Check whether the same information has been discussed in the past messages. If so, do not initiate the conversation.
+            3. Based on steps 1 and 2, decide whether to initiate a conversation about the <News>.
+            4. The conversation initiated should be natural and based on daily life, rather than stiff and deliberate.
+            """;
+
     private static final String CHAT_INITIALIZATION = """
             ## Initialization
             You are Andrew.You have to behavior like the <SelfPortrait>.
@@ -95,6 +115,7 @@ public class ChatPrompt {
             You are Andrew.You should behavior like the <SelfPortrait>.
             %s
             <Memory> is the recently chat messages between you and %s.
+            <News> is the recently hot news from web.
             You have to follow the <Rules> and think step by step as <Steps>, decide whether to send a new message to %s.
             By the way, now is %s.
             """;
@@ -102,6 +123,8 @@ public class ChatPrompt {
     private static final String CHAT_PROMPT = SELF_PORTRAIT + PORTRAIT + RULES + MEMORY + STEPS + CHAT_INITIALIZATION;
 
     private static final String SCHEDULE_PROMPT = SELF_PORTRAIT + PORTRAIT + SCHEDULE_RULES + MEMORY + SCHEDULE_STEPS + SCHEDULE_INITIALIZATION;
+
+    private static final String NEWS_SCHEDULE_PROMPT = SELF_PORTRAIT + PORTRAIT + NEWS_SCHEDULE_RULES + MEMORY + NEWS + NEWS_SCHEDULE_STEPS + SCHEDULE_INITIALIZATION;
 
 
     public String getChatPrompt(String messageFromName, String chatHistory, boolean groupFlag, boolean scheduleFlag) {
@@ -167,4 +190,23 @@ public class ChatPrompt {
         return String.format(SCORE_PROMPT, param);
     }
 
+
+    public String getNewsSchedulerPrompt(String memberName, String memoryStr, String news, boolean groupFlag) {
+        String selfPortrait = selfUpdate.getSelfPortrait();
+        selfPortrait = StringUtils.isBlank(selfPortrait) ? "" : selfPortrait;
+        String talkPortrait;
+        if (groupFlag) {
+            talkPortrait = Optional.ofNullable(redisUtil.getGroupPortrait(memberName)).orElse(String.format("## GroupPortrait\n" + "- Name: %s", memberName));
+        }else {
+            talkPortrait = Optional.ofNullable(redisUtil.getFriendPortrait(memberName)).orElse(String.format("## FriendPortrait\n" + "- Name: %s", memberName));
+        }
+        String talkingDesc;
+        if (groupFlag) {
+            talkingDesc = "You are chatting in WeChat Group <GroupPortrait>";
+        }else {
+            talkingDesc = "<FriendPortrait> is your WeChat Friend";
+        }
+        return String.format(NEWS_SCHEDULE_PROMPT, selfPortrait, talkPortrait, memoryStr,news, talkingDesc, memberName, memberName,
+                DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT) + "(" + DateUtil.dayOfWeekEnum(new Date()).toString() + ")");
+    }
 }

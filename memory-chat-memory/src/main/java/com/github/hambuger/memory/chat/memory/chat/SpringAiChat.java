@@ -3,6 +3,7 @@ package com.github.hambuger.memory.chat.memory.chat;
 import com.google.common.collect.Lists;
 
 import com.alibaba.fastjson.JSON;
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
 
@@ -66,19 +67,9 @@ public class SpringAiChat {
         openAiApi = new OpenAiApi(baseUrl, openaiApiKey, clientBuilder, WebClient.builder());
     }
 
-    public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages, boolean groupFlag, boolean scheduleFlag) {
+    public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages, boolean groupFlag, ChatSceneEnum scene) {
         OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
-        List<ToolSpecification> toolSpecifications = CallFunctionRegistryFactory.getAllFunctionCall(groupFlag, scheduleFlag);
-        List<OpenAiApi.FunctionTool> tools = new ArrayList<>();
-        for (ToolSpecification toolSpecification : toolSpecifications) {
-            Map<String, Object> toolMap = new HashMap<>();
-            toolMap.put("required", toolSpecification.parameters().required());
-            toolMap.put("properties", toolSpecification.parameters().properties());
-            toolMap.put("type", toolSpecification.parameters().type());
-            OpenAiApi.FunctionTool chatTool = new OpenAiApi.FunctionTool(OpenAiApi.FunctionTool.Type.FUNCTION, new OpenAiApi.FunctionTool.Function(toolSpecification.description(),
-                    toolSpecification.name(), JSON.toJSONString(toolMap)));
-            tools.add(chatTool);
-        }
+        List<OpenAiApi.FunctionTool> tools = CallFunctionRegistryFactory.getAllFunctionCall(groupFlag, scene);
 
         OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().withModel(modelName).withTools(tools).withToolChoice(REQUIRED).withTemperature(temperature).build();
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
@@ -95,7 +86,7 @@ public class SpringAiChat {
         }
         messages.add(response.getBody().choices().get(0).message());
         messages.addAll(executionResultMessages);
-        return generateMsgWithMsgListAndFunctions(messages, groupFlag, scheduleFlag);
+        return generateMsgWithMsgListAndFunctions(messages, groupFlag, scene);
     }
 
     public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages, boolean jsonFormat) {

@@ -6,10 +6,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.functionCall.FunctionTool;
 import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator;
 
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
@@ -17,8 +20,6 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 
-import dev.langchain4j.agent.tool.ToolParameters;
-import dev.langchain4j.agent.tool.ToolSpecification;
 import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
 
 
@@ -28,6 +29,9 @@ import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryF
  */
 @Component
 public class AnnotationProcessor implements BeanPostProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(AnnotationProcessor.class);
+
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -48,33 +52,28 @@ public class AnnotationProcessor implements BeanPostProcessor {
                         throw new RuntimeException(e);
                     }
                 };
-                if (StringUtils.equalsIgnoreCase(functionCallRegistry.scope(), CreatorEnum.GROUP.getType())) {
-                    CallFunctionRegistryFactory.registryGroupFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
-                } else if (StringUtils.equalsIgnoreCase(functionCallRegistry.scope(), CreatorEnum.USER.getType())) {
-                    CallFunctionRegistryFactory.registryUserFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
-                } else {
-                    CallFunctionRegistryFactory.registryUserFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
-                    CallFunctionRegistryFactory.registryGroupFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass), argClass, function);
-                }
+                ChatSceneEnum[] scene = functionCallRegistry.scene();
+                CallFunctionRegistryFactory.registryFunction(convertToolSpecification(method.getName(), functionCallRegistry.functionDesc(), argClass, scene), argClass, function);
+
             }
         }
         return bean;
     }
 
 
-    private ToolSpecification convertToolSpecification(String methodName, String methodDesc, Class<?> argClass) {
+    private FunctionTool convertToolSpecification(String methodName, String methodDesc, Class<?> argClass, ChatSceneEnum[] scene) {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(objectMapper);
-
         JsonNode jsonSchema = jsonSchemaGenerator.generateJsonSchema(argClass);
-        ToolParameters toolParameters = null;
+        FunctionTool functionTool = new FunctionTool();
+        functionTool.setScene(scene);
         try {
-            toolParameters = objectMapper.treeToValue(jsonSchema, ToolParameters.Builder.class).build();
+            functionTool.setFunctionTool(new OpenAiApi.FunctionTool(new OpenAiApi.FunctionTool.Function(methodDesc, methodName, objectMapper.writeValueAsString(jsonSchema))));
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return ToolSpecification.builder().name(methodName).description(methodDesc).parameters(toolParameters).build();
+            log.error("convertToolSpecification error", e);
+            return null;
+        } return functionTool;
     }
 }

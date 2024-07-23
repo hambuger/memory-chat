@@ -3,6 +3,7 @@ package com.github.hambuger.memory.chat.memory.plan;
 import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 
@@ -45,7 +46,7 @@ public class SelfUpdate {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "更新Andrew的自我画像，可与回复消息并行执行")
+    @FunctionCallRegistry(functionDesc = "更新Andrew的自我画像，可与回复消息并行执行", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
     public boolean updateSelfPortrait(SelfPortrait param) {
         redisUtil.setString(SELF_PORTRAIT_KEY, JSON.toJSONString(param));
         return true;

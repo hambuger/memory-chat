@@ -1,7 +1,9 @@
 package com.github.hambuger.memory.chat.memory.websearch;
 
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -9,8 +11,14 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,9 +33,11 @@ public class GoogleSearch {
 
     private final static String searchUrl = "https://www.google.com/search?q=%s";
 
+    private static final ThreadPoolExecutor FETCH_URL_POOL = new ThreadPoolExecutor(20, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(2000));
 
-    @FunctionCallRegistry(functionDesc = "去谷歌搜索相关信息")
-    public String getSerpSearchResult(SerpSearch.SerpQuery query) {
+
+    @FunctionCallRegistry(functionDesc = "去谷歌搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
+    public String getGoogleSearchResult(SerpSearch.SerpQuery query) {
         try {
             String googleUrl = String.format(searchUrl, query.getQueryWord().replace(" ", "%20"));
             Map<String, String> headers = new HashMap<>();
@@ -54,24 +64,19 @@ public class GoogleSearch {
             headers.put("Sec-Fetch-Site", "none");
             headers.put("Sec-Fetch-User", "?1");
             headers.put("Upgrade-Insecure-Requests", "1");
-            headers.put("User-Agent", "User-Agent:\n" + "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
+            headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
             headers.put("X-Client-Data", "CIy2yQEIprbJAQipncoBCJ78ygEIlaHLAQid/swBCPKYzQEIhqDNAQjok84BCLKWzgEI2pvOAQjGnc4BCK+ezgEIsp/OAQiYos4BCKaizgEI4afOARjX680BGKCdzgE=");
             Document doc =
                     Jsoup.connect(googleUrl).headers(headers).userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537" + ".36").get();
             Elements results = doc.select("div.yuRUbf");
-            StringBuilder stringBuilder = new StringBuilder();
-            int index = 1;
+            List<String> urlList = new ArrayList<>();
             for (Element result : results) {
                 String link = result.select("a[jsname=UWckNb]").attr("href");
                 if (StringUtils.isNotBlank(link)) {
-                    String linkContent = fetchUrlContent(link);
-                    if (StringUtils.isNotBlank(linkContent)) {
-                        stringBuilder.append(index).append(". ").append(linkContent).append("\n");
-                        index++;
-                    }
+                    urlList.add(link);
                 }
             }
-            return stringBuilder.toString();
+            return fetchUrlListContent(urlList);
         } catch (Exception e) {
             log.error("getSerpSearchResult error", e);
         }
@@ -89,4 +94,44 @@ public class GoogleSearch {
         }
     }
 
+
+    public static String fetchUrlListContent(List<String> urlList) {
+        try {
+            if (CollectionUtils.isEmpty(urlList)) {
+                return null;
+            }
+            CountDownLatch latch = new CountDownLatch(urlList.size());
+            Map<String, String> urlAndContent = new HashMap<>();
+            for (String url : urlList) {
+                FETCH_URL_POOL.execute(() -> {
+                    try {
+                        String content = fetchUrlContent(url);
+                        if (StringUtils.isNotBlank(content) && content.length() > 10 && !content.startsWith("百度热搜")) {
+                            urlAndContent.put(url, content);
+                        }
+                    } catch (Exception e) {
+                        log.error("fetchUrlListContent error", e);
+                    } finally {
+                        latch.countDown();
+                    }
+                });
+            }
+            latch.await(30, TimeUnit.SECONDS);
+            int index = 1;
+            StringBuilder stringBuilder = new StringBuilder();
+            for (String url : urlList) {
+                if (urlAndContent.get(url) == null) {
+                    continue;
+                }
+                stringBuilder.append(index).append(". ").append(urlAndContent.get(url)).append("\n");
+                index++;
+                if (index > 6) {
+                    break;
+                }
+            }
+            return stringBuilder.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

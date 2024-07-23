@@ -156,7 +156,7 @@ public class ChatCompletionsApi {
                 return null;
             }
             // 获取AI回复
-            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, groupFlag, false);
+            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, groupFlag, ChatSceneEnum.NORMAL_USER);
             if (aiMessageResponse == null || CollectionUtils.isEmpty(aiMessageResponse.choices())) {
                 return null;
             }
@@ -261,7 +261,7 @@ public class ChatCompletionsApi {
                 }
                 List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
                 messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-                OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, true);
+                OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, ChatSceneEnum.SCHEDULE);
                 if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
                     return false;
                 }
@@ -593,7 +593,7 @@ public class ChatCompletionsApi {
         redisUtil.delOldMemory(msgListKey, i);
     }
 
-    public void executeSchedulerTask(ChatMember chatMember) {
+    public void executeSchedulerTask(ChatMember chatMember, String news) {
 
         String memberName = chatMember.getName();
         String userId = nameAndUserIdMap.get(memberName);
@@ -605,13 +605,13 @@ public class ChatCompletionsApi {
             if (CollectionUtils.isEmpty(memoryDTOS)) {
                 return;
             }
-            String prompt = getNewsSchedulerPrompt(memberName, groupFlag, memoryDTOS);
+            String prompt = getNewsSchedulerPrompt(memberName, groupFlag, memoryDTOS, news);
             if (StringUtils.isBlank(prompt)) {
                 return;
             }
             List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
             messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-            OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, true);
+            OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, ChatSceneEnum.NEWS_SCHEDULE);
             if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
                 return;
             }
@@ -641,8 +641,17 @@ public class ChatCompletionsApi {
         }
     }
 
-    private String getNewsSchedulerPrompt(String memberName, boolean groupFlag, List<MemoryDTO> memoryDTOS) {
-
+    private String getNewsSchedulerPrompt(String memberName, boolean groupFlag, List<MemoryDTO> memoryDTOS, String news) {
+        try {
+            StringBuilder memoryStr = new StringBuilder();
+            for (int i = 1; i < memoryDTOS.size(); i++) {
+                MemoryDTO memorySingle = memoryDTOS.get(i);
+                memoryStr.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(": ").append(memorySingle.getMessageContent()).append("\n");
+            }
+            return chatPrompt.getNewsSchedulerPrompt(memberName, memoryStr.toString(), news, groupFlag);
+        } catch (Exception e) {
+            log.error("getCheckStartMsgPrompt error", e);
+        }
         return null;
     }
 }

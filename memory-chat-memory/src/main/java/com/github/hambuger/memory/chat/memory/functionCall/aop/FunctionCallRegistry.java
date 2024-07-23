@@ -1,5 +1,7 @@
 package com.github.hambuger.memory.chat.memory.functionCall.aop;
 
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -16,6 +18,6 @@ public @interface FunctionCallRegistry {
 
     String functionDesc() default "";
 
-    String scope() default "";
+    ChatSceneEnum[] scene();
 
 }
