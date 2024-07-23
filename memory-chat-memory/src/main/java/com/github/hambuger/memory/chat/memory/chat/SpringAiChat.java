@@ -2,7 +2,6 @@ package com.github.hambuger.memory.chat.memory.chat;
 
 import com.google.common.collect.Lists;
 
-import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
@@ -23,12 +22,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
