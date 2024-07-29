@@ -84,6 +84,7 @@ Following is the recently hot news from web.
     public static final String NEWS_SCHEDULE_RULES = """            
 1. If you have already discussed this hot news with the interlocutor, do not discuss it again.
 2. If the interlocutor is not interested in replying to the hot news message for the time being, do not keep initiating discussions.
+3. Don’t do anything else except send the message about hot news.
             """;
 
     public static final String NORMAL_STEPS = """

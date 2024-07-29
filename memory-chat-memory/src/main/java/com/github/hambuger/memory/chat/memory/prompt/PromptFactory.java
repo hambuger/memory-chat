@@ -57,7 +57,7 @@ public class PromptFactory {
         templateValueMap.put("friendName", messageFromName);
         templateValueMap.put("talkingDesc", groupFlag ? "one of the WeChat groups you joined" : "is your WeChat Friend");
         templateValueMap.put("talkingRole", groupFlag ? "this group" : "him/she");
-        templateValueMap.put("talkingInfo", Optional.ofNullable(redisUtil.getGroupPortrait(messageFromName)).orElse(String.format("- Name: %s", messageFromName)));
+        templateValueMap.put("talkingInfo", Optional.ofNullable(groupFlag ? redisUtil.getGroupPortrait(messageFromName) : redisUtil.getFriendPortrait(messageFromName)).orElse(String.format("- Name: %s", messageFromName)));
         templateValueMap.put("memory", chatHistory);
         templateValueMap.put("rules", chatRuleMap.get(sceneEnum));
         templateValueMap.put("steps", chatStepMap.get(sceneEnum));

@@ -18,6 +18,7 @@ import com.github.hambuger.memory.chat.memory.memory.MemoryUpdate;
 import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.prompt.ChatPrompt;
+import com.github.hambuger.memory.chat.memory.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
 import com.github.hambuger.memory.chat.memory.util.*;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
@@ -105,6 +106,9 @@ public class ChatCompletionsApi {
 
     @Resource
     private ChatPrompt chatPrompt;
+
+    @Resource
+    private PromptFactory promptFactory;
 
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
@@ -294,7 +298,7 @@ public class ChatCompletionsApi {
     private String getCheckStartMsgPrompt(String toUserName, boolean groupFlag, List<MemoryDTO> memoryDTOS) {
         try {
             StringBuilder memoryStr = getMemoryStrFromMemoryList(memoryDTOS);
-            return chatPrompt.getChatPrompt(toUserName, memoryStr.toString(), groupFlag, true);
+            return promptFactory.getChatPrompt(toUserName, memoryStr.toString(), null, groupFlag, ChatSceneEnum.SCHEDULE);
         } catch (Exception e) {
             log.error("getCheckStartMsgPrompt error", e);
         }
@@ -355,7 +359,7 @@ public class ChatCompletionsApi {
         boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
         // 选择prompt
         if (CollectionUtils.isEmpty(searchMemoryList)) {
-            systemMessage = new OpenAiApi.ChatCompletionMessage(chatPrompt.getChatPrompt(memoryDTO.getMessageCreatorName(), null, groupFlag, false), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+            systemMessage = new OpenAiApi.ChatCompletionMessage(promptFactory.getChatPrompt(memoryDTO.getMessageCreatorName(), null, null, groupFlag, ChatSceneEnum.NORMAL_USER), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         }else {
             StringBuilder memory = new StringBuilder();
             for (int i = 0; i < searchMemoryList.size(); i++) {
@@ -366,7 +370,7 @@ public class ChatCompletionsApi {
                 memory.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorName()).orElse(memorySingle.getMessageCreatorName())).append(":").append(memorySingle.getMessageContent()).append("\n");
                 memoryUpdate.updateMemoryAccessTime(memorySingle.getMessageId());
             }
-            systemMessage = new OpenAiApi.ChatCompletionMessage(chatPrompt.getChatPrompt(memoryDTO.getMessageCreatorName(), memory.toString(), groupFlag, false),
+            systemMessage = new OpenAiApi.ChatCompletionMessage(promptFactory.getChatPrompt(memoryDTO.getMessageCreatorName(), memory.toString(), null, groupFlag, ChatSceneEnum.NORMAL_USER),
                     OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         }
         return systemMessage;
@@ -624,7 +628,7 @@ public class ChatCompletionsApi {
             }
             List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
             messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-            messages.add(new OpenAiApi.ChatCompletionMessage(String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复", chatMember, formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND))), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+            messages.add(new OpenAiApi.ChatCompletionMessage(String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复", chatMember.getName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND))), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
             OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, ChatSceneEnum.NEWS_SCHEDULE);
             if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
                 return;
@@ -658,7 +662,7 @@ public class ChatCompletionsApi {
     private String getNewsSchedulerPrompt(String memberName, boolean groupFlag, List<MemoryDTO> memoryDTOS, String news) {
         try {
             StringBuilder memoryStr = getMemoryStrFromMemoryList(memoryDTOS);
-            return chatPrompt.getNewsSchedulerPrompt(memberName, memoryStr.toString(), news, groupFlag);
+            return promptFactory.getChatPrompt(memberName, memoryStr.toString(), news, groupFlag, ChatSceneEnum.NEWS_SCHEDULE);
         } catch (Exception e) {
             log.error("getCheckStartMsgPrompt error", e);
         }
