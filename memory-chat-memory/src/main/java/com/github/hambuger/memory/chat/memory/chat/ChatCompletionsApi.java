@@ -2,6 +2,7 @@ package com.github.hambuger.memory.chat.memory.chat;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Pair;
 import com.alibaba.fastjson.JSON;
@@ -261,6 +262,7 @@ public class ChatCompletionsApi {
                 }
                 List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
                 messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+                messages.add(new OpenAiApi.ChatCompletionMessage(String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复", memoryDTO.getMessageCreatorName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND))), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
                 OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, ChatSceneEnum.SCHEDULE);
                 if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
                     return false;
@@ -589,6 +591,21 @@ public class ChatCompletionsApi {
         redisUtil.delOldMemory(msgListKey, i);
     }
 
+    public static String formatDuration(long seconds) {
+        if (seconds < 60) {
+            return seconds + "秒";
+        } else if (seconds < 3600) {
+            long minutes = seconds / 60;
+            return minutes + "分钟";
+        } else if (seconds < 86400) { // 一天有 86400 秒
+            long hours = seconds / 3600;
+            return hours + "小时";
+        } else {
+            long days = seconds / 86400;
+            return days + "天";
+        }
+    }
+
     public void executeSchedulerTask(ChatMember chatMember, String news) {
 
         String memberName = chatMember.getName();
@@ -607,6 +624,7 @@ public class ChatCompletionsApi {
             }
             List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
             messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+            messages.add(new OpenAiApi.ChatCompletionMessage(String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复", chatMember, formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND))), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
             OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, ChatSceneEnum.NEWS_SCHEDULE);
             if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
                 return;
