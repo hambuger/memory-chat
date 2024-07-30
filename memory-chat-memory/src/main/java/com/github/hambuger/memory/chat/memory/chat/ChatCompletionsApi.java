@@ -19,6 +19,7 @@ import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.prompt.ChatPrompt;
 import com.github.hambuger.memory.chat.memory.prompt.PromptFactory;
+import com.github.hambuger.memory.chat.memory.prompt.PromptTemplate;
 import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
 import com.github.hambuger.memory.chat.memory.util.*;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
@@ -634,6 +635,9 @@ public class ChatCompletionsApi {
                 return;
             }
             OpenAiApi.ChatCompletionMessage responseMessage = aiResponse.choices().get(0).message();
+            if (!checkNeedSendNewMsg(responseMessage, memoryDTOS, memberName)) {
+                return;
+            }
             log.info("ai response for news:{}", responseMessage);
             CHAT_POOL.execute(() -> {
                 MemoryDTO memoryDTO = new MemoryDTO();
@@ -657,6 +661,20 @@ public class ChatCompletionsApi {
         } finally {
             redisUtil.releaseLock(String.format(CHAT_LOCK_KEY, memberName), memberName);
         }
+    }
+
+    private boolean checkNeedSendNewMsg(OpenAiApi.ChatCompletionMessage responseMessage, List<MemoryDTO> memoryDTOS, String memberName) {
+        List<String> newMsgs = Optional.ofNullable(responseMessage.toolCalls()).orElse(new ArrayList<>()).stream().filter(tool -> tool.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME)).flatMap(tool -> {
+            SendMessageRequest sendMessageRequest = JSON.parseObject(tool.function().arguments(), SendMessageRequest.class);
+            return Optional.ofNullable(sendMessageRequest.getSendTextMessageList()).stream().flatMap(Collection::stream);
+        }).toList();
+        if (CollectionUtils.isEmpty(newMsgs)) {
+            return false;
+        }
+        String newMsg = StringUtils.join(newMsgs, "\n");
+        StringBuilder memoryStr = getMemoryStrFromMemoryList(memoryDTOS);
+        String response = springAiChat.generateJsonWithSingleMsgAndPrompt(format(PromptTemplate.NEW_MSG_PROMPT, memoryStr, memberName, newMsg, memberName, DateUtil.now()));
+        return Optional.ofNullable(JSON.parseObject(response).getBoolean("needSend")).orElse(false);
     }
 
     private String getNewsSchedulerPrompt(String memberName, boolean groupFlag, List<MemoryDTO> memoryDTOS, String news) {
