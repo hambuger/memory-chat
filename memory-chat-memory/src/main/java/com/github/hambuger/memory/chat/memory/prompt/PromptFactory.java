@@ -91,4 +91,13 @@ public class PromptFactory {
         return String.format(PromptTemplate.SCORE_PROMPT, param);
     }
 
+    public String getNewMsgCheckPrompt(String chatHistory, String friendName, String newMsg) {
+        Map<String, String> templateValueMap = new HashMap<>();
+        templateValueMap.put("chatHistory", chatHistory);
+        templateValueMap.put("friendName", friendName);
+        templateValueMap.put("newMsg", newMsg);
+        templateValueMap.put("now", DateUtil.now());
+        return formatPrompt(PromptTemplate.NEW_MSG_PROMPT, templateValueMap);
+    }
+
 }

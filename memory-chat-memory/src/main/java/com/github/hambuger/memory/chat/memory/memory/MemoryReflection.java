@@ -3,6 +3,7 @@ package com.github.hambuger.memory.chat.memory.memory;
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.prompt.ChatPrompt;
+import com.github.hambuger.memory.chat.memory.prompt.PromptFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,9 @@ public class MemoryReflection {
 
     @Resource
     private ChatPrompt chatPrompt;
+
+    @Resource
+    private PromptFactory promptFactory;
 
 
     @Data
@@ -61,7 +65,7 @@ public class MemoryReflection {
 
 
     public List<ReflectionResult.Reflection> extractReflectionFromMessages(List<String> msgList) {
-        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(chatPrompt.getMsgReflectionPrompt(StringUtils.join(msgList, "\n"), ReflectionResult.getJsonTemplate()));
+        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(promptFactory.getMsgReflectionPrompt(StringUtils.join(msgList, "\n"), ReflectionResult.getJsonTemplate()));
         if (StringUtils.isBlank(result)) {
             return new ArrayList<>();
         }

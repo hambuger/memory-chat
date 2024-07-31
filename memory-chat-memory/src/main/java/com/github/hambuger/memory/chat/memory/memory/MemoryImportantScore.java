@@ -3,6 +3,7 @@ package com.github.hambuger.memory.chat.memory.memory;
 import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.prompt.ChatPrompt;
+import com.github.hambuger.memory.chat.memory.prompt.PromptFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -25,9 +26,12 @@ public class MemoryImportantScore {
     @Resource
     private ChatPrompt chatPrompt;
 
+    @Resource
+    private PromptFactory promptFactory;
+
 
     public Double generateImportantScore(String message) {
-        String score = JSONObject.parseObject(springAiChat.generateJsonWithSingleMsgAndPrompt(chatPrompt.getMsgScorePrompt(message))).getString("score");
+        String score = JSONObject.parseObject(springAiChat.generateJsonWithSingleMsgAndPrompt(promptFactory.getMsgScorePrompt(message))).getString("score");
         if (StringUtils.isNotBlank(score)) {
             return Double.valueOf(score);
         }

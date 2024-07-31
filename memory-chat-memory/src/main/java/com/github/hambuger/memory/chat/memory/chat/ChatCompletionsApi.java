@@ -673,7 +673,7 @@ public class ChatCompletionsApi {
         }
         String newMsg = StringUtils.join(newMsgs, "\n");
         StringBuilder memoryStr = getMemoryStrFromMemoryList(memoryDTOS);
-        String response = springAiChat.generateJsonWithSingleMsgAndPrompt(format(PromptTemplate.NEW_MSG_PROMPT, memoryStr, memberName, newMsg, memberName, DateUtil.now()));
+        String response = springAiChat.generateJsonWithSingleMsgAndPrompt(promptFactory.getNewMsgCheckPrompt(memoryStr.toString(), memberName, newMsg));
         return Optional.ofNullable(JSON.parseObject(response).getBoolean("needSend")).orElse(false);
     }
 
