@@ -141,7 +141,7 @@ ${newMsg}
 3.你可以尝试找些话题和${friendName}聊
 4.夜间尽量不要打扰${friendName}
 
-现在时间是{now}
+现在时间是${now}
 最终返回的结果类似如下json:
 {\\"needSend\\":false,\\"reason\\":\\"\\"}
             """;

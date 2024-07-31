@@ -691,13 +691,15 @@ public class ChatCompletionsApi {
     private static StringBuilder getMemoryStrFromMemoryList(List<MemoryDTO> memoryDTOS) {
         StringBuilder memoryStr = new StringBuilder();
         Set<String> existSet = new HashSet<>();
-        for (int i = 1; i < memoryDTOS.size(); i++) {
+        int index = 1;
+        for (int i = 0; i < memoryDTOS.size(); i++) {
             MemoryDTO memorySingle = memoryDTOS.get(i);
             if (existSet.contains(memorySingle.getMessageContent())) {
                 continue;
             }
             existSet.add(memorySingle.getMessageContent());
-            memoryStr.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(": ").append(memorySingle.getMessageContent()).append("\n");
+            memoryStr.append(index).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(": ").append(memorySingle.getMessageContent()).append("\n");
+            index++;
         }
         return memoryStr;
     }
