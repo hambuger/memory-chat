@@ -1,16 +1,10 @@
 package com.github.hambuger.memory.chat.memory.other.controller;
 
-import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
+import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 
 /**
@@ -27,7 +21,7 @@ public class ChatController {
 
     @PostMapping("/wechat")
     @ResponseBody
-    public ChatResponse wechat(@RequestBody ExtraBaseMemoryDTO memoryDTO) {
+    public ChatResponse wechat(@RequestBody BaseMemoryDTO memoryDTO) {
         return chatCompletionsApi.chat(memoryDTO);
     }
 

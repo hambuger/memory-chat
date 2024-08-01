@@ -159,6 +159,15 @@ public class MessageTools {
         return sendMsgByUserId(messages);
     }
 
+    public static WebWXSendMsgResponse sendMsgByRemarkName(Message message) {
+        ArrayList<Message> messages = new ArrayList<>();
+        if (StringUtils.isNotBlank(message.getToRemarkname())) {
+            message.setToUsername(ContactsTools.getUserIdByRemarkName(message.getToRemarkname()));
+        }
+        messages.add(message);
+        return sendMsgByUserId(messages);
+    }
+
 
     /**
      * 根据指定类型发送消息

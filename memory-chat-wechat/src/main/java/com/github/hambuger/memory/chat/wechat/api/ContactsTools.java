@@ -156,6 +156,22 @@ public class ContactsTools {
         return CommonTools.emojiFormatter(contactByUserName.getRemarkname());
     }
 
+    public static String getUserIdByRemarkName(String remarkName) {
+        Map<String, Contacts> contactMap = Core.getMemberMap();
+        if (contactMap == null) {
+            return "";
+        }
+        for (Map.Entry<String, Contacts> entry : contactMap.entrySet()) {
+            if (StringUtils.equals(entry.getValue().getRemarkname(), remarkName)) {
+                return entry.getKey();
+            }
+            if (StringUtils.equals(entry.getValue().getNickname(), remarkName)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
     /**
      * 根据用户名获取用户备注
      *

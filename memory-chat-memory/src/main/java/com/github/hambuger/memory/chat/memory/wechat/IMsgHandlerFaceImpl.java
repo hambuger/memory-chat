@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
 import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
-import com.github.hambuger.memory.chat.memory.chat.dto.ExtraBaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
+import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 import com.github.hambuger.memory.chat.wechat.api.ContactsTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
@@ -17,21 +17,15 @@ import com.github.hambuger.memory.chat.wechat.entity.Status;
 import com.github.hambuger.memory.chat.wechat.service.IMsgHandlerFace;
 import com.github.hambuger.memory.chat.wechat.utils.ExecutorServiceUtil;
 import com.github.hambuger.memory.chat.wechat.utils.SleepUtils;
-
+import jakarta.annotation.Resource;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import jakarta.annotation.Resource;
-import lombok.extern.log4j.Log4j2;
+import java.util.*;
 
 
 @Log4j2
@@ -344,7 +338,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         if (msg.getIsSend()) {
             return null;
         }
-        ExtraBaseMemoryDTO baseMemoryDTO = new ExtraBaseMemoryDTO();
+        BaseMemoryDTO baseMemoryDTO = new BaseMemoryDTO();
         baseMemoryDTO.setMessageContent(msg.getContent());
         ContentTypeEnum sendMsgContentTypeEnum = ContentTypeEnum.getByWxType(msg.getMsgType());
         if (sendMsgContentTypeEnum == null) {
@@ -360,12 +354,11 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         baseMemoryDTO.setGroupMsgFlag(msg.isGroup() ? CommonConstants.YES_STR : CommonConstants.NO_STR);
         baseMemoryDTO.setRealCreatorId(StringUtils.isNoneBlank(msg.getFromMemberOfGroupNickname()) ? msg.getFromMemberOfGroupNickname() : msg.getFromMemberOfGroupDisplayname());
         baseMemoryDTO.setRealCreatorName(baseMemoryDTO.getRealCreatorId());
-        baseMemoryDTO.setFromUserName(msg.getFromUsername());
         ChatResponse response = chatCompletionsApi.chat(baseMemoryDTO);
         if (response == null || CollectionUtils.isEmpty(response.getSendMessageList())) {
             return null;
         }
-        chatCompletionsApi.sendWxChatMessageList(msg.getFromUsername(), response.getSendMessageList(), receiveMsgTime);
+        chatCompletionsApi.sendWxChatMessageList(baseMemoryDTO.getMessageCreatorName(), response.getSendMessageList(), receiveMsgTime);
         return null;
     }
 

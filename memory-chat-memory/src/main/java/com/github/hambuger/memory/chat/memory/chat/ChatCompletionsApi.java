@@ -67,8 +67,6 @@ public class ChatCompletionsApi {
 
     private static final AtomicReference<ConcurrentHashMap<String, String>> LAST_MESSAGE_ID_MAP = new AtomicReference<>(new ConcurrentHashMap());
 
-    private static final Map<String, String> nameAndUserIdMap = new HashMap<>();
-
     @Value("${spring.ai.openai.chat.options.model}")
     private String modelName;
 
@@ -121,12 +119,11 @@ public class ChatCompletionsApi {
     }
 
 
-    public ChatResponse chat(ExtraBaseMemoryDTO baseMemoryDTO) {
+    public ChatResponse chat(BaseMemoryDTO baseMemoryDTO) {
         String lockKey = UUID.randomUUID().toString();
         try {
             log.info("get a new msg:{}", JSON.toJSONString(baseMemoryDTO));
             redisUtil.setString(String.format(CHAT_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
-            nameAndUserIdMap.put(baseMemoryDTO.getMessageCreatorName(), baseMemoryDTO.getFromUserName());
             SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
             String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
@@ -184,7 +181,7 @@ public class ChatCompletionsApi {
             if (CollectionUtils.isEmpty(sendMessageList)) {
                 return null;
             }else {
-                startNewTaskForContact(baseMemoryDTO.getFromUserName(), memoryDTO, msgListKey);
+                startNewTaskForContact(memoryDTO, msgListKey);
             }
             ChatResponse chatResponse = new ChatResponse();
             chatResponse.setSendMessageList(sendMessageList);
@@ -198,10 +195,10 @@ public class ChatCompletionsApi {
     }
 
 
-    public void sendWxChatMessageList(String toUserName, List<SendMessage> sendMessageList, long receiveMsgTime) {
+    public void sendWxChatMessageList(String remarkName, List<SendMessage> sendMessageList, long receiveMsgTime) {
         for (SendMessage sendMessage : sendMessageList) {
             Message message = new Message();
-            message.setToUsername(toUserName);
+            message.setToRemarkname(remarkName);
             message.setContent(sendMessage.getMessageContent());
             ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(sendMessage.getMessageContentType());
             message.setMsgType(contentTypeEnum == null ? ContentTypeEnum.TEXT.getMsgType() : contentTypeEnum.getMsgType());
@@ -242,7 +239,7 @@ public class ChatCompletionsApi {
                     }
                 }
             }
-            WebWXSendMsgResponse webWXSendMsgResponse = MessageTools.sendMsgByUserId(message);
+            WebWXSendMsgResponse webWXSendMsgResponse = MessageTools.sendMsgByRemarkName(message);
             if (contentTypeEnum == ContentTypeEnum.EMOJI && CollectionUtils.isEmpty(redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent()))) {
                 emojiTypeAndMediaId.add(webWXSendMsgResponse.getMediaId());
                 redisUtil.putEmojiAndMediaId(sendMessage.getMessageContent(), emojiTypeAndMediaId);
@@ -252,7 +249,7 @@ public class ChatCompletionsApi {
     }
 
 
-    private void startNewTaskForContact(String toUserId, MemoryDTO memoryDTO, String msgListKey) {
+    private void startNewTaskForContact(MemoryDTO memoryDTO, String msgListKey) {
         StartConversationCheckTask.startTaskForContact(msgListKey, () -> {
             try {
                 redisUtil.acquireLock(String.format(CHAT_LOCK_KEY, memoryDTO.getMessageCreatorName()), memoryDTO.getMessageCreatorName(), 30 * 1000L, 60 * 1000L);
@@ -283,7 +280,7 @@ public class ChatCompletionsApi {
                 if (CollectionUtils.isEmpty(sendMessageList)) {
                     return false;
                 }else {
-                    sendWxChatMessageList(toUserId, sendMessageList, System.currentTimeMillis());
+                    sendWxChatMessageList(memoryDTO.getMessageCreatorName(), sendMessageList, System.currentTimeMillis());
                 }
                 return true;
             } catch (Exception e) {
@@ -614,7 +611,6 @@ public class ChatCompletionsApi {
     public void executeSchedulerTask(ChatMember chatMember, String news) {
 
         String memberName = chatMember.getName();
-        String userId = nameAndUserIdMap.get(memberName);
         boolean groupFlag = chatMember.isGroupFlag();
         String msgListKey = CreatorEnum.Andrew.getUserId() + DOUBLE_COLON + memberName + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
         try {
@@ -654,7 +650,7 @@ public class ChatCompletionsApi {
             // 转换成发送消息
             List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
             if (CollectionUtils.isNotEmpty(sendMessageList)) {
-                sendWxChatMessageList(userId, sendMessageList, System.currentTimeMillis());
+                sendWxChatMessageList(memberName, sendMessageList, System.currentTimeMillis());
             }
         } catch (Exception e) {
             log.error("executeSchedulerTask error", e);
