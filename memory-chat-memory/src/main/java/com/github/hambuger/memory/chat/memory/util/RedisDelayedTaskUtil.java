@@ -1,5 +1,12 @@
 package com.github.hambuger.memory.chat.memory.util;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,12 +25,34 @@ public class RedisDelayedTaskUtil {
 
     private static final String DELAYED_TASK_KEY = "delayedTasks";
 
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class TaskInfo {
+
+        @JsonPropertyDescription("延迟任务的内容描述")
+        @JsonProperty(required = true)
+        private String taskMessage;
+
+        @JsonPropertyDescription("延迟时间")
+        @JsonProperty(required = true)
+        private long delayTime;
+
+        @JsonPropertyDescription("延迟时间单位")
+        @JsonProperty(required = true)
+        private TimeUnit timeUnit;
+
+
+    }
+
+
     // 添加延迟任务
-    public void addTask(String message, long delay, TimeUnit timeUnit) {
+//    @FunctionCallRegistry(functionDesc = "添加一个任务，以便在未来时间处理", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.TASK})
+    public void addTask(TaskInfo taskInfo) {
         // 将自定义时间单位转换为秒
-        long delayInSeconds = timeUnit.toSeconds(delay);
+        long delayInSeconds = taskInfo.getTimeUnit().toSeconds(taskInfo.getDelayTime());
         long executionTime = Instant.now().getEpochSecond() + delayInSeconds;
-        commonRedisTemplate.opsForZSet().add(DELAYED_TASK_KEY, message, executionTime);
+        commonRedisTemplate.opsForZSet().add(DELAYED_TASK_KEY, taskInfo.getTaskMessage(), executionTime);
     }
 
     // 执行到期任务

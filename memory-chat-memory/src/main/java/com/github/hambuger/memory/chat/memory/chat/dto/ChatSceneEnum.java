@@ -10,6 +10,7 @@ public enum ChatSceneEnum {
     NORMAL_GROUP("正常群沟通"),
     SCHEDULE("退避尝试发起对话"),
     NEWS_SCHEDULE("定时根据热点尝试发起对话"),
+    TASK("延迟任务"),
 
     ;
 
