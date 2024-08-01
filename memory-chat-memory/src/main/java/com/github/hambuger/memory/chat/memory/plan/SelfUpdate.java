@@ -36,11 +36,27 @@ public class SelfUpdate {
         @JsonProperty(required = false, defaultValue = "Unknown")
         private String longPlan = "Unknown";
 
-        @JsonPropertyDescription("状态")
-        @JsonProperty(required = false, defaultValue = "Unknown")
-        private String status = "Unknown";
+        @JsonPropertyDescription("短期计划")
+        @JsonProperty(required = true, defaultValue = "Unknown")
+        private String shortTermPlan = "Unknown";
 
-        @JsonPropertyDescription("其他补充信息")
+        @JsonPropertyDescription("状态")
+        @JsonProperty(required = true, defaultValue = "Unknown")
+        private String state = "Unknown";
+
+        @JsonPropertyDescription("喜好")
+        @JsonProperty(required = true, defaultValue = "Unknown")
+        private String hobby = "Unknown";
+
+        @JsonPropertyDescription("厌恶")
+        @JsonProperty(required = true, defaultValue = "Unknown")
+        private String disgust = "Unknown";
+
+        @JsonPropertyDescription("正在做")
+        @JsonProperty(required = true, defaultValue = "Unknown")
+        private String doing = "Unknown";
+
+        @JsonPropertyDescription("其他补充信息,<\"画像维度\":\"维度内容描述\">")
         @JsonProperty(required = false)
         public Map<String, String> otherInfo = new HashMap<>();
     }
@@ -60,17 +76,21 @@ public class SelfUpdate {
         }else {
             SelfPortrait selfPortrait = JSON.parseObject(portraitStr, SelfPortrait.class);
             String formatStr = """
-                    - LongPlan: %s
-                    - Status: %s
+                - LongPlan: %s
+                - ShortTermPlan: %s
+                - Hobby: %s
+                - Disgust: %s
+                - Doing: %s
+                - State: %s
                     %s
-                    """;
+""";
             StringBuilder otherInfoStr = new StringBuilder();
             if (MapUtils.isNotEmpty(selfPortrait.otherInfo)) {
                 for (Map.Entry<String, String> stringEntry : selfPortrait.otherInfo.entrySet()) {
                     otherInfoStr.append("- ").append(stringEntry.getKey()).append(": ").append(stringEntry.getValue()).append("\n");
                 }
             }
-            return String.format(formatStr, selfPortrait.longPlan, selfPortrait.status, otherInfoStr);
+            return String.format(formatStr, selfPortrait.longPlan, selfPortrait.shortTermPlan, selfPortrait.hobby, selfPortrait.disgust, selfPortrait.doing, selfPortrait.state, otherInfoStr);
 
         }
     }

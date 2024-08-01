@@ -43,7 +43,7 @@ public class FriendPortrait {
 
     @JsonPropertyDescription("好友性格描述")
     @JsonProperty(required = true, defaultValue = "Unknown")
-    private String character = "Unknown";
+    private String personality = "Unknown";
 
     @JsonPropertyDescription("和Andrew的关系")
     @JsonProperty(required = true, defaultValue = "Unknown")
@@ -53,12 +53,28 @@ public class FriendPortrait {
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String longPlan = "Unknown";
 
+    @JsonPropertyDescription("好友短期计划")
+    @JsonProperty(required = true, defaultValue = "Unknown")
+    private String shortTermPlan = "Unknown";
+
+    @JsonPropertyDescription("好友喜好")
+    @JsonProperty(required = true, defaultValue = "Unknown")
+    private String hobby = "Unknown";
+
+    @JsonPropertyDescription("好友厌恶")
+    @JsonProperty(required = true, defaultValue = "Unknown")
+    private String disgust = "Unknown";
+
+    @JsonPropertyDescription("好友正在做")
+    @JsonProperty(required = true, defaultValue = "Unknown")
+    private String doing = "Unknown";
+
     @JsonPropertyDescription("好友状态")
     @JsonProperty(required = true, defaultValue = "Unknown")
-    private String status = "Unknown";
+    private String state = "Unknown";
 
 
-    @JsonPropertyDescription("好友的其他补充信息")
+    @JsonPropertyDescription("好友的其他补充信息,<\"画像维度\":\"维度内容描述\">")
     @JsonProperty(required = false)
     public Map<String, String> otherInfo = new HashMap<>();
 
@@ -70,10 +86,14 @@ public class FriendPortrait {
                 - NativeLanguage: %s
                 - City: %s
                 - Gender: %s
-                - Character: %s
+                - Personality: %s
                 - Relationship: %s
                 - LongPlan: %s
-                - Status: %s
+                - ShortTermPlan: %s
+                - Hobby: %s
+                - Disgust: %s
+                - Doing: %s
+                - State: %s
                 %s
                 """;
         StringBuilder otherInfoStr = new StringBuilder();
@@ -82,7 +102,7 @@ public class FriendPortrait {
                 otherInfoStr.append("- ").append(stringEntry.getKey()).append(": ").append(stringEntry.getValue()).append("\n");
             }
         }
-        return String.format(formatStr, this.name, age, language, city, gender, character, relationship, longPlan, status, otherInfoStr);
+        return String.format(formatStr, this.name, age, language, city, gender, personality, relationship, longPlan, shortTermPlan, hobby, disgust, doing, state, otherInfoStr);
     }
 
 }

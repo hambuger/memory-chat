@@ -24,7 +24,7 @@ public class GroupPortrait {
     @JsonProperty(required = true, defaultValue = "Unknown")
     public String name;
 
-    @JsonPropertyDescription("群的其他补充信息")
+    @JsonPropertyDescription("群的其他补充信息,<\"画像维度\":\"维度内容描述\">")
     @JsonProperty(required = false)
     public Map<String, String> otherInfo = new HashMap<>();
 
