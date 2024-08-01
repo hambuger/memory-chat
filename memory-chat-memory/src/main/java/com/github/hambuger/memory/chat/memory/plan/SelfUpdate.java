@@ -76,13 +76,13 @@ public class SelfUpdate {
         }else {
             SelfPortrait selfPortrait = JSON.parseObject(portraitStr, SelfPortrait.class);
             String formatStr = """
-                - LongPlan: %s
-                - ShortTermPlan: %s
-                - Hobby: %s
-                - Disgust: %s
-                - Doing: %s
-                - State: %s
-                    %s
+- LongPlan: %s
+- ShortTermPlan: %s
+- Hobby: %s
+- Disgust: %s
+- Doing: %s
+- State: %s
+%s
 """;
             StringBuilder otherInfoStr = new StringBuilder();
             if (MapUtils.isNotEmpty(selfPortrait.otherInfo)) {

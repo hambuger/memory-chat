@@ -36,10 +36,10 @@ public class GroupPortrait {
             }
         }
         String formatStr = """
-                ## GroupPortrait
-                - Name: %s
-                %s
-                """;
+## GroupPortrait
+- Name: %s
+%s
+""";
         return String.format(formatStr, this.name, otherInfoStr);
     }
 }

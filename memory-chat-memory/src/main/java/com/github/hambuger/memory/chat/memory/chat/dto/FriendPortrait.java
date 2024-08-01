@@ -80,22 +80,22 @@ public class FriendPortrait {
 
     public String toMarkDown() {
         String formatStr = """
-                ## FriendPortrait
-                - Name: %s
-                - Age: %s
-                - NativeLanguage: %s
-                - City: %s
-                - Gender: %s
-                - Personality: %s
-                - Relationship: %s
-                - LongPlan: %s
-                - ShortTermPlan: %s
-                - Hobby: %s
-                - Disgust: %s
-                - Doing: %s
-                - State: %s
-                %s
-                """;
+## FriendPortrait
+- Name: %s
+- Age: %s
+- NativeLanguage: %s
+- City: %s
+- Gender: %s
+- Personality: %s
+- Relationship: %s
+- LongPlan: %s
+- ShortTermPlan: %s
+- Hobby: %s
+- Disgust: %s
+- Doing: %s
+- State: %s
+%s
+""";
         StringBuilder otherInfoStr = new StringBuilder();
         if (MapUtils.isNotEmpty(this.otherInfo)) {
             for (Map.Entry<String, String> stringEntry : otherInfo.entrySet()) {
