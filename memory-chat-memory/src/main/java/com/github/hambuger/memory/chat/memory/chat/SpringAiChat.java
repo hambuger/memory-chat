@@ -70,7 +70,9 @@ public class SpringAiChat {
         OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().withModel(modelName).withTools(tools).withToolChoice(REQUIRED).withTemperature(temperature).build();
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
-        if (response == null || CollectionUtils.isEmpty(response.getBody().choices()) || response.getBody().choices().get(0).message().toolCalls().stream().anyMatch(tool -> tool.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME))) {
+        if (response == null || CollectionUtils.isEmpty(response.getBody().choices())
+                || CollectionUtils.isEmpty(response.getBody().choices().get(0).message().toolCalls())
+                || response.getBody().choices().get(0).message().toolCalls().stream().anyMatch(tool -> tool.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME))) {
             return response.getBody();
         }
         List<OpenAiApi.ChatCompletionMessage> executionResultMessages = new ArrayList<>();

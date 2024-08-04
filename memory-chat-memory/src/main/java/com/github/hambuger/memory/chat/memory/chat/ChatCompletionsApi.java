@@ -450,7 +450,7 @@ public class ChatCompletionsApi {
 
 
     @NotNull
-    private static MemoryDTO getAiResponseMemoryDTO(MemoryDTO memoryDTO, String TEXT, String aiMessage, Integer token) {
+    public static MemoryDTO getAiResponseMemoryDTO(MemoryDTO memoryDTO, String TEXT, String aiMessage, Integer token) {
         MemoryDTO aiMemoryDTO = new MemoryDTO();
         aiMemoryDTO.setMessageCreatorId(CreatorEnum.Andrew.getUserId());
         aiMemoryDTO.setMessageCreatorName(CreatorEnum.Andrew.getUserName());

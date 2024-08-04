@@ -36,7 +36,7 @@ public class GoogleSearch {
     private static final ThreadPoolExecutor FETCH_URL_POOL = new ThreadPoolExecutor(20, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(2000));
 
 
-    @FunctionCallRegistry(functionDesc = "去谷歌搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
+    @FunctionCallRegistry(functionDesc = "去谷歌搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.TASK})
     public String getGoogleSearchResult(SerpSearch.SerpQuery query) {
         try {
             String googleUrl = String.format(searchUrl, query.getQueryWord().replace(" ", "%20"));
