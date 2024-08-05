@@ -2,7 +2,6 @@ package com.github.hambuger.memory.chat.memory.memory;
 
 import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
-import com.github.hambuger.memory.chat.memory.prompt.ChatPrompt;
 import com.github.hambuger.memory.chat.memory.prompt.PromptFactory;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,9 +21,6 @@ public class MemoryImportantScore {
 
     @Resource
     private SpringAiChat springAiChat;
-
-    @Resource
-    private ChatPrompt chatPrompt;
 
     @Resource
     private PromptFactory promptFactory;
