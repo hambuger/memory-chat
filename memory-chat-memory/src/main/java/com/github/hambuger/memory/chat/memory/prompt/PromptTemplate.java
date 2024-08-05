@@ -146,4 +146,16 @@ ${newMsg}
 {\\"needSend\\":false,\\"reason\\":\\"\\"}
             """;
 
+
+    public static final String EMOTION_PROMPT = """
+以下是%s和%s最近的对话记录：
+%s
+
+判断%s在下面这句话是的情感是什么状态，并且结合聊天历史总结提炼出三个关于下面这句话的关键词语。
+%s
+
+返回的结构类似如下的json:
+{    \"emotion\": \"快乐\",    \"summaryWords\": [    ]}
+think it step by step.
+""";
 }
