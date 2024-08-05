@@ -5,10 +5,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.collections4.MapUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.commons.collections4.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -24,15 +25,15 @@ public class GroupPortrait {
     @JsonProperty(required = true, defaultValue = "Unknown")
     public String name;
 
-    @JsonPropertyDescription("群的其他补充信息,<\"画像维度\":\"维度内容描述\">")
+    @JsonPropertyDescription("群的其他维度补充信息")
     @JsonProperty(required = false)
-    public Map<String, String> otherInfo = new HashMap<>();
+    public List<DimensionInfo> otherInfo = new ArrayList<>();
 
     public String toMarkDown() {
         StringBuilder otherInfoStr = new StringBuilder();
-        if (MapUtils.isNotEmpty(this.otherInfo)) {
-            for (Map.Entry<String, String> stringEntry : otherInfo.entrySet()) {
-                otherInfoStr.append("- ").append(stringEntry.getKey()).append(": ").append(stringEntry.getValue()).append("\n");
+        if (CollectionUtils.isNotEmpty(this.otherInfo)) {
+            for (DimensionInfo info : otherInfo) {
+                otherInfoStr.append("- ").append(info.getDimensionName()).append(": ").append(info.getDimensionDescription()).append("\n");
             }
         }
         String formatStr = """

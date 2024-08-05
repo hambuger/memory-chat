@@ -2,14 +2,15 @@ package com.github.hambuger.memory.chat.memory.chat.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+
+import org.apache.commons.collections4.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.apache.commons.collections4.MapUtils;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -74,9 +75,10 @@ public class FriendPortrait {
     private String state = "Unknown";
 
 
-    @JsonPropertyDescription("好友的其他补充信息,<\"画像维度\":\"维度内容描述\">")
+    @JsonPropertyDescription("好友的其他维度补充信息")
     @JsonProperty(required = false)
-    public Map<String, String> otherInfo = new HashMap<>();
+    public List<DimensionInfo> otherInfo = new ArrayList<>();
+
 
     public String toMarkDown() {
         String formatStr = """
@@ -97,9 +99,9 @@ public class FriendPortrait {
 %s
 """;
         StringBuilder otherInfoStr = new StringBuilder();
-        if (MapUtils.isNotEmpty(this.otherInfo)) {
-            for (Map.Entry<String, String> stringEntry : otherInfo.entrySet()) {
-                otherInfoStr.append("- ").append(stringEntry.getKey()).append(": ").append(stringEntry.getValue()).append("\n");
+        if (CollectionUtils.isNotEmpty(this.otherInfo)) {
+            for (DimensionInfo info : otherInfo) {
+                otherInfoStr.append("- ").append(info.getDimensionName()).append(": ").append(info.getDimensionDescription()).append("\n");
             }
         }
         return String.format(formatStr, this.name, age, language, city, gender, personality, relationship, longPlan, shortTermPlan, hobby, disgust, doing, state, otherInfoStr);

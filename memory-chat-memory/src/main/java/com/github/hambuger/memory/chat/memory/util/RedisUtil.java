@@ -185,7 +185,7 @@ public class RedisUtil {
             FriendPortrait friendPortrait = objectMapper.readValue(jsonString, FriendPortrait.class);
             BeanUtils.copyProperties(friendPortrait, portrait);
             if (friendPortrait.getOtherInfo() != null) {
-                portrait.getOtherInfo().putAll(friendPortrait.getOtherInfo());
+                portrait.getOtherInfo().addAll(friendPortrait.getOtherInfo());
             }
             String json = objectMapper.writeValueAsString(portrait);
             redisTemplate.opsForValue().set(name + PORTRAIT_KEY_SUFFIX, json);
@@ -206,7 +206,7 @@ public class RedisUtil {
             GroupPortrait groupPortrait = objectMapper.readValue(jsonString, GroupPortrait.class);
             BeanUtils.copyProperties(groupPortrait, portrait);
             if (groupPortrait.getOtherInfo() != null) {
-                portrait.getOtherInfo().putAll(groupPortrait.getOtherInfo());
+                portrait.getOtherInfo().addAll(groupPortrait.getOtherInfo());
             }
             String json = objectMapper.writeValueAsString(portrait);
             redisTemplate.opsForValue().set(name + PORTRAIT_KEY_SUFFIX, json);

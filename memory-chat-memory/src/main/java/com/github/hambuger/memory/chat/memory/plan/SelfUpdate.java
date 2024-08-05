@@ -4,15 +4,16 @@ import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.chat.dto.DimensionInfo;
 import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 
-import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.annotation.Resource;
 import lombok.Data;
@@ -56,9 +57,10 @@ public class SelfUpdate {
         @JsonProperty(required = true, defaultValue = "Unknown")
         private String doing = "Unknown";
 
-        @JsonPropertyDescription("其他补充信息,<\"画像维度\":\"维度内容描述\">")
+        @JsonPropertyDescription("其他维度补充信息")
         @JsonProperty(required = false)
-        public Map<String, String> otherInfo = new HashMap<>();
+        public List<DimensionInfo> otherInfo = new ArrayList<>();
+
     }
 
 
@@ -85,9 +87,9 @@ public class SelfUpdate {
 %s
 """;
             StringBuilder otherInfoStr = new StringBuilder();
-            if (MapUtils.isNotEmpty(selfPortrait.otherInfo)) {
-                for (Map.Entry<String, String> stringEntry : selfPortrait.otherInfo.entrySet()) {
-                    otherInfoStr.append("- ").append(stringEntry.getKey()).append(": ").append(stringEntry.getValue()).append("\n");
+            if (CollectionUtils.isNotEmpty(selfPortrait.otherInfo)) {
+                for (DimensionInfo info : selfPortrait.otherInfo) {
+                    otherInfoStr.append("- ").append(info.getDimensionName()).append(": ").append(info.getDimensionDescription()).append("\n");
                 }
             }
             return String.format(formatStr, selfPortrait.longPlan, selfPortrait.shortTermPlan, selfPortrait.hobby, selfPortrait.disgust, selfPortrait.doing, selfPortrait.state, otherInfoStr);
