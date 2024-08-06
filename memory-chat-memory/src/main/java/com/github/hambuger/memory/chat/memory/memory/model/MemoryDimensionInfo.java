@@ -39,6 +39,7 @@ public class MemoryDimensionInfo {
 
 
     public enum EmotionEnum {
+        未知,
         快乐,
         满足,
         幸福,
@@ -90,6 +91,7 @@ public class MemoryDimensionInfo {
         失望,
         挫折,
         平静,
+        好奇,
         宁静,
         安详,
         放松,

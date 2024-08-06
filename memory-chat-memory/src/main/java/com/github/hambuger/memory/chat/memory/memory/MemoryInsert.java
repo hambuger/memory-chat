@@ -90,7 +90,8 @@ public class MemoryInsert {
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
         }
         boolean userMsgFlag = StringUtils.equals(memoryDTO.getAiResponseFlag(), CommonConstants.NO_STR);
-        String msgListKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + (Objects.equal(memoryDTO.getAiResponseFlag(), CommonConstants.NO_STR) ? memoryDTO.getMessageCreatorId() :
+        boolean reflectionFlag = StringUtils.equals(memoryDTO.getMessageCreatorType(), CreatorEnum.REFLECTION.getType());
+        String msgListKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + ((userMsgFlag && !reflectionFlag) ? memoryDTO.getMessageCreatorId() :
                 memoryDTO.getMessageReceiveId()) + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
         if (!userMsgFlag) {
             redisUtil.addMsg(msgListKey,

@@ -61,7 +61,7 @@ public class RedisDelayedTaskUtil {
 
     // 添加延迟任务
     @FunctionCallRegistry(functionDesc = "添加一个任务，以便在未来时间处理", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.TASK})
-    public void addTask(TaskInfo taskInfo) {
+    public boolean addTask(TaskInfo taskInfo) {
         // 将自定义时间单位转换为秒
         long delayInSeconds = taskInfo.getTimeUnit().toSeconds(taskInfo.getDelayTime());
         long executionTime = Instant.now().getEpochSecond() + delayInSeconds;
@@ -70,6 +70,7 @@ public class RedisDelayedTaskUtil {
 
         // 将序列化后的 JSON 字符串存储到 Redis 中
         commonRedisTemplate.opsForZSet().add(DELAYED_TASK_KEY, jsonString, executionTime);
+        return true;
 
     }
 

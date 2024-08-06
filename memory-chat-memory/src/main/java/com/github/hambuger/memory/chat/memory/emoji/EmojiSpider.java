@@ -10,6 +10,7 @@ import com.mashape.unirest.http.Unirest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -70,23 +71,36 @@ public class EmojiSpider {
      */
     private String downloadImage(String imageUrl, String destinationFilePath) throws Exception {
         HttpResponse<InputStream> response = Unirest.get(imageUrl).asBinary();
-        try {
+        try (InputStream in = response.getBody()) {
+
+            // 获取内容类型并根据此信息设置文件扩展名
             List<String> contentTypes = response.getHeaders().get("Content-Type");
             if (contentTypes != null && contentTypes.size() > 0) {
                 destinationFilePath = destinationFilePath + contentTypes.get(0).replace("image/", ".");
             }
-            InputStream in = response.getBody();
-            FileOutputStream out = new FileOutputStream(destinationFilePath);
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = in.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
+
+            // 确保目录存在
+            File file = new File(destinationFilePath);
+            File parentDir = file.getParentFile();
+            if (!parentDir.exists()) {
+                parentDir.mkdirs();  // 创建所有必要的父目录
             }
+
+            try (FileOutputStream out = new FileOutputStream(file)) {
+                // 写入文件
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+
             return destinationFilePath;
+
         } catch (Exception e) {
             log.error("downloadImage error", e);
+            return null;  // 返回null表示下载失败
         }
-        return destinationFilePath;
     }
 }
 

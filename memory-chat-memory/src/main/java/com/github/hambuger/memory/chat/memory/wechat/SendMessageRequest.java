@@ -17,7 +17,7 @@ public class SendMessageRequest {
     @JsonProperty(required = true)
     private boolean needsSending;
 
-    @JsonPropertyDescription("发送的文本消息列表")
+    @JsonPropertyDescription("发送的文本消息列表,郭德纲语言风格")
     @JsonProperty(required = false)
     private List<String> sendTextMessageList;
 

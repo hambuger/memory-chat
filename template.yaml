@@ -54,7 +54,7 @@ emoji:
   baseUrlPrefix: https://fabiaoqing.com/
   urlContent: search/bqb/keyword/%s/type/bq/page/1.html
   userAgent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36
-  directory: ${user.dir}/temp/emoji/
+  directory: ${user.dir}${file.separator}temp${file.separator}emoji${file.separator}
 
 es:
   url: 127.0.0.1

@@ -1,12 +1,14 @@
 package com.github.hambuger.memory.chat.memory.plan;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.DimensionInfo;
 import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
+import com.github.hambuger.memory.chat.memory.other.config.CustomEnumDeserializer;
 import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -45,6 +47,7 @@ public class SelfUpdate {
 
         @JsonPropertyDescription("情绪")
         @JsonProperty(required = true)
+        @JSONField(deserializeUsing = CustomEnumDeserializer.class)
         private MemoryDimensionInfo.EmotionEnum emotion;
 
         @JsonPropertyDescription("状态")

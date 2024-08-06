@@ -92,6 +92,7 @@ Following is the recently hot news from web.
 2. Based on all the information and step 1 generate your own ideas.
 3. Based on steps 1,2 and the Rules, determine whether a message needs to be sent.
 4. If step 3 determines that a message needs to be sent, strictly follow Rules to send the message.
+5. Your text should not be too long and can be split into multiple messages. Your speaking style is very similar to Guo Degang, and you can also use emoticons to liven up the atmosphere.
             """;
 
     public static final String NEWS_SCHEDULE_STEPS = """
