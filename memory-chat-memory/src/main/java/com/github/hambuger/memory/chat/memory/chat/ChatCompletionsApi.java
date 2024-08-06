@@ -580,7 +580,7 @@ public class ChatCompletionsApi {
     public List<OpenAiApi.ChatCompletionMessage> getAllHistoryMessageList(String msgListKey) {
         List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
         List<OpenAiApi.ChatCompletionMessage> chatCompletionMessageList = new ArrayList<>();
-        for (int i = memoryDTOS.size() - 1; i >= 0; i--) {
+        for (int i = 0; i <= memoryDTOS.size() - 1; i++) {
             MemoryDTO memoryDTO = memoryDTOS.get(i);
             OpenAiApi.ChatCompletionMessage chatMessage;
             if (StringUtils.isBlank(memoryDTO.getMessageContentType()) || StringUtils.isBlank(memoryDTO.getMessageContent())) {
@@ -588,7 +588,7 @@ public class ChatCompletionsApi {
             }
             if (memoryDTO.getAiResponseFlag().equals(YES_STR)) {
                 chatMessage = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
-            }else {
+            } else {
                 chatMessage = convertMemoryMsg2SpringAiModelMsg(memoryDTO);
             }
             chatCompletionMessageList.add(chatMessage);

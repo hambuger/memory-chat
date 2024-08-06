@@ -96,18 +96,20 @@ public class MemoryInsert {
             redisUtil.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
         }
-        boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType());
+        boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) || StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.NOTE.getType());
         List<OpenAiApi.ChatCompletionMessage> historyMessageList = chatCompletionsApi.getAllHistoryMessageList(msgListKey);
         OpenAiApi.ChatCompletionMessage dimensionSystemMessage = new OpenAiApi.ChatCompletionMessage(promptFactory.getEmotionPrompt(), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         historyMessageList.add(historyMessageList.size() - 1, dimensionSystemMessage);
         MemoryDimensionInfo dimensionInfo = memoryDimensionGenerate.generateDimension(historyMessageList);
         if (dimensionInfo != null) {
             memoryDTO.setMessageImportanceScore(dimensionInfo.getScore());
-            memoryDTO.setEmotion(dimensionInfo.getEmotion().name());
+            memoryDTO.setEmotion(Optional.ofNullable(dimensionInfo.getEmotion()).map(Enum::name).orElse(null));
             memoryDTO.setSummaryWords(dimensionInfo.getSummaryWords());
         }
-        List<Double> vector = springAiEmbeddings.generateTextEmbeddings(memoryDTO.getMessageContent());
-        memoryDTO.setMessageContentVector(vector);
+        if (textMsgFlag) {
+            List<Double> vector = springAiEmbeddings.generateTextEmbeddings(memoryDTO.getMessageContent());
+            memoryDTO.setMessageContentVector(vector);
+        }
         if (!forceInsert && !userMsgFlag && ChatCompletionsApi.checkLastMessageId(memoryDTO)) {
             return false;
         }
