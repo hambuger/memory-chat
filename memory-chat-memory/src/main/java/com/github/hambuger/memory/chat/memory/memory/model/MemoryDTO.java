@@ -48,6 +48,16 @@ public class MemoryDTO extends BaseMemoryDTO {
      */
     private List<Double> messageContentVector;
 
+    /**
+     * 情感
+     */
+    private String emotion;
+
+    /**
+     * 总结词语
+     */
+    private List<String> summaryWords;
+
 
     /**
      * 消耗token数

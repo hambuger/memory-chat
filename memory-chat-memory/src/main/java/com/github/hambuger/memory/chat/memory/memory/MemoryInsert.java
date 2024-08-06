@@ -8,6 +8,8 @@ import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
+import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
+import com.github.hambuger.memory.chat.memory.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.util.EsClient;
 import com.github.hambuger.memory.chat.memory.embeddings.SpringAiEmbeddings;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
@@ -18,6 +20,7 @@ import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
@@ -52,7 +55,7 @@ public class MemoryInsert {
     private EsClient esClient;
 
     @Resource
-    private MemoryImportantScore memoryImportantScore;
+    private MemoryDimensionGenerate memoryDimensionGenerate;
 
     @Resource
     private MemoryReflection memoryReflection;
@@ -72,6 +75,12 @@ public class MemoryInsert {
     @Resource
     private TokenCalculation tokenCalculation;
 
+    @Resource
+    private ChatCompletionsApi chatCompletionsApi;
+
+    @Resource
+    private PromptFactory promptFactory;
+
     private static final ThreadPoolExecutor MEMORY_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("memory-pool"),
             new ThreadPoolExecutor.CallerRunsPolicy());
 
@@ -81,22 +90,24 @@ public class MemoryInsert {
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
         }
         boolean userMsgFlag = StringUtils.equals(memoryDTO.getAiResponseFlag(), CommonConstants.NO_STR);
+        String msgListKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + (Objects.equal(memoryDTO.getAiResponseFlag(), CommonConstants.NO_STR) ? memoryDTO.getMessageCreatorId() :
+                memoryDTO.getMessageReceiveId()) + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
         if (!userMsgFlag) {
-            String msgListKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + (Objects.equal(memoryDTO.getAiResponseFlag(), CommonConstants.NO_STR) ? memoryDTO.getMessageCreatorId() :
-                    memoryDTO.getMessageReceiveId()) + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
             redisUtil.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
         }
         boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType());
-        // 生成重要性分数
-        String messageContent = memoryDTO.getMessageContent();
-        if (textMsgFlag && userMsgFlag) {
-            Double score = memoryImportantScore.generateImportantScore(messageContent);
-            memoryDTO.setMessageImportanceScore(score);
-            // 生成消息向量
-            List<Double> vector = springAiEmbeddings.generateTextEmbeddings(messageContent);
-            memoryDTO.setMessageContentVector(vector);
+        List<OpenAiApi.ChatCompletionMessage> historyMessageList = chatCompletionsApi.getAllHistoryMessageList(msgListKey);
+        OpenAiApi.ChatCompletionMessage dimensionSystemMessage = new OpenAiApi.ChatCompletionMessage(promptFactory.getEmotionPrompt(), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+        historyMessageList.add(historyMessageList.size() - 1, dimensionSystemMessage);
+        MemoryDimensionInfo dimensionInfo = memoryDimensionGenerate.generateDimension(historyMessageList);
+        if (dimensionInfo != null) {
+            memoryDTO.setMessageImportanceScore(dimensionInfo.getScore());
+            memoryDTO.setEmotion(dimensionInfo.getEmotion().name());
+            memoryDTO.setSummaryWords(dimensionInfo.getSummaryWords());
         }
+        List<Double> vector = springAiEmbeddings.generateTextEmbeddings(memoryDTO.getMessageContent());
+        memoryDTO.setMessageContentVector(vector);
         if (!forceInsert && !userMsgFlag && ChatCompletionsApi.checkLastMessageId(memoryDTO)) {
             return false;
         }

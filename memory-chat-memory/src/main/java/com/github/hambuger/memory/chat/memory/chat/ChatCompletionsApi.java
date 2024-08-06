@@ -577,6 +577,25 @@ public class ChatCompletionsApi {
         return String.format("%s发送了一个视频。这个视频的信息如下：%s", creatorName, videoInfo);
     }
 
+    public List<OpenAiApi.ChatCompletionMessage> getAllHistoryMessageList(String msgListKey) {
+        List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
+        List<OpenAiApi.ChatCompletionMessage> chatCompletionMessageList = new ArrayList<>();
+        for (int i = memoryDTOS.size() - 1; i >= 0; i--) {
+            MemoryDTO memoryDTO = memoryDTOS.get(i);
+            OpenAiApi.ChatCompletionMessage chatMessage;
+            if (StringUtils.isBlank(memoryDTO.getMessageContentType()) || StringUtils.isBlank(memoryDTO.getMessageContent())) {
+                continue;
+            }
+            if (memoryDTO.getAiResponseFlag().equals(YES_STR)) {
+                chatMessage = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
+            }else {
+                chatMessage = convertMemoryMsg2SpringAiModelMsg(memoryDTO);
+            }
+            chatCompletionMessageList.add(chatMessage);
+        }
+        return chatCompletionMessageList;
+    }
+
 
     private Pair<List<String>, LinkedList<OpenAiApi.ChatCompletionMessage>> getMinMemoryContext(String msgListKey, List<MemoryDTO> memoryDTOS) {
         if (CollectionUtils.isEmpty(memoryDTOS)) {

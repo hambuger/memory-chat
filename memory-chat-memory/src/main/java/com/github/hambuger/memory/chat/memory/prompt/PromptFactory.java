@@ -100,4 +100,9 @@ public class PromptFactory {
         return formatPrompt(PromptTemplate.NEW_MSG_PROMPT, templateValueMap);
     }
 
+    public String getEmotionPrompt() {
+        return PromptTemplate.EMOTION_PROMPT;
+    }
+
+
 }
