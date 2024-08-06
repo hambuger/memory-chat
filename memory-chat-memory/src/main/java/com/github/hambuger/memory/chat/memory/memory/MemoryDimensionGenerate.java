@@ -1,6 +1,7 @@
 package com.github.hambuger.memory.chat.memory.memory;
 
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.Feature;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
@@ -42,7 +43,7 @@ public class MemoryDimensionGenerate {
         String dimensionInfoArgs =
                 Optional.ofNullable(chatCompletion).map(OpenAiApi.ChatCompletion::choices).map(list -> list.get(0)).map(OpenAiApi.ChatCompletion.Choice::message).map(OpenAiApi.ChatCompletionMessage::toolCalls).map(list -> list.get(0)).map(OpenAiApi.ChatCompletionMessage.ToolCall::function).map(OpenAiApi.ChatCompletionMessage.ChatCompletionFunction::arguments).orElse(null);
         if (StringUtils.isNotBlank(dimensionInfoArgs)) {
-            return JSONObject.parseObject(dimensionInfoArgs, MemoryDimensionInfo.class);
+            return JSONObject.parseObject(dimensionInfoArgs, MemoryDimensionInfo.class, Feature.IgnoreNotMatch);
         }
         return null;
     }

@@ -3,10 +3,12 @@ package com.github.hambuger.memory.chat.memory.chat.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
+import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -58,6 +60,10 @@ public class FriendPortrait {
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String shortTermPlan = "Unknown";
 
+    @JsonPropertyDescription("好友情绪")
+    @JsonProperty(required = true)
+    private MemoryDimensionInfo.EmotionEnum emotion;
+
     @JsonPropertyDescription("好友喜好")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String hobby = "Unknown";
@@ -92,6 +98,7 @@ public class FriendPortrait {
 - Relationship: %s
 - LongPlan: %s
 - ShortTermPlan: %s
+- emotion: %s
 - Hobby: %s
 - Disgust: %s
 - Doing: %s
@@ -104,7 +111,7 @@ public class FriendPortrait {
                 otherInfoStr.append("- ").append(info.getDimensionName()).append(": ").append(info.getDimensionDescription()).append("\n");
             }
         }
-        return String.format(formatStr, this.name, age, language, city, gender, personality, relationship, longPlan, shortTermPlan, hobby, disgust, doing, state, otherInfoStr);
+        return String.format(formatStr, this.name, age, language, city, gender, personality, relationship, longPlan, shortTermPlan, Optional.ofNullable(emotion).map(Enum::name).orElse("Unknown"), hobby, disgust, doing, state, otherInfoStr);
     }
 
 }

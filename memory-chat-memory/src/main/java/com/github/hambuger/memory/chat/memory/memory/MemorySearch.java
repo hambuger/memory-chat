@@ -3,10 +3,12 @@ package com.github.hambuger.memory.chat.memory.memory;
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
+import com.github.hambuger.memory.chat.memory.chat.dto.FriendPortrait;
 import com.github.hambuger.memory.chat.memory.util.EsClient;
 import com.github.hambuger.memory.chat.memory.embeddings.SpringAiEmbeddings;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 
+import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -54,6 +56,9 @@ public class MemorySearch {
     @Value("${chatMemoryIndex}")
     private String chatMemoryIndex;
 
+    @Resource
+    private RedisUtil redisUtil;
+
 
     public List<MemoryDTO> searchRelationMemory(String ownerId, String creatorId, String content) {
         List<Double> contentVector = springAiEmbeddings.generateTextEmbeddings(content);
@@ -77,6 +82,11 @@ public class MemorySearch {
         // 构建查询体
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.size(6);
+        FriendPortrait friendPortraitInfo = redisUtil.getFriendPortraitInfo(creatorId);
+        String emotion = "Unknown";
+        if (friendPortraitInfo != null && friendPortraitInfo.getEmotion() != null) {
+            emotion = friendPortraitInfo.getEmotion().name();
+        }
         searchSourceBuilder.query(QueryBuilders.functionScoreQuery(QueryBuilders.boolQuery().must(mustQuery),
                 new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchQuery("messageContent", content),
                         new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "_score / (1 + _score)", Collections.emptyMap()))),
@@ -84,10 +94,22 @@ public class MemorySearch {
                         new FunctionScoreQueryBuilder.FilterFunctionBuilder(new FieldValueFactorFunctionBuilder("messageImportanceScore")),
                         new FunctionScoreQueryBuilder.FilterFunctionBuilder(new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "1 / (1 + Math.exp(-1.0 * " + "doc" +
                                 "['memoryLeafDepth'].value))", Collections.emptyMap()))), new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchAllQuery(),
-                        new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "double score = (cosineSimilarity(params.query_vector, 'messageContentVector') + 1.0); return score "
-                                + "> 0.5 " + "? 10 + score : 0;", new HashMap() {{
-            put("query_vector", contentVector);
-        }})))}).scoreMode(FunctionScoreQuery.ScoreMode.SUM).boostMode(CombineFunction.REPLACE).setMinScore(10));
+                        new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless",
+                                "double score = cosineSimilarity(params.query_vector, 'messageContentVector'); " +
+                                        "return (score > 0.5 || score < -0.5) ? 10 : 0;",
+                                new HashMap<>() {{
+                                    put("query_vector", contentVector);
+                                }}))),
+                        // 精确匹配 emotion 字段
+                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+                                QueryBuilders.termQuery("emotion", emotion),
+                                new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "return 1;", Collections.emptyMap()))
+                        ),
+                        // 对数函数归一化 summaryWords 字段的匹配分数
+                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+                                QueryBuilders.matchQuery("summaryWords", content),
+                                new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "double rawScore = _score; double normalizedScore = Math.log1p(rawScore) / Math.log1p(1.0); return normalizedScore;", Collections.emptyMap()))
+                        )}).scoreMode(FunctionScoreQuery.ScoreMode.SUM).boostMode(CombineFunction.REPLACE).setMinScore(10));
 
         SearchRequest searchRequest = new SearchRequest(chatMemoryIndex);
         searchRequest.source(searchSourceBuilder);

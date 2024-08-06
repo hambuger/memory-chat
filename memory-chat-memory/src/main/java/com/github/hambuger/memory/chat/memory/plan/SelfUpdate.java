@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.DimensionInfo;
 import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
 import com.github.hambuger.memory.chat.memory.util.RedisUtil;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.annotation.Resource;
 import lombok.Data;
@@ -40,6 +42,10 @@ public class SelfUpdate {
         @JsonPropertyDescription("短期计划")
         @JsonProperty(required = true, defaultValue = "Unknown")
         private String shortTermPlan = "Unknown";
+
+        @JsonPropertyDescription("情绪")
+        @JsonProperty(required = true)
+        private MemoryDimensionInfo.EmotionEnum emotion;
 
         @JsonPropertyDescription("状态")
         @JsonProperty(required = true, defaultValue = "Unknown")
@@ -80,6 +86,7 @@ public class SelfUpdate {
             String formatStr = """
 - LongPlan: %s
 - ShortTermPlan: %s
+- emotion: %s
 - Hobby: %s
 - Disgust: %s
 - Doing: %s
@@ -92,7 +99,7 @@ public class SelfUpdate {
                     otherInfoStr.append("- ").append(info.getDimensionName()).append(": ").append(info.getDimensionDescription()).append("\n");
                 }
             }
-            return String.format(formatStr, selfPortrait.longPlan, selfPortrait.shortTermPlan, selfPortrait.hobby, selfPortrait.disgust, selfPortrait.doing, selfPortrait.state, otherInfoStr);
+            return String.format(formatStr, selfPortrait.longPlan, selfPortrait.shortTermPlan, Optional.ofNullable(selfPortrait.emotion).map(Enum::name).orElse("Unknown"), selfPortrait.hobby, selfPortrait.disgust, selfPortrait.doing, selfPortrait.state, otherInfoStr);
 
         }
     }

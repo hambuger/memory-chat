@@ -62,6 +62,17 @@ public class RedisUtil {
         redisTemplate.opsForList().trim(msgListKey, i + 1, listSize);
     }
 
+    public FriendPortrait getFriendPortraitInfo(String name) {
+        String value = redisTemplate.opsForValue().get(name + PORTRAIT_KEY_SUFFIX);
+        if (StringUtils.isNotBlank(value)) {
+            try {
+                return objectMapper.readValue(value, FriendPortrait.class);
+            } catch (JsonProcessingException e) {
+                log.error("getFriendPortrait error", e);
+            }
+        }
+        return null;
+    }
 
     public String getFriendPortrait(String name) {
         String value = redisTemplate.opsForValue().get(name + PORTRAIT_KEY_SUFFIX);
