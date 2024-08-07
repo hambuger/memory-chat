@@ -15,10 +15,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +39,14 @@ public class RedisUtil {
     private static final String EMOJI_AND_MEDIA_ID_MAP_KEY = "emojiAndMediaIdMap";
 
     private static final String CHAT_FRIEND_LIST_KEY = "chatFriends";
+
+    public void saveMap(String key, Map<String, String> map) {
+        redisTemplate.opsForHash().putAll(key, map);
+    }
+
+    public Map<Object, Object> getMap(String key) {
+        return redisTemplate.opsForHash().entries(key);
+    }
 
     // 添加成员到集合
     public void addMember(Object member) {

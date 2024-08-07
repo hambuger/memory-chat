@@ -137,7 +137,7 @@ ${chatHistory}
 ${newMsg}
 
 你的判断规则如下:
-1.不要发送重复的内容
+1.不要发送重复的内容，尤其是你已经发送过的消息
 2.不一定非要等${friendName}回复才发送新的消息，但是如果在最新的对话中，你发送了连续两条消息，${friendName}并没有回复你，应该考虑不要再发送新消息
 3.你可以尝试找些话题和${friendName}聊
 4.夜间尽量不要打扰${friendName}
@@ -176,7 +176,7 @@ ${newMsg}
     这句话是否具有独特性或不寻常？独特的或超出常规的对话语句更容易在记忆中脱颖而出，成为难忘的片段。
 
 2.用户在进行这个新对话内容时的情感是什么状态
-3.结合聊天历史信息，从新对话内容总结提炼出3-7个关键信息。
+3.结合聊天历史信息，从下面新对话内容总结提炼出3-7个关键信息。
 4.给出生成的大概理由
 
 
@@ -184,9 +184,9 @@ think it step by step.
 """;
 
 
-    private static final String LONG_PLAN=
+    public static final String DAY_PLAN_PROMPT=
 """
-以下是韩家宝的个人介绍，结合这些信息生成它的今日每个小时的计划。
+以下是Andrew的个人介绍，结合这些信息生成他的今日每个小时的计划。
 - Age: 30
 - Gender: Male
 - NativeLanguage: Chinese
@@ -194,11 +194,9 @@ think it step by step.
 - Job: Programmer
 - LongPlan: 想要创造出一个人工智能体
 - ShortTermPlan: 上班赚钱
-- emotion: 平静
 - Hobby: 小狗
-- Disgust: Unknown
-- Doing: 上班
-总体而言，韩家宝会在1点钟睡觉，八点起床，9点去公司上班一直到晚上7点半下班，他是一个程序员，已婚有条小狗。
-今天是%s
+- Disgust: 社交
+Andrew会在1点钟睡觉，八点起床，9点去公司上班一直到晚上7点半下班，他是一个程序员，已婚有条小狗。
+今天是${now}
 """;
 }

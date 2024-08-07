@@ -17,6 +17,8 @@ public enum ChatSceneEnum {
 
     MEMORY_DIMENSION("补全记忆维度","addNewMemory"),
 
+    PLAN("计划生成","generateDayPlan"),
+
     ;
 
     private String desc;

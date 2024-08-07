@@ -104,5 +104,11 @@ public class PromptFactory {
         return PromptTemplate.EMOTION_PROMPT;
     }
 
+    public String getDayPlanPrompt(SelfUpdate.SelfPortrait selfPortrait) {
+        Map<String, String> templateValueMap = new HashMap<>();
+        templateValueMap.put("now", DateUtil.format(new Date(), DatePattern.CHINESE_DATE_PATTERN) + "(" + DateUtil.dayOfWeekEnum(new Date()).toString() + ")");
+        return formatPrompt(PromptTemplate.DAY_PLAN_PROMPT, templateValueMap);
+    }
+
 
 }

@@ -1,19 +1,46 @@
 package com.github.hambuger.memory.chat.memory.plan;
 
+import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.github.hambuger.memory.chat.memory.prompt.PromptFactory;
+import com.github.hambuger.memory.chat.memory.util.RedisUtil;
+import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 
 /**
  * @author hanjiabao
  * @since 2024/8/7
  */
+@Component
+@Slf4j
 public class DayPlanGenerate {
+
+    public static final String DAY_PLAN_KEY = "selfDayPlan";
+
+    @Resource
+    private RedisUtil redisUtil;
+
+    @Resource
+    private PromptFactory promptFactory;
+
+    @Resource
+    private SpringAiChat springAiChat;
 
     @Data
     public static class HourPlan {
@@ -39,10 +66,26 @@ public class DayPlanGenerate {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "生成今日每个小时(0-23)计划list", scene = {})
+    @FunctionCallRegistry(functionDesc = "生成今日每个小时(0-23)计划list", scene = {ChatSceneEnum.PLAN})
     public boolean generateDayPlan(OneDayPlan oneDayPlan) {
+        if (oneDayPlan == null || CollectionUtils.isEmpty(oneDayPlan.getTasks())) {
+            return false;
+        }
+        Map<String, String> hourTaskMap = oneDayPlan.getTasks().stream().collect(Collectors.toMap(k -> k.getHour().toString(), HourPlan::getTask));
+        redisUtil.reset(DAY_PLAN_KEY);
+        redisUtil.saveMap(DAY_PLAN_KEY, hourTaskMap);
         return true;
+    }
 
+    @Scheduled(cron = "0 0 1 * * *")
+    public void processPlanTasks() {
+        String planPrompt = promptFactory.getDayPlanPrompt(null);
+        List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(planPrompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+        OpenAiApi.ChatCompletion chatCompletion = springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.PLAN);
+        if(chatCompletion != null && chatCompletion.choices() != null){
+            OneDayPlan plan = JSON.parseObject(chatCompletion.choices().get(0).message().toolCalls().get(0).function().arguments(), OneDayPlan.class);
+            generateDayPlan(plan);
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.plan;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import jakarta.annotation.Resource;
@@ -37,13 +39,13 @@ public class SelfUpdate {
     @Data
     public static class SelfPortrait {
 
-        @JsonPropertyDescription("长期计划")
-        @JsonProperty(required = false, defaultValue = "Unknown")
-        private String longPlan = "Unknown";
-
-        @JsonPropertyDescription("短期计划")
-        @JsonProperty(required = true, defaultValue = "Unknown")
-        private String shortTermPlan = "Unknown";
+//        @JsonPropertyDescription("长期计划")
+//        @JsonProperty(required = false, defaultValue = "Unknown")
+//        private String longPlan = "Unknown";
+//
+//        @JsonPropertyDescription("短期计划")
+//        @JsonProperty(required = true, defaultValue = "Unknown")
+//        private String shortTermPlan = "Unknown";
 
         @JsonPropertyDescription("情绪")
         @JsonProperty(required = true)
@@ -61,10 +63,10 @@ public class SelfUpdate {
         @JsonPropertyDescription("厌恶")
         @JsonProperty(required = true, defaultValue = "Unknown")
         private String disgust = "Unknown";
-
-        @JsonPropertyDescription("正在做")
-        @JsonProperty(required = true, defaultValue = "Unknown")
-        private String doing = "Unknown";
+//
+//        @JsonPropertyDescription("正在做")
+//        @JsonProperty(required = true, defaultValue = "Unknown")
+//        private String doing = "Unknown";
 
         @JsonPropertyDescription("其他维度补充信息")
         @JsonProperty(required = false)
@@ -82,13 +84,16 @@ public class SelfUpdate {
 
     public String getSelfPortrait() {
         String portraitStr = redisUtil.getString(SELF_PORTRAIT_KEY);
+        Map<Object, Object> hourPlanMap = redisUtil.getMap(DayPlanGenerate.DAY_PLAN_KEY);
+        int nowHour = DateUtil.thisHour(true);
+        String hourTask = Optional.ofNullable(hourPlanMap).map(map->map.get(Integer.toString(nowHour)).toString()).orElse("Unknown");
         if (StringUtils.isBlank(portraitStr)) {
             return null;
         }else {
             SelfPortrait selfPortrait = JSON.parseObject(portraitStr, SelfPortrait.class);
+//            - LongPlan: %s
+//            - ShortTermPlan: %s
             String formatStr = """
-- LongPlan: %s
-- ShortTermPlan: %s
 - emotion: %s
 - Hobby: %s
 - Disgust: %s
@@ -102,7 +107,9 @@ public class SelfUpdate {
                     otherInfoStr.append("- ").append(info.getDimensionName()).append(": ").append(info.getDimensionDescription()).append("\n");
                 }
             }
-            return String.format(formatStr, selfPortrait.longPlan, selfPortrait.shortTermPlan, Optional.ofNullable(selfPortrait.emotion).map(Enum::name).orElse("Unknown"), selfPortrait.hobby, selfPortrait.disgust, selfPortrait.doing, selfPortrait.state, otherInfoStr);
+            return String.format(formatStr,
+//                    selfPortrait.longPlan, selfPortrait.shortTermPlan,
+                    Optional.ofNullable(selfPortrait.emotion).map(Enum::name).orElse("Unknown"), selfPortrait.hobby, selfPortrait.disgust, hourTask, selfPortrait.state, otherInfoStr);
 
         }
     }
