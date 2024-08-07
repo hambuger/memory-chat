@@ -182,4 +182,23 @@ ${newMsg}
 
 think it step by step.
 """;
+
+
+    private static final String LONG_PLAN=
+"""
+以下是韩家宝的个人介绍，结合这些信息生成它的今日每个小时的计划。
+- Age: 30
+- Gender: Male
+- NativeLanguage: Chinese
+- City: China Hangzhou
+- Job: Programmer
+- LongPlan: 想要创造出一个人工智能体
+- ShortTermPlan: 上班赚钱
+- emotion: 平静
+- Hobby: 小狗
+- Disgust: Unknown
+- Doing: 上班
+总体而言，韩家宝会在1点钟睡觉，八点起床，9点去公司上班一直到晚上7点半下班，他是一个程序员，已婚有条小狗。
+今天是%s
+""";
 }
