@@ -1,10 +1,12 @@
 package com.github.hambuger.memory.chat.memory.memory.model;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
 import java.util.List;
 
+import com.github.hambuger.memory.chat.memory.other.config.CustomEnumDeserializer;
 import lombok.Data;
 
 
@@ -24,6 +26,7 @@ public class MemoryDimensionInfo {
      */
     @JsonPropertyDescription("对话内容识别出来的情感")
     @JsonProperty(required = true)
+    @JSONField(deserializeUsing = CustomEnumDeserializer.class)
     private EmotionEnum emotion;
 
     /**

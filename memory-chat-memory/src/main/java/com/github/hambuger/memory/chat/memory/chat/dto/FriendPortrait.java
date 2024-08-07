@@ -1,9 +1,11 @@
 package com.github.hambuger.memory.chat.memory.chat.dto;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
+import com.github.hambuger.memory.chat.memory.other.config.CustomEnumDeserializer;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
@@ -62,6 +64,7 @@ public class FriendPortrait {
 
     @JsonPropertyDescription("好友情绪")
     @JsonProperty(required = true)
+    @JSONField(deserializeUsing = CustomEnumDeserializer.class)
     private MemoryDimensionInfo.EmotionEnum emotion;
 
     @JsonPropertyDescription("好友喜好")
