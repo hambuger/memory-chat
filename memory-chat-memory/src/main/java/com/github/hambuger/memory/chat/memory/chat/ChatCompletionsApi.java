@@ -402,7 +402,7 @@ public class ChatCompletionsApi {
     }
 
 
-    private SpringAiChatMessageMemoryDTO getChatMemory(BaseMemoryDTO baseMemoryDTO) {
+    private SpringAiChatMessageMemoryDTO getChatMemory(BaseMemoryDTO baseMemoryDTO) throws Exception {
         if (StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.AUDIO.getType())) {
             DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             baseMemoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
@@ -411,6 +411,9 @@ public class ChatCompletionsApi {
             DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             baseMemoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
             baseMemoryDTO.setMessageContent(getVideoInfo(baseMemoryDTO));
+        }else if(StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.PICTURE.getType()) || StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.EMOJI.getType())){
+            DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
+            baseMemoryDTO.setMessageContent(imageUploadUtils.uploadImg(baseMemoryDTO.getMessageContent()));
         }
         SpringAiChatMessageMemoryDTO memoryDTO = BeanUtil.copyProperties(baseMemoryDTO, SpringAiChatMessageMemoryDTO.class);
         memoryDTO.setMessageId(IdUtil.generateUniqueId());
@@ -514,12 +517,10 @@ public class ChatCompletionsApi {
                 message = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
             case PICTURE:
-                message = new OpenAiApi.ChatCompletionMessage(Lists.newArrayList(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format(
-                        "data:%s;base64,%s", IMAGE_TYPE, FileUtil.getFileBase64Data(memoryDTO.getMessageContent(), true)), "auto"))), OpenAiApi.ChatCompletionMessage.Role.USER);
+                message = new OpenAiApi.ChatCompletionMessage(Lists.newArrayList(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(memoryDTO.getMessageContent(), "auto"))), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
             case EMOJI:
-                message = new OpenAiApi.ChatCompletionMessage(Lists.newArrayList(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(format(
-                        "data:%s;base64,%s", EMOJI_TYPE, FileUtil.getFileBase64Data(memoryDTO.getMessageContent(), true)), "auto"))), OpenAiApi.ChatCompletionMessage.Role.USER);
+                message = new OpenAiApi.ChatCompletionMessage(Lists.newArrayList(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(memoryDTO.getMessageContent(), "auto"))), OpenAiApi.ChatCompletionMessage.Role.USER);
                 break;
             default:
                 break;
