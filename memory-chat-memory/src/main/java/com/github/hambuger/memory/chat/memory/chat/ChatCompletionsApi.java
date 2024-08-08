@@ -294,6 +294,9 @@ public class ChatCompletionsApi {
                     return false;
                 }
                 OpenAiApi.ChatCompletionMessage responseMessage = aiResponse.choices().get(0).message();
+                if (!checkNeedSendNewMsg(responseMessage, memoryDTOS, memoryDTO.getMessageCreatorName())) {
+                    return false;
+                }
                 log.info("ai response:{}", responseMessage);
                 CHAT_POOL.execute(() -> {
                     List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiResponse.usage().completionTokens());

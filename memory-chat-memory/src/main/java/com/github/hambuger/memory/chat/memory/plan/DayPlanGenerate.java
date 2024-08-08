@@ -59,14 +59,14 @@ public class DayPlanGenerate {
     @Data
     public static class OneDayPlan {
 
-        @JsonPropertyDescription("每个小时(0-23)计划list")
+        @JsonPropertyDescription("每个小时(0-23)计划")
         @JsonProperty(required = true)
         private List<HourPlan> tasks;
 
     }
 
 
-    @FunctionCallRegistry(functionDesc = "生成今日每个小时(0-23)计划list", scene = {ChatSceneEnum.PLAN})
+    @FunctionCallRegistry(functionDesc = "生成今日每个小时(0-23)计划list", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.TASK})
     public boolean generateDayPlan(OneDayPlan oneDayPlan) {
         if (oneDayPlan == null || CollectionUtils.isEmpty(oneDayPlan.getTasks())) {
             return false;

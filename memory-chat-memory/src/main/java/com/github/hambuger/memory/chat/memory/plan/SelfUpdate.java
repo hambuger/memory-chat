@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -86,7 +87,17 @@ public class SelfUpdate {
         String portraitStr = redisUtil.getString(SELF_PORTRAIT_KEY);
         Map<Object, Object> hourPlanMap = redisUtil.getMap(DayPlanGenerate.DAY_PLAN_KEY);
         int nowHour = DateUtil.thisHour(true);
-        String hourTask = Optional.ofNullable(hourPlanMap).map(map->map.get(Integer.toString(nowHour)).toString()).orElse("Unknown");
+        String hourTask = Optional.ofNullable(hourPlanMap).map(map -> {
+            StringBuilder info = new StringBuilder(map.get(Integer.toString(nowHour)).toString());
+            info.append("(");
+            info.append("已进行了");
+            int minute = DateUtil.minute(new Date());
+            info.append(minute);
+            info.append("分钟, 还剩下");
+            info.append(60 - minute);
+            info.append("分钟)");
+            return info.toString();
+        }).orElse("Unknown");
         if (StringUtils.isBlank(portraitStr)) {
             return null;
         }else {

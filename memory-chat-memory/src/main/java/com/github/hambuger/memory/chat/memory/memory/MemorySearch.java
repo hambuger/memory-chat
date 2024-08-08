@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
+import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
 import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -89,27 +90,27 @@ public class MemorySearch {
         }
         searchSourceBuilder.query(QueryBuilders.functionScoreQuery(QueryBuilders.boolQuery().must(mustQuery),
                 new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchQuery("messageContent", content),
-                        new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "_score / (1 + _score)", Collections.emptyMap()))),
-                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchAllQuery(), new GaussDecayFunctionBuilder("messageLastAccessTime", "now", "24h", "1h", 0.5)),
-                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(new FieldValueFactorFunctionBuilder("messageImportanceScore")),
-                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "1 / (1 + Math.exp(-1.0 * " + "doc" +
-                                "['memoryLeafDepth'].value))", Collections.emptyMap()))), new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchAllQuery(),
-                        new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless",
-                                "double score = cosineSimilarity(params.query_vector, 'messageContentVector'); " +
-                                        "return (score > 0.5 || score < -0.5) ? 10 : 0;",
-                                new HashMap<>() {{
-                                    put("query_vector", contentVector);
-                                }}))),
-                        // 精确匹配 emotion 字段
-                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(
-                                QueryBuilders.termQuery("emotion", emotion),
-                                new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "return 1;", Collections.emptyMap()))
-                        ),
-                        // 对数函数归一化 summaryWords 字段的匹配分数
-                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(
-                                QueryBuilders.matchQuery("summaryWords", content),
-                                new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "double rawScore = _score; double normalizedScore = Math.log1p(rawScore) / Math.log1p(1.0); return normalizedScore;", Collections.emptyMap()))
-                        )}).scoreMode(FunctionScoreQuery.ScoreMode.SUM).boostMode(CombineFunction.REPLACE).setMinScore(10));
+                //1
+                new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "_score / (1 + _score)", Collections.emptyMap()))),
+                //1
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchAllQuery(), new GaussDecayFunctionBuilder("messageLastAccessTime", "now", "24h", "1h", 0.5)),
+                //2
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(new FieldValueFactorFunctionBuilder("messageImportanceScore").modifier(FieldValueFactorFunction.Modifier.NONE)  // 不修改原始值
+                        .factor(2)),
+                //1
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "1 / (1 + Math.exp(-1.0 * " + "doc" + "['memoryLeafDepth"
+                        + "'].value))", Collections.emptyMap()))),
+                //3
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchAllQuery(), new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "double score = " +
+                        "cosineSimilarity(params.query_vector, 'messageContentVector'); " + "return Math.abs" + "(score) * 3;", new HashMap<>() {{
+                    put("query_vector", contentVector);
+                }}))),
+                // 精确匹配 emotion 字段,1
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.termQuery("emotion", emotion), new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "return 1;"
+                        , Collections.emptyMap()))),
+                // 对数函数归一化 summaryWords 字段的匹配分数,1
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchQuery("summaryWords", content), new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless",
+                        "double rawScore = _score; double normalizedScore = Math.log1p(rawScore) / Math.log1p(1.0); return normalizedScore;", Collections.emptyMap())))}).scoreMode(FunctionScoreQuery.ScoreMode.SUM).boostMode(CombineFunction.REPLACE).setMinScore(3));
 
         SearchRequest searchRequest = new SearchRequest(chatMemoryIndex);
         searchRequest.source(searchSourceBuilder);

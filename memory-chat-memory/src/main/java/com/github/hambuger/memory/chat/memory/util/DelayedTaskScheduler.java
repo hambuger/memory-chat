@@ -24,7 +24,7 @@ public class DelayedTaskScheduler {
     private HotNews hotNews;
 
 
-    @Scheduled(fixedRate = 1000 * 60 * 5)
+    @Scheduled(fixedRate = 1000 * 60 * 30)
     public void processTasks() {
         Set<Object> allMembers = redisUtil.getAllMembers();
         if (CollectionUtils.isEmpty(allMembers)) {
