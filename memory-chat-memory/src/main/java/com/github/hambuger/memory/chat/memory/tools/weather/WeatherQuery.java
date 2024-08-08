@@ -1,13 +1,17 @@
 package com.github.hambuger.memory.chat.memory.tools.weather;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.util.MyHttpUtils;
-import com.mashape.unirest.http.exceptions.UnirestException;
-
-import org.springframework.stereotype.Component;
-
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 
 /**
@@ -18,33 +22,47 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class WeatherQuery {
 
-    private static final String Weather_url = "http://t.weather.itboy.net/api/weather/city/%s";
+    private static final String GEOCODE_URL = "https://restapi.amap.com/v3/geocode/geo?address=%s&output=json&key=%s";
 
-    public static String getWeather(String city) {
+    private static final String WEATHER_URL = "https://restapi.amap.com/v3/weather/weatherInfo?city=%s&key=%s";
 
-        String response = null;
-        try {
-            response = MyHttpUtils.get(String.format(Weather_url, city), null, null);
-            System.out.println(response);
-            JSONObject jsonObject = JSON.parseObject(response);
-            // 提取天气数据
-            JSONObject todayWeather = jsonObject.getJSONObject("data");
-            String shidu = todayWeather.getString("shidu");
-            String pm25 = todayWeather.getString("pm25");
-            String pm10 = todayWeather.getString("pm10");
-            String quality = todayWeather.getString("quality");
-            String wendu = todayWeather.getString("wendu");
-            String ganmao = todayWeather.getString("ganmao");
-        } catch (UnirestException e) {
-            throw new RuntimeException(e);
-        }
+    @Value("${weather.key}")
+    private String weatherKey;
 
-        return null;
+    @Data
+    public static class WeatherParam {
+
+        @JsonPropertyDescription("地址名")
+        @JsonProperty(required = true)
+        private String address;
+
     }
 
+    @FunctionCallRegistry(functionDesc = "查询天气", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.PLAN})
+    public String getWeather(WeatherParam param) {
+        try {
+            String locationName = param.getAddress();
+            String geocodeUrl = String.format(GEOCODE_URL, locationName, weatherKey);
+            String geocodeResponse = MyHttpUtils.get(geocodeUrl, null, null);
+            JSONObject geocodeJson = JSON.parseObject(geocodeResponse);
+            JSONArray geocodes = geocodeJson.getJSONArray("geocodes");
+            if (geocodes == null || geocodes.isEmpty()) {
+                return null;
+            }
+            String adcode = geocodes.getJSONObject(0).getString("adcode");
+            String weatherUrl = String.format(WEATHER_URL, adcode, weatherKey);
+            String weatherResponse = MyHttpUtils.get(weatherUrl, null, null);
+            JSONObject weatherJson = JSON.parseObject(weatherResponse);
+            JSONArray lives = weatherJson.getJSONArray("lives");
+            if (lives == null || lives.isEmpty()) {
+                return null;
+            }
+            return lives.getJSONObject(0).toJSONString();
 
-    public static void main(String[] args) {
-        getWeather("101210106");
+        } catch (Exception e) {
+            log.error("get weather error", e);
+            return null;
+        }
     }
 
 

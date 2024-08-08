@@ -66,3 +66,6 @@ reflection:
 chatMemoryIndex: chat_memory
 maxMsgToken: 50000
 
+weather:
+  key: xxx
+
