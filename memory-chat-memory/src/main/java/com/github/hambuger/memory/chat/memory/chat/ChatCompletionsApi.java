@@ -12,7 +12,7 @@ import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
 import com.github.hambuger.memory.chat.memory.chat.dto.SpringAiChatMessageMemoryDTO;
 import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
-import com.github.hambuger.memory.chat.memory.emoji.EmojiSpider;
+import com.github.hambuger.memory.chat.memory.emoji.SogouEmoji;
 import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
 import com.github.hambuger.memory.chat.memory.memory.MemoryInsert;
 import com.github.hambuger.memory.chat.memory.memory.MemorySearch;
@@ -125,7 +125,7 @@ public class ChatCompletionsApi {
     private RedisUtil redisUtil;
 
     @Resource
-    private EmojiSpider emojiSpider;
+    private SogouEmoji sogouEmoji;
 
     @Resource
     private TokenCalculation tokenCalculation;
@@ -233,7 +233,7 @@ public class ChatCompletionsApi {
                 message.setContent(null);
             }else if (contentTypeEnum == ContentTypeEnum.EMOJI) {
                 if (CollectionUtils.isEmpty(redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent()))) {
-                    String emojiPath = emojiSpider.searchEmoji(sendMessage.getMessageContent());
+                    String emojiPath = sogouEmoji.searchEmoji(sendMessage.getMessageContent());
                     if (StringUtils.isBlank(emojiPath)) {
                         message.setMsgType(ContentTypeEnum.TEXT.getMsgType());
                     }else {
