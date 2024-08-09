@@ -55,7 +55,7 @@ public class SpringAiChat {
     private OpenAiApi openAiApi;
 
     @FunctionCallRegistry(functionDesc = "完成所有操作并获取到操作结果后，更新完成状态", scene = {ChatSceneEnum.PLAN})
-    public boolean updateFinishFlag() {
+    public boolean updateFinishFlag(String success) {
         return true;
     }
 
@@ -85,7 +85,7 @@ public class SpringAiChat {
         for (OpenAiApi.ChatCompletionMessage.ToolCall toolExecution : response.getBody().choices().get(0).message().toolCalls()) {
             String funResult = CallFunctionRegistryFactory.executeFunctionResult(toolExecution.function().name(), toolExecution.function().arguments());
             OpenAiApi.ChatCompletionMessage functionMsg = new OpenAiApi.ChatCompletionMessage(funResult, OpenAiApi.ChatCompletionMessage.Role.TOOL, toolExecution.function().name(),
-                    toolExecution.id(), null);
+                    toolExecution.id(), null, null);
             executionResultMessages.add(functionMsg);
         }
         messages.add(response.getBody().choices().get(0).message());
@@ -97,7 +97,7 @@ public class SpringAiChat {
         OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
         OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().withModel(modelName).withTemperature(temperature).build();
         if (jsonFormat) {
-            chatOptions.setResponseFormat(new OpenAiApi.ChatCompletionRequest.ResponseFormat(MemoryChatConstants.JSON_OBJECT));
+            chatOptions.setResponseFormat(new OpenAiApi.ChatCompletionRequest.ResponseFormat(OpenAiApi.ChatCompletionRequest.ResponseFormat.Type.JSON_OBJECT));
         }
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
