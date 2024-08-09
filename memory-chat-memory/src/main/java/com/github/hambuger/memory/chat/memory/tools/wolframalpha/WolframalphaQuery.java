@@ -13,6 +13,9 @@ import org.springframework.stereotype.Component;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 
 /**
  * @author hanjiabao
@@ -40,8 +43,8 @@ public class WolframalphaQuery {
 
     @FunctionCallRegistry(functionDesc = "通过wolframalpha查询结果，适合数学计算或者偏数学相关的问题", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE,
             ChatSceneEnum.TASK, ChatSceneEnum.PLAN})
-    public String searchByWolframalpha(WolframalphaParam query) throws UnirestException {
-        String wolframalphaUrl = String.format(WOLFRAMALPHA_URL, wolframalphaKey, query.getQueryUseEnglishLanguage());
+    public String searchByWolframalpha(WolframalphaParam query) throws Exception {
+        String wolframalphaUrl = String.format(WOLFRAMALPHA_URL, wolframalphaKey, URLEncoder.encode(query.getQueryUseEnglishLanguage(), StandardCharsets.UTF_8));
         return MyHttpUtils.get(wolframalphaUrl, null, null);
     }
 }
