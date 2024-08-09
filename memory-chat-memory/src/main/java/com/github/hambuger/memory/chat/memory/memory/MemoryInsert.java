@@ -1,21 +1,19 @@
 package com.github.hambuger.memory.chat.memory.memory;
 
-import com.google.common.base.Objects;
-
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
-import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
-import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
-import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
-import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
+import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
+import com.github.hambuger.memory.chat.memory.chat.model.CreatorEnum;
+import com.github.hambuger.memory.chat.memory.other.constants.CommonConstants;
+import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
-import com.github.hambuger.memory.chat.memory.prompt.PromptFactory;
-import com.github.hambuger.memory.chat.memory.util.EsClient;
-import com.github.hambuger.memory.chat.memory.embeddings.SpringAiEmbeddings;
+import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
+import com.github.hambuger.memory.chat.memory.other.util.EsClient;
+import com.github.hambuger.memory.chat.memory.other.embeddings.SpringAiEmbeddings;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
-import com.github.hambuger.memory.chat.memory.token.TokenCalculation;
-import com.github.hambuger.memory.chat.memory.util.IdUtil;
-import com.github.hambuger.memory.chat.memory.util.RedisUtil;
+import com.github.hambuger.memory.chat.memory.other.token.TokenCalculation;
+import com.github.hambuger.memory.chat.memory.other.util.IdUtil;
+import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.index.IndexRequest;

@@ -1,7 +1,7 @@
 package com.github.hambuger.memory.chat.memory.memory;
 
 import com.alibaba.fastjson.JSON;
-import com.github.hambuger.memory.chat.memory.util.EsClient;
+import com.github.hambuger.memory.chat.memory.other.util.EsClient;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 
 import org.elasticsearch.action.update.UpdateRequest;

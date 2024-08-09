@@ -1,6 +1,6 @@
 package com.github.hambuger.memory.chat.memory.audio;
 
-import com.github.hambuger.memory.chat.memory.util.VideoUtil;
+import com.github.hambuger.memory.chat.memory.other.util.VideoUtil;
 
 import org.springframework.ai.openai.OpenAiAudioTranscriptionModel;
 import org.springframework.ai.openai.OpenAiAudioTranscriptionOptions;

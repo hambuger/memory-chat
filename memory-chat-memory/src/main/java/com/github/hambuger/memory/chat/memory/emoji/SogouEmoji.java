@@ -1,6 +1,6 @@
 package com.github.hambuger.memory.chat.memory.emoji;
 
-import com.github.hambuger.memory.chat.memory.util.MyHttpUtils;
+import com.github.hambuger.memory.chat.memory.other.util.MyHttpUtils;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 

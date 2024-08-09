@@ -2,9 +2,9 @@ package com.github.hambuger.memory.chat.memory.chat;
 
 import com.google.common.collect.Lists;
 
-import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
-import com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants;
-import com.github.hambuger.memory.chat.memory.functionCall.CallFunctionRegistryFactory;
+import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
+import com.github.hambuger.memory.chat.memory.other.functionCall.CallFunctionRegistryFactory;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.ai.model.ModelOptionsUtils;
@@ -28,8 +28,7 @@ import java.util.Optional;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
-import static com.github.hambuger.memory.chat.memory.constants.MemoryChatConstants.REQUIRED;
+import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.REQUIRED;
 
 
 /**

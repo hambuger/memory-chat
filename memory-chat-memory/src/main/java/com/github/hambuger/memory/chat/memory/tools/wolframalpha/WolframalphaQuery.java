@@ -2,9 +2,9 @@ package com.github.hambuger.memory.chat.memory.tools.wolframalpha;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
-import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
-import com.github.hambuger.memory.chat.memory.util.MyHttpUtils;
+import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.other.util.MyHttpUtils;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import org.springframework.beans.factory.annotation.Value;

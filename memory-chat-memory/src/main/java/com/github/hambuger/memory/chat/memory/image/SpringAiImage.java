@@ -2,8 +2,8 @@ package com.github.hambuger.memory.chat.memory.image;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
-import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 
 import org.springframework.ai.image.Image;
 import org.springframework.ai.image.ImageGeneration;

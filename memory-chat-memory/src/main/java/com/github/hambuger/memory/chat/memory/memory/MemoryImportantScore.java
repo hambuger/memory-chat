@@ -2,7 +2,7 @@ package com.github.hambuger.memory.chat.memory.memory;
 
 import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
-import com.github.hambuger.memory.chat.memory.prompt.PromptFactory;
+import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;

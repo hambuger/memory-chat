@@ -2,11 +2,11 @@ package com.github.hambuger.memory.chat.memory.wechat;
 
 import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
-import com.github.hambuger.memory.chat.memory.chat.dto.ChatResponse;
-import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
-import com.github.hambuger.memory.chat.memory.constants.CommonConstants;
+import com.github.hambuger.memory.chat.memory.chat.model.ChatResponse;
+import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
+import com.github.hambuger.memory.chat.memory.other.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
-import com.github.hambuger.memory.chat.memory.util.RedisUtil;
+import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 import com.github.hambuger.memory.chat.wechat.api.ContactsTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
 import com.github.hambuger.memory.chat.wechat.constant.WxReqParamsConstant;

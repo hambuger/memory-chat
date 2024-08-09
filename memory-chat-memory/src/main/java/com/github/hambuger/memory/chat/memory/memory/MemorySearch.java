@@ -1,14 +1,14 @@
 package com.github.hambuger.memory.chat.memory.memory;
 
 import com.alibaba.fastjson.JSON;
-import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
-import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
-import com.github.hambuger.memory.chat.memory.chat.dto.FriendPortrait;
-import com.github.hambuger.memory.chat.memory.util.EsClient;
-import com.github.hambuger.memory.chat.memory.embeddings.SpringAiEmbeddings;
+import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
+import com.github.hambuger.memory.chat.memory.chat.model.CreatorEnum;
+import com.github.hambuger.memory.chat.memory.portrait.model.FriendPortrait;
+import com.github.hambuger.memory.chat.memory.other.util.EsClient;
+import com.github.hambuger.memory.chat.memory.other.embeddings.SpringAiEmbeddings;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 
-import com.github.hambuger.memory.chat.memory.util.RedisUtil;
+import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;

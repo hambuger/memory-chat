@@ -1,9 +1,9 @@
 package com.github.hambuger.memory.chat.memory.wechat;
 
-import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
-import com.github.hambuger.memory.chat.memory.chat.dto.ContentTypeEnum;
-import com.github.hambuger.memory.chat.memory.chat.dto.CreatorEnum;
-import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
+import com.github.hambuger.memory.chat.memory.chat.model.CreatorEnum;
+import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.memory.MemoryInsert;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
@@ -14,7 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import static com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi.getAiResponseMemoryDTO;
-import static com.github.hambuger.memory.chat.memory.constants.CommonConstants.NO_STR;
+import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.NO_STR;
 
 @Slf4j
 @Component

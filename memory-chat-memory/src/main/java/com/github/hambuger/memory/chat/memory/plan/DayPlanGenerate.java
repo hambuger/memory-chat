@@ -4,15 +4,15 @@ import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
-import com.github.hambuger.memory.chat.memory.chat.dto.ChatSceneEnum;
-import com.github.hambuger.memory.chat.memory.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.github.hambuger.memory.chat.memory.prompt.PromptFactory;
-import com.github.hambuger.memory.chat.memory.util.RedisUtil;
+import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
+import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 import com.google.common.collect.Lists;
 import jakarta.annotation.Resource;
 import lombok.Data;
