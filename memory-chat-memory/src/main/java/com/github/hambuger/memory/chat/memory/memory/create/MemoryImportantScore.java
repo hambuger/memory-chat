@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.memory;
+package com.github.hambuger.memory.chat.memory.memory.create;
 
 import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;

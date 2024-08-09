@@ -1,9 +1,10 @@
-package com.github.hambuger.memory.chat.memory.memory;
+package com.github.hambuger.memory.chat.memory.memory.create;
 
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.model.CreatorEnum;
+import com.github.hambuger.memory.chat.memory.memory.reflection.MemoryReflection;
 import com.github.hambuger.memory.chat.memory.other.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;

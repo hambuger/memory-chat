@@ -4,7 +4,7 @@ import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.model.CreatorEnum;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
-import com.github.hambuger.memory.chat.memory.memory.MemoryInsert;
+import com.github.hambuger.memory.chat.memory.memory.create.MemoryInsert;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
 import com.github.hambuger.memory.chat.wechat.entity.Message;

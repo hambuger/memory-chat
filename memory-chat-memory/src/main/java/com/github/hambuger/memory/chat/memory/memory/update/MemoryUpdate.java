@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.memory;
+package com.github.hambuger.memory.chat.memory.memory.update;
 
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.other.util.EsClient;

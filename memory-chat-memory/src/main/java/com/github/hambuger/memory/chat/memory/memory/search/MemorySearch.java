@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.memory;
+package com.github.hambuger.memory.chat.memory.memory.search;
 
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;

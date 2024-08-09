@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.other.functionCall.CallFunctionRegistryFactory;
+import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.ai.model.ModelOptionsUtils;
@@ -52,6 +53,11 @@ public class SpringAiChat {
     private String modelName;
 
     private OpenAiApi openAiApi;
+
+    @FunctionCallRegistry(functionDesc = "完成所有操作并获取到操作结果后，更新完成状态", scene = {ChatSceneEnum.PLAN})
+    public boolean updateFinishFlag() {
+        return true;
+    }
 
     @PostConstruct
     public void init() {

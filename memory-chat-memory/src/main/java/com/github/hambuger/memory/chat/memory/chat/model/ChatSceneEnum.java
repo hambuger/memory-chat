@@ -19,6 +19,8 @@ public enum ChatSceneEnum {
 
     PLAN("计划生成","generateDayPlan"),
 
+    MEMORY_MERGE("记忆整理", "updateFinishFlag"),
+
     ;
 
     private String desc;
