@@ -69,3 +69,6 @@ maxMsgToken: 50000
 weather:
   key: xxx
 
+wolframalpha:
+  key: xxx
+
