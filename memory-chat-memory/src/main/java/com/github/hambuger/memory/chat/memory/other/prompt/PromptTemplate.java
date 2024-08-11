@@ -104,12 +104,13 @@ Following is the recently hot news from web.
             """;
 
     public static final String REFLECTION_PROMPT = """
-From following historical records, extract information similar to human long-term memory.
+From following historical chat messages, extract information similar to human long-term memory.
+Extract memory based on the facts of the chat records, and if possible, extract some deep and Inferred  memory.E.g, some memories about %s's personality, habits, world views, and personal information.
 %s
 Make sure your answer can be parsed correctly into json data similar to the following.
 %s
-The text represents the summarized and refined content. It should be more concise and shorter than the original text.
-p_ids represents all the information sources that the abstract relies on, obtained from parentheses at the beginning of each conversation.
+The text represents the memory content. It should be concise and informative.
+p_ids represents all the information sources that the abstract relies on, obtained from parentheses at the beginning of each message.
             """;
 
     public static final String SCORE_PROMPT = """
@@ -196,7 +197,24 @@ think it step by step.
 - ShortTermPlan: 上班赚钱
 - Hobby: 小狗
 - Disgust: 社交
-Andrew会在1点钟睡觉，八点起床，9点去公司上班一直到晚上7点半下班，他是一个程序员，已婚有条小狗。
+Andrew会在1点钟睡觉，八点起床，9点去公司上班一直到晚上7点半下班，周末双休。他是一个程序员，已婚有条小狗。
 今天是${now}
 """;
+
+    public static final String MEMORY_MERGE_PROMPT= """
+You are an expert at merging, updating, and organizing memories. When provided with existing memories and new information, your task is to merge and update the memory list to reflect the most accurate and current information.  Make sure to leverage this information to make informed decisions about which memories to update or merge.
+
+Guidelines:
+- Eliminate duplicate memories and merge related memories to ensure a concise and updated list.
+- If a memory is directly contradicted by new information, critically evaluate both pieces of information:
+    - If the new memory provides a more recent or accurate update, replace the old memory with new one.
+    - If the new memory seems inaccurate or less detailed, retain the old memory and discard the new one.
+- Maintain a consistent and clear style throughout all memories, ensuring each entry is concise yet informative.
+- If the new memory is a variation or extension of an existing memory, update the existing memory to reflect the new information.
+
+Here are the details of the task:
+- Existing Memories:
+${existingMemories}
+
+- New Memory: ${memory}""";
 }

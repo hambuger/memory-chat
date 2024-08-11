@@ -74,4 +74,6 @@ public class MemoryDTO extends BaseMemoryDTO {
      */
     private String aiResponseFlag;
 
+    private String isDeleted = "0";
+
 }

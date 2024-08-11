@@ -162,7 +162,7 @@ public class ChatCompletionsApi {
             }
             // 查询相关性最高的历史消息
             List<MemoryDTO> searchMemoryList = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) ?
-                    memorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(), memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent()) : new ArrayList<>();
+                    memorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(), memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent(), 0) : new ArrayList<>();
 
             List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
             if (checkLastMessageId(memoryDTO)) {

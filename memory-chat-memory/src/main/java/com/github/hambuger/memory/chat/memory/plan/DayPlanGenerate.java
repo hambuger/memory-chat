@@ -59,7 +59,7 @@ public class DayPlanGenerate {
     @Data
     public static class OneDayPlan {
 
-        @JsonPropertyDescription("每个小时(0-23)计划")
+        @JsonPropertyDescription("每个小时(0-23)计划,需要全部的24个小时")
         @JsonProperty(required = true)
         private List<HourPlan> tasks;
 

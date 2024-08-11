@@ -10,6 +10,8 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -52,6 +54,10 @@ public class EsClient {
 
     public UpdateResponse update(UpdateRequest updateRequest) throws IOException {
         return client.update(updateRequest, RequestOptions.DEFAULT);
+    }
+
+    public BulkByScrollResponse updateByQuery(UpdateByQueryRequest updateRequest) throws IOException {
+        return client.updateByQuery(updateRequest, RequestOptions.DEFAULT);
     }
 
 }

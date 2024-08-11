@@ -89,7 +89,11 @@ public class SelfUpdate {
         Map<Object, Object> hourPlanMap = redisUtil.getMap(DayPlanGenerate.DAY_PLAN_KEY);
         int nowHour = DateUtil.thisHour(true);
         String hourTask = Optional.ofNullable(hourPlanMap).map(map -> {
-            StringBuilder info = new StringBuilder(map.get(Integer.toString(nowHour)).toString());
+            Object object = map.get(Integer.toString(nowHour));
+            if (object == null) {
+                return "Unknown";
+            }
+            StringBuilder info = new StringBuilder(object.toString());
             info.append("(");
             info.append("已进行了");
             int minute = DateUtil.minute(new Date());

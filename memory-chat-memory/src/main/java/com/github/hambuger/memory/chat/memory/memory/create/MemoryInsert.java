@@ -4,7 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.model.CreatorEnum;
+import com.github.hambuger.memory.chat.memory.memory.reflection.MemoryMergeTask;
 import com.github.hambuger.memory.chat.memory.memory.reflection.MemoryReflection;
+import com.github.hambuger.memory.chat.memory.memory.search.MemorySearch;
 import com.github.hambuger.memory.chat.memory.other.constants.CommonConstants;
 import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
@@ -37,6 +39,8 @@ import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.NO_STR;
 
 
 /**
@@ -80,6 +84,12 @@ public class MemoryInsert {
     @Resource
     private PromptFactory promptFactory;
 
+    @Resource
+    private MemorySearch memorySearch;
+
+    @Resource
+    private MemoryMergeTask memoryMergeTask;
+
     private static final ThreadPoolExecutor MEMORY_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("memory-pool"),
             new ThreadPoolExecutor.CallerRunsPolicy());
 
@@ -88,7 +98,7 @@ public class MemoryInsert {
         if (StringUtils.isBlank(memoryDTO.getMessageId())) {
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
         }
-        boolean userMsgFlag = StringUtils.equals(memoryDTO.getAiResponseFlag(), CommonConstants.NO_STR);
+        boolean userMsgFlag = StringUtils.equals(memoryDTO.getAiResponseFlag(), NO_STR);
         boolean reflectionFlag = StringUtils.equals(memoryDTO.getMessageCreatorType(), CreatorEnum.REFLECTION.getType());
         String msgListKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + ((userMsgFlag && !reflectionFlag) ? memoryDTO.getMessageCreatorId() :
                 memoryDTO.getMessageReceiveId()) + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
@@ -113,6 +123,7 @@ public class MemoryInsert {
         if (!forceInsert && !userMsgFlag && ChatCompletionsApi.checkLastMessageId(memoryDTO)) {
             return false;
         }
+        memoryDTO.setIsDeleted(NO_STR);
         IndexRequest indexRequest = new IndexRequest(chatMemoryIndex).id(memoryDTO.getMessageId()).source(JSON.toJSONString(memoryDTO), XContentType.JSON);
         try {
             esClient.index(indexRequest);
@@ -142,13 +153,17 @@ public class MemoryInsert {
 
 
     private static String getAiUseJsonInfo(MemoryDTO memoryDTO) {
-        MemoryDTO newMemoryDTO = new MemoryDTO();
-        newMemoryDTO.setMessageId(memoryDTO.getMessageId());
-        newMemoryDTO.setMessageContent(memoryDTO.getMessageContent());
-        newMemoryDTO.setMessageCreatorName(Optional.ofNullable(memoryDTO.getRealCreatorName()).orElse(memoryDTO.getMessageCreatorName()));
-        newMemoryDTO.setMessageCreateAt(memoryDTO.getMessageCreateAt());
-        newMemoryDTO.setMessageImportanceScore(memoryDTO.getMessageImportanceScore());
-        return JSON.toJSONString(newMemoryDTO);
+//        MemoryDTO newMemoryDTO = new MemoryDTO();
+//        newMemoryDTO.setMessageId(memoryDTO.getMessageId());
+//        newMemoryDTO.setMessageContent(memoryDTO.getMessageContent());
+//        newMemoryDTO.setMessageCreatorName(Optional.ofNullable(memoryDTO.getRealCreatorName()).orElse(memoryDTO.getMessageCreatorName()));
+//        newMemoryDTO.setMessageCreateAt(memoryDTO.getMessageCreateAt());
+//        newMemoryDTO.setMessageImportanceScore(memoryDTO.getMessageImportanceScore());
+        return "(" + memoryDTO.getMessageId() + ") " + Optional.ofNullable(memoryDTO.getRealCreatorName()).orElse(memoryDTO.getMessageCreatorName()) + ": " + memoryDTO.getMessageContent() + "(" + memoryDTO.getMessageCreateAt() + ")";
+    }
+
+    private static String getAiUseInfo(MemoryDTO memoryDTO) {
+        return "(" + memoryDTO.getMessageId() + ") " + memoryDTO.getMessageContent() + "(" + memoryDTO.getMessageCreateAt() + ")";
     }
 
 
@@ -158,7 +173,7 @@ public class MemoryInsert {
         if (redisUtil.get(depthLeafKey) < reflectionTokenLimit) {
             return;
         }
-        List<MemoryReflection.ReflectionResult.Reflection> reflectionList = memoryReflection.extractReflectionFromMessages(redisUtil.getList(depthLeafListKey));
+        List<MemoryReflection.ReflectionResult.Reflection> reflectionList = memoryReflection.extractReflectionFromMessages(receiveName, redisUtil.getList(depthLeafListKey));
         redisUtil.reset(depthLeafKey);
         redisUtil.reset(depthLeafListKey);
         if (CollectionUtils.isEmpty(reflectionList)) {
@@ -171,12 +186,19 @@ public class MemoryInsert {
                     MemoryDTO.builder().messageCreatorId(CreatorEnum.REFLECTION.getUserId()).messageCreatorName(CreatorEnum.REFLECTION.getUserName())
                             .messageCreatorType(CreatorEnum.REFLECTION.getType())
                             .messageContentType(ContentTypeEnum.TEXT.getType())
-                            .messageParentIds(parentIdList).messageContent(reflectionText).aiResponseFlag(CommonConstants.NO_STR)
+                            .messageParentIds(parentIdList).messageContent(reflectionText).aiResponseFlag(NO_STR)
                             .messageCreateAt(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT))
                             .messageReceiveId(receiveId).messageReceiveName(receiveName).messageReceiveType(receiveType)
                             .messageOwnerId(ownerId).messageOwnerName(ownerName).messageOwnerType(ownerType)
                             .memoryLeafDepth(leafDepth + 1).useToken(tokenCalculation.getMessageTextTokenCount(reflectionText)).build();
-            insertNewMemory(memoryDTO, true);
+            List<MemoryDTO> memoryDTOS = memorySearch.searchRelationMemory(ownerId, memoryDTO.getMessageReceiveId(), memoryDTO.getMessageContent(), memoryDTO.getMemoryLeafDepth());
+            StringBuilder memory = new StringBuilder();
+            if (!CollectionUtils.isEmpty(memoryDTOS)) {
+                for (MemoryDTO dto : memoryDTOS) {
+                    memory.append(getAiUseInfo(dto)).append("\n");
+                }
+            }
+            memoryMergeTask.memoryMerge(memoryDTO, memory.toString());
         }
     }
 

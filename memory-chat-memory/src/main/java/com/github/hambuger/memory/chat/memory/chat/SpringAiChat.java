@@ -1,12 +1,14 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.google.common.collect.Lists;
 
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
-import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.other.functionCall.CallFunctionRegistryFactory;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 
+import lombok.Data;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -54,8 +56,16 @@ public class SpringAiChat {
 
     private OpenAiApi openAiApi;
 
-    @FunctionCallRegistry(functionDesc = "完成所有操作并获取到操作结果后，更新完成状态", scene = {ChatSceneEnum.PLAN})
-    public boolean updateFinishFlag(String success) {
+    @Data
+    public static class FinishParam {
+
+        @JsonPropertyDescription("完成状态")
+        @JsonProperty(required = true)
+        boolean finishStatus;
+    }
+
+    @FunctionCallRegistry(functionDesc = "完成所有操作并获取到操作结果后，更新完成状态", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.MEMORY_MERGE})
+    public boolean updateFinishFlag(FinishParam success) {
         return true;
     }
 

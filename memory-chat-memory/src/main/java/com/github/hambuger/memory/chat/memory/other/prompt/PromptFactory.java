@@ -111,4 +111,10 @@ public class PromptFactory {
     }
 
 
+    public String getMemoryMergePrompt(String messageContent, String historyMemory) {
+        Map<String, String> templateValueMap = new HashMap<>();
+        templateValueMap.put("memory", messageContent);
+        templateValueMap.put("existingMemories", historyMemory);
+        return formatPrompt(PromptTemplate.MEMORY_MERGE_PROMPT, templateValueMap);
+    }
 }

@@ -60,8 +60,8 @@ public class MemoryReflection {
     }
 
 
-    public List<ReflectionResult.Reflection> extractReflectionFromMessages(List<String> msgList) {
-        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(promptFactory.getMsgReflectionPrompt(StringUtils.join(msgList, "\n"), ReflectionResult.getJsonTemplate()));
+    public List<ReflectionResult.Reflection> extractReflectionFromMessages(String receiverName, List<String> msgList) {
+        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(promptFactory.getMsgReflectionPrompt(receiverName, StringUtils.join(msgList, "\n"), ReflectionResult.getJsonTemplate()));
         if (StringUtils.isBlank(result)) {
             return new ArrayList<>();
         }
