@@ -30,6 +30,9 @@ import jakarta.annotation.Resource;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.HTTP;
+import static org.springframework.util.ResourceUtils.FILE_URL_PREFIX;
+
 
 /**
  * @author hanjiabao
@@ -63,22 +66,26 @@ public class DocParse {
         @JsonProperty(required = true)
         private String fileUrl;
 
-        @JsonPropertyDescription("查询语句")
+        @JsonPropertyDescription("问题")
         @JsonProperty(required = true)
-        private String queryText;
+        private String question;
     }
 
 
-    @FunctionCallRegistry(functionDesc = "从传入的文件中查询相关内容", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
+    @FunctionCallRegistry(functionDesc = "根据传入的文件回答问题", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
     public String queryContentFromDocument(FileParam param) {
-        TikaDocumentReader documentReader = new TikaDocumentReader(param.getFileUrl());
+        String fileUrl = param.getFileUrl();
+        if (!StringUtils.startsWith(fileUrl, FILE_URL_PREFIX) && !StringUtils.startsWith(fileUrl, HTTP)) {
+            fileUrl = FILE_URL_PREFIX + fileUrl;
+        }
+        TikaDocumentReader documentReader = new TikaDocumentReader(fileUrl);
         TokenTextSplitter tokenTextSplitter = new TokenTextSplitter();
         List<Document> transform = tokenTextSplitter.transform(documentReader.read());
         SimpleVectorStore vectorStore = new SimpleVectorStore(springAiEmbeddings.getEmbeddingModel());
         vectorStore.add(transform);
-        SearchRequest request = SearchRequest.query(param.getQueryText());
+        SearchRequest request = SearchRequest.query(param.getQuestion());
         List<Document> documents = vectorStore.similaritySearch(request);
-        List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(String.format(PROMPT, param.getQueryText(),
+        List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(String.format(PROMPT, param.getQuestion(),
                 StringUtils.join(documents.stream().map(Document::getContent).collect(Collectors.toList()), "\n\n")), OpenAiApi.ChatCompletionMessage.Role.USER));
         OpenAiApi.ChatCompletion chatCompletion = springAiChat.generateMsgWithMsgList(messages, false);
         return Optional.ofNullable(chatCompletion).map(OpenAiApi.ChatCompletion::choices).map(list -> list.get(0)).map(OpenAiApi.ChatCompletion.Choice::message).map(OpenAiApi.ChatCompletionMessage::content).orElse(null);
