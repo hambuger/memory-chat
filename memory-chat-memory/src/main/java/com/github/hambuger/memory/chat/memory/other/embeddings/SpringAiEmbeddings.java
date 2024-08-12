@@ -20,6 +20,10 @@ public class SpringAiEmbeddings {
     @Resource
     private OpenAiEmbeddingModel embeddingModel;
 
+    public OpenAiEmbeddingModel getEmbeddingModel() {
+        return embeddingModel;
+    }
+
 
     public List<Double> generateTextEmbeddings(String text) {
         return embeddingModel.embed(text);

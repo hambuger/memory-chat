@@ -54,7 +54,7 @@ public class SpringAiChat {
     @Value("${spring.ai.openai.chat.options.model}")
     private String modelName;
 
-    private OpenAiApi openAiApi;
+    public OpenAiApi openAiApi;
 
     @Data
     public static class FinishParam {

@@ -26,6 +26,7 @@ import com.github.hambuger.memory.chat.memory.other.util.IdUtil;
 import com.github.hambuger.memory.chat.memory.other.util.ImageUploadUtils;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 import com.github.hambuger.memory.chat.memory.other.util.VideoUtil;
+import com.github.hambuger.memory.chat.memory.tools.docparse.DocParse;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
@@ -71,11 +72,12 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.DOUBLE_COLON;
+import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.HTTP;
 import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.NO_STR;
 import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.YES_STR;
 import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.CHAT_LOCK_KEY;
 import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
-import static java.lang.String.format;
+import static org.springframework.util.ResourceUtils.FILE_URL_PREFIX;
 
 
 /**
@@ -130,6 +132,9 @@ public class ChatCompletionsApi {
 
     @Resource
     private PromptFactory promptFactory;
+
+    @Resource
+    private DocParse docParse;
 
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
@@ -412,6 +417,10 @@ public class ChatCompletionsApi {
         }else if(StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.PICTURE.getType()) || StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.EMOJI.getType())){
             DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             baseMemoryDTO.setMessageContent(imageUploadUtils.uploadImg(baseMemoryDTO.getMessageContent()));
+        }else if(StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.APP.getType())) {
+            DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
+            baseMemoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
+            baseMemoryDTO.setMessageContent(getFileInfo(baseMemoryDTO));
         }
         SpringAiChatMessageMemoryDTO memoryDTO = BeanUtil.copyProperties(baseMemoryDTO, SpringAiChatMessageMemoryDTO.class);
         memoryDTO.setMessageId(IdUtil.generateUniqueId());
@@ -432,6 +441,21 @@ public class ChatCompletionsApi {
         memoryDTO.setChatMessage(message);
         memoryDTO.setUseToken(tokenCalculation.getUserMessageToken(message));
         return memoryDTO;
+    }
+
+
+    private String getFileInfo(BaseMemoryDTO baseMemoryDTO) {
+        StringBuilder info = new StringBuilder();
+        info.append(Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName()));
+        info.append("发送过来一个文件，文件地址：");
+        info.append(baseMemoryDTO.getMessageContent()).append("\n");
+        info.append("文件的内容大致总结如下：\n");
+        String filePath = baseMemoryDTO.getMessageContent();
+        if (!StringUtils.startsWith(filePath, FILE_URL_PREFIX) && !StringUtils.startsWith(filePath, HTTP)) {
+            filePath = FILE_URL_PREFIX + filePath;
+        }
+        info.append(docParse.summaryDoc(filePath));
+        return info.toString();
     }
 
 

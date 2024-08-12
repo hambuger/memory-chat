@@ -15,6 +15,7 @@ public enum ContentTypeEnum {
     VIDEO(43, "VIDEO", "视频"),
     EMOJI(47, "EMOJI", "表情"),
     NOTE(10000, "NOTE", "提醒"),
+    APP(49, "APP", "文件"),
     ;
 
     private Integer wxType;

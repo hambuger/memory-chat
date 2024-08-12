@@ -347,7 +347,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         }
         baseMemoryDTO.setMessageContentType(sendMsgContentTypeEnum.getType());
         // 对于语音和图片,表情，特殊处理文件路径
-        if (sendMsgContentTypeEnum == ContentTypeEnum.VIDEO || sendMsgContentTypeEnum == ContentTypeEnum.AUDIO || sendMsgContentTypeEnum == ContentTypeEnum.PICTURE || sendMsgContentTypeEnum == ContentTypeEnum.EMOJI) {
+        if (sendMsgContentTypeEnum == ContentTypeEnum.APP ||sendMsgContentTypeEnum == ContentTypeEnum.VIDEO || sendMsgContentTypeEnum == ContentTypeEnum.AUDIO || sendMsgContentTypeEnum == ContentTypeEnum.PICTURE || sendMsgContentTypeEnum == ContentTypeEnum.EMOJI) {
             baseMemoryDTO.setMessageContent(msg.getFilePath());
         }
         baseMemoryDTO.setMessageCreatorName(StringUtils.isNoneBlank(msg.getFromRemarkname()) ? msg.getFromRemarkname() : msg.getFromNickname());
@@ -449,8 +449,13 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
             case OTHER:
                 break;
             case LINK:
+                msg.setMsgType(WxReqParamsConstant.WXSendMsgCodeEnum.TEXT.getCode());
+                // [链接文本](链接地址)
+                msg.setContent(String.format("[%s](%s)", msg.getFileName(), msg.getUrl()));
+                dealNewMsg(msg);
                 break;
             case FILE:
+                dealNewMsg(msg);
                 break;
             case PROGRAM:
                 break;
