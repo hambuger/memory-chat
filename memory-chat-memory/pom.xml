@@ -99,6 +99,10 @@
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
     </dependency>
+    <dependency>
+        <groupId>com.microsoft.playwright</groupId>
+        <artifactId>playwright</artifactId>
+    </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -210,6 +214,9 @@
             <id>spring-milestones</id>
             <name>Spring Milestones</name>
             <url>https://repo.spring.io/milestone</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -218,9 +225,15 @@
             <id>spring-snapshots</id>
             <name>Spring Snapshots</name>
             <url>https://repo.spring.io/snapshot</url>
+            <!-- 启用发布版构件下载 -->
             <releases>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </releases>
+            <!-- 启用快照版构件下载 -->
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
+
 </project>

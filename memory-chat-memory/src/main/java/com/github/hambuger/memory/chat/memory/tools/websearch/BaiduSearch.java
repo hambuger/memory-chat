@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.tools.webpage.PageDetailGet;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Resource;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class BaiduSearch {
+
+    @Resource
+    private PageDetailGet pageDetailGet;
 
     private static final String SEARCH_URL = "http://www.baidu.com/s?pn=0&wd=%s";
 
@@ -54,7 +59,7 @@ public class BaiduSearch {
                 String muLink = div.attr("mu");
                 muLinks.add(muLink);
             }
-            return GoogleSearch.fetchUrlListContent(muLinks);
+            return pageDetailGet.fetchUrlListContent(muLinks);
 
         } catch (Exception ex) {
             log.error("搜索出错", ex);
