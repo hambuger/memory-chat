@@ -29,7 +29,5 @@ public class MemoryChatConstants {
     public static final String SELF_PORTRAIT_KEY = "selfPortrait";
 
     public static final String CHAT_LOCK_KEY = "chatLock::%s";
-
-    public static final String OPERATE_LOCK_KEY = "operateLock::%s";
 }
 

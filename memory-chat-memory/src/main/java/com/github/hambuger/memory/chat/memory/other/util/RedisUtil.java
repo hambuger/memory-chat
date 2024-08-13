@@ -1,5 +1,7 @@
 package com.github.hambuger.memory.chat.memory.other.util;
 
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.hambuger.memory.chat.memory.portrait.model.FriendPortrait;
@@ -140,6 +142,26 @@ public class RedisUtil {
         return redisTemplate.opsForList().range(key, 0, -1);
     }
 
+    public void updateMsgContentById(String key, String targetId, String newContent) {
+        List<String> jsonList = redisTemplate.opsForList().range(key, 0, -1);
+        if (jsonList != null) {
+            for (int i = 0; i < jsonList.size(); i++) {
+                String json = jsonList.get(i);
+                try {
+                    MemoryDTO msg = objectMapper.readValue(json, MemoryDTO.class);
+                    if (msg.getMessageId().equals(targetId)) {
+                        msg.setMessageContent(newContent);
+                        String updatedJson = objectMapper.writeValueAsString(msg);
+                        redisTemplate.opsForList().set(key, i, updatedJson);
+                        break;
+                    }
+                } catch (Exception e) {
+                    log.warn("updateMsgContentById error", e);
+                }
+            }
+        }
+    }
+
 
     public void addMsg(String key, MemoryDTO msg) {
         try {
@@ -163,6 +185,7 @@ public class RedisUtil {
                 }
             }
         }
+        msgList.sort(Comparator.comparing((msg -> DateUtil.parse(msg.getMessageCreateAt(), DatePattern.NORM_DATETIME_FORMAT))));
         return msgList;
     }
 

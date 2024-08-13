@@ -25,4 +25,6 @@ public class SpringAiChatMessageMemoryDTO extends MemoryDTO {
     @JSONField(serialize = false)
     private OpenAiApi.ChatCompletionMessage chatMessage;
 
+    private boolean dealFileFlag = false;
+
 }
