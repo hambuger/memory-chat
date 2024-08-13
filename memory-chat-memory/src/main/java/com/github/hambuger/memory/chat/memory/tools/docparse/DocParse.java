@@ -95,7 +95,8 @@ public class DocParse {
     public String summaryDoc(String fileUrl) {
         TikaDocumentReader documentReader = new TikaDocumentReader(fileUrl);
         SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT));
-        List<Document> transformDocumentList = documentReader.read();
+        TokenTextSplitter tokenTextSplitter = new TokenTextSplitter(10000,8000, 5,100,true);
+        List<Document> transformDocumentList = tokenTextSplitter.transform(documentReader.read());
         List<Document> transform;
         int sumTokens;
         while (true) {
