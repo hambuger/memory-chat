@@ -8,7 +8,7 @@ public class MemoryChatConstants {
 
     public static final String MSG_LIST_KEY_SUFFIX = "::msg";
 
-    public static final String REPLY_MESSAGE_FUNCTION_NAME = "replyMessageProcessing";
+    public static final String REPLY_MESSAGE_FUNCTION_NAME = "replyOrStartNewMessage";
 
     public static final String IMAGE_TYPE = "image/jepg";
 
