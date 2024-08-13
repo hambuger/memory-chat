@@ -76,6 +76,7 @@ import static com.github.hambuger.memory.chat.memory.other.constants.CommonConst
 import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.NO_STR;
 import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.YES_STR;
 import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.CHAT_LOCK_KEY;
+import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.OPERATE_LOCK_KEY;
 import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
 import static org.springframework.util.ResourceUtils.FILE_URL_PREFIX;
 
@@ -150,6 +151,7 @@ public class ChatCompletionsApi {
         String lockKey = UUID.randomUUID().toString();
         try {
             log.info("get a new msg:{}", JSON.toJSONString(baseMemoryDTO));
+            redisUtil.acquireLock(String.format(OPERATE_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey, 300 * 1000L, 600 * 1000L);
             redisUtil.setString(String.format(CHAT_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
             SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
@@ -157,6 +159,7 @@ public class ChatCompletionsApi {
             boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
             redisUtil.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
+            redisUtil.releaseLock(String.format(OPERATE_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
             // 异步插入用户消息
             CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(memoryDTO, false));
             // 更新最后一条消息id
@@ -217,6 +220,7 @@ public class ChatCompletionsApi {
             log.error("error", e);
             return null;
         } finally {
+            redisUtil.releaseLock(String.format(OPERATE_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
             redisUtil.releaseLock(String.format(CHAT_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
         }
     }

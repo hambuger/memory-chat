@@ -81,7 +81,7 @@ public class DocParse {
         TikaDocumentReader documentReader = new TikaDocumentReader(fileUrl);
         TokenTextSplitter tokenTextSplitter = new TokenTextSplitter();
         List<Document> transform = tokenTextSplitter.transform(documentReader.read());
-        SimpleVectorStore vectorStore = new SimpleVectorStore(springAiEmbeddings.getEmbeddingModel());
+        CustomVectorStore vectorStore = new CustomVectorStore(springAiEmbeddings.getEmbeddingModel());
         vectorStore.add(transform);
         SearchRequest request = SearchRequest.query(param.getQuestion());
         List<Document> documents = vectorStore.similaritySearch(request);
@@ -95,7 +95,7 @@ public class DocParse {
     public String summaryDoc(String fileUrl) {
         TikaDocumentReader documentReader = new TikaDocumentReader(fileUrl);
         SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT));
-        TokenTextSplitter tokenTextSplitter = new TokenTextSplitter(10000,8000, 5,100,true);
+        TokenTextSplitter tokenTextSplitter = new TokenTextSplitter(10000, 8000, 5, 100, true);
         List<Document> transformDocumentList = tokenTextSplitter.transform(documentReader.read());
         List<Document> transform;
         int sumTokens;
