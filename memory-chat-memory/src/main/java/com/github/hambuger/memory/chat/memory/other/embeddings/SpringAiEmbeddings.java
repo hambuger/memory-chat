@@ -1,12 +1,12 @@
 package com.github.hambuger.memory.chat.memory.other.embeddings;
 
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -26,7 +26,15 @@ public class SpringAiEmbeddings {
 
 
     public List<Double> generateTextEmbeddings(String text) {
-        return embeddingModel.embed(text);
+        return convertFloatArrayToList(embeddingModel.embed(text));
+    }
+
+    public static List<Double> convertFloatArrayToList(float[] floatArray) {
+        List<Double> doubleList = new ArrayList<>();
+        for (float value : floatArray) {
+            doubleList.add((double) value);
+        }
+        return doubleList;
     }
 
 }

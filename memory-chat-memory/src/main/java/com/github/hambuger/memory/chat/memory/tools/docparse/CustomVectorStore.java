@@ -24,8 +24,7 @@ public class CustomVectorStore extends SimpleVectorStore {
     @Override
     public void add(List<Document> documents) {
         documents.stream().parallel().forEach(document -> {
-            List<Double> embedding = this.embeddingModel.embed(document);
-            document.setEmbedding(embedding);
+            document.setEmbedding(this.embeddingModel.embed(document));
             this.store.put(document.getId(), document);
         });
     }
