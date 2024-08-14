@@ -769,14 +769,14 @@ public class ChatCompletionsApi {
     @NotNull
     private static StringBuilder getMemoryStrFromMemoryList(List<MemoryDTO> memoryDTOS) {
         StringBuilder memoryStr = new StringBuilder();
-        Set<String> existSet = new HashSet<>();
+//        Set<String> existSet = new HashSet<>();
         int index = 1;
         for (int i = 0; i < memoryDTOS.size(); i++) {
             MemoryDTO memorySingle = memoryDTOS.get(i);
-            if (existSet.contains(memorySingle.getMessageContent())) {
-                continue;
-            }
-            existSet.add(memorySingle.getMessageContent());
+//            if (existSet.contains(memorySingle.getMessageContent())) {
+//                continue;
+//            }
+//            existSet.add(memorySingle.getMessageContent());
             memoryStr.append(index).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(": ").append(memorySingle.getMessageContent()).append("\n");
             index++;
         }
