@@ -40,6 +40,8 @@ public class RedisUtil {
 
     private static final String EMOJI_AND_MEDIA_ID_MAP_KEY = "emojiAndMediaIdMap";
 
+    private static final String LEARN_SKILL_KEY = "learnSkillMap";
+
     private static final String CHAT_FRIEND_LIST_KEY = "chatFriends";
 
     public void saveMap(String key, Map<String, String> map) {
@@ -197,6 +199,33 @@ public class RedisUtil {
         } catch (JsonProcessingException e) {
             log.warn("putEmojiAndMediaId error", e);
         }
+    }
+
+    public void putLearnSkill(String key, String value) {
+        try {
+            redisTemplate.opsForHash().put(LEARN_SKILL_KEY, key, value);
+        } catch (Exception e) {
+            log.warn("putLearnSkill error", e);
+        }
+    }
+
+    public Set<String> getAllLearnSkill() {
+        try {
+            redisTemplate.opsForHash().keys(LEARN_SKILL_KEY);
+        } catch (Exception e) {
+            log.warn("getAllLearnSkill error", e);
+        }
+        return null;
+    }
+
+
+    public String getLearnSkill(String key) {
+        try {
+            redisTemplate.opsForHash().get(LEARN_SKILL_KEY, key);
+        } catch (Exception e) {
+            log.warn("getLearnSkill error", e);
+        }
+        return null;
     }
 
 
