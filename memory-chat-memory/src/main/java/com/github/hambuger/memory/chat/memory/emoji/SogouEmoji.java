@@ -1,9 +1,14 @@
 package com.github.hambuger.memory.chat.memory.emoji;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.other.util.MyHttpUtils;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +38,44 @@ public class SogouEmoji {
 
     private final static String emojiWebAddress = "https://pic.sogou.com/pic/emo/searchList.jsp?keyword=%s&spver=&rcer=&routeName=emosearch&tag=0";
 
+    @Data
+    public static class EmoticonPictureQuery {
+        @JsonPropertyDescription("表情图片搜索文本")
+        @JsonProperty(required = true)
+        private String emoticonPictureQueryWord;
+
+    }
+
+    @FunctionCallRegistry(functionDesc = "搜索表情图片，返回图片url", scene = {ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NORMAL_USER})
+    public String searchEmoticonPicture(EmoticonPictureQuery query) {
+        try {
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
+            headers.put("Accept-Encoding", "gzip, deflate, br, zstd");
+            headers.put("Accept-Language", "zh-CN,zh;q=0.9");
+            headers.put("Connection", "keep-alive");
+            headers.put("Host", "pic.sogou.com");
+            headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
+            String response = MyHttpUtils.get(String.format(emojiWebAddress, query.getEmoticonPictureQueryWord()), headers, null);
+            Random random = new Random();
+            int randomNumber = random.nextInt(21) - 10;
+            String regex;
+            if (randomNumber > 0) {
+                regex = "\"thumbSrc\":\"(https:[^\"]+)\",\"idx\":" + randomNumber;
+            } else {
+                regex = "\"emoGroupList\":\\[\\[\\{\"groupName\":\"[^\"]+\",\"groupId\":[0-9]+,\"picUrl\":\"(https:[^\"]+)\",\"pic";
+            }
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(response);
+            if (matcher.find()) {
+                String rawUrl = matcher.group(1);
+                return rawUrl.replace("\\u002F", "/");
+            }
+        } catch (Exception e) {
+            log.error("searchEmoji error", e);
+        }
+        return null;
+    }
 
     public String searchEmoji(String keyword) {
         try {

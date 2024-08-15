@@ -87,8 +87,8 @@ public class SpringAiChat {
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
         if (response == null || CollectionUtils.isEmpty(response.getBody().choices())
                 || CollectionUtils.isEmpty(response.getBody().choices().get(0).message().toolCalls())
-                || (scene.getEndFunctionName() != null
-                && response.getBody().choices().get(0).message().toolCalls().stream().anyMatch(tool -> tool.function().name().equals(scene.getEndFunctionName())))) {
+                || (scene.getEndFunctionName() != null  && response.getBody().choices().get(0).message().toolCalls().size() == 1
+                && response.getBody().choices().get(0).message().toolCalls().get(0).function().name().equals(scene.getEndFunctionName()))) {
             return response.getBody();
         }
         List<OpenAiApi.ChatCompletionMessage> executionResultMessages = new ArrayList<>();
