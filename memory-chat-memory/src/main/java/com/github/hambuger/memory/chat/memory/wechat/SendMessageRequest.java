@@ -25,8 +25,8 @@ public class SendMessageRequest {
     @JsonProperty(required = false)
     private List<String> sendPictureMessageList;
 
-    @JsonPropertyDescription("发送的表情消息列表,表情的文字描述,注意只能是文字描述，不要直接发送emoji")
+    @JsonPropertyDescription("发送表情图片的纯文字描述")
     @JsonProperty(required = false)
-    private List<String> sendEmojiMessageList;
+    private List<String> sendEmoticonPictureDescriptionList;
 
 }

@@ -117,4 +117,8 @@ public class PromptFactory {
         templateValueMap.put("existingMemories", historyMemory);
         return formatPrompt(PromptTemplate.MEMORY_MERGE_PROMPT, templateValueMap);
     }
+
+    public String getLearnSkillPrompt(String memory) {
+        return String.format(PromptTemplate.LEARN_SKILL_PROMPT, memory);
+    }
 }

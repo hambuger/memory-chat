@@ -21,6 +21,8 @@ public enum ChatSceneEnum {
 
     MEMORY_MERGE("记忆整理", "updateFinishFlag"),
 
+    LEARN_SKILL("技能学习", "learnSkillProcess"),
+
     ;
 
     private String desc;

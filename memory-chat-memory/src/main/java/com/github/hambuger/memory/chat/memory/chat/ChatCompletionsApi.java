@@ -50,11 +50,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -366,8 +364,8 @@ public class ChatCompletionsApi {
                                         sendMessageList.add(sendMessage);
                                     }
                                 }
-                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendEmojiMessageList())) {
-                                    for (String emoji : sendMessageRequest.getSendEmojiMessageList()) {
+                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendEmoticonPictureDescriptionList())) {
+                                    for (String emoji : sendMessageRequest.getSendEmoticonPictureDescriptionList()) {
                                         SendMessage sendMessage = new SendMessage();
                                         sendMessage.setMessageContent(emoji.replaceAll("[\\[\\]]", ""));
                                         sendMessage.setMessageContentType(ContentTypeEnum.EMOJI.getType());
@@ -492,8 +490,8 @@ public class ChatCompletionsApi {
                                 if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendPictureMessageList())) {
                                     sendMessageRequest.getSendPictureMessageList().stream().forEach(pic -> sendMessageList.add(new SendMessage(pic, ContentTypeEnum.PICTURE.getType())));
                                 }
-                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendEmojiMessageList())) {
-                                    sendMessageRequest.getSendEmojiMessageList().stream().forEach(emoji -> sendMessageList.add(new SendMessage(String.format("[%s]", emoji),
+                                if (CollectionUtils.isNotEmpty(sendMessageRequest.getSendEmoticonPictureDescriptionList())) {
+                                    sendMessageRequest.getSendEmoticonPictureDescriptionList().stream().forEach(emoji -> sendMessageList.add(new SendMessage(String.format("[%s]", emoji),
                                             ContentTypeEnum.EMOJI.getType())));
                                 }
                                 for (SendMessage sendMessage : sendMessageList) {

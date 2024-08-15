@@ -66,7 +66,7 @@ public class DayPlanGenerate {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "生成今日每个小时(0-23)计划list", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.TASK})
+    @FunctionCallRegistry(functionDesc = "生成今日24个小时计划list", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.TASK})
     public boolean generateDayPlan(OneDayPlan oneDayPlan) {
         if (oneDayPlan == null || CollectionUtils.isEmpty(oneDayPlan.getTasks())) {
             return false;

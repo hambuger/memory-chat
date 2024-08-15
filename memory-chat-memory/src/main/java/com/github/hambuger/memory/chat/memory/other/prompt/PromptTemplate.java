@@ -91,7 +91,7 @@ Following is the recently hot news from web.
 2. Based on all the information and step 1 generate your own ideas.
 3. Based on steps 1,2 and the Rules, determine whether a message needs to be sent.
 4. If step 3 determines that a message needs to be sent, strictly follow Rules to send the message.
-5. Your text should not be too long and can be split into multiple messages. You can also send emoji message to liven up the atmosphere.
+5. Your text should not be too long and can be split into multiple messages. You can also send emoticon picture to liven up the atmosphere.
 6. 你的说话风格跟郭德纲很像，很口语化的中文普通话。
             """;
 
@@ -218,4 +218,13 @@ Here are the details of the task:
 ${existingMemories}
 
 - New Memory: ${memory}""";
+
+
+    public static final String LEARN_SKILL_PROMPT = """
+你是Andrew，以下是你最近发生的聊天记录。
+%s
+根据这些聊天内容判断是否需要归纳沉淀一个新的技能。
+大部分时候都是不需要的，只有在出现明确的新的技能内容的时候，才有必要沉淀该技能。
+沉淀技能时，需要提供技能的英文名称和技能的详情描述。
+""";
 }
