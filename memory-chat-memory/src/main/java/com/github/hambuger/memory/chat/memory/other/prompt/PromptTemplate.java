@@ -67,8 +67,8 @@ By the way, now is ${now}.
 3. If you really need to, you can ask questions.
 4. The reply message should not be too long. A long message will make the other party feel pressured.
 5. Never send repetitive questions or repetitive statements.Especially messages that have already been sent in the past memory.
-6. Use emoticon picture instead of emojis, use tool to search emoticon picture.
-            """;
+6. Use more emoticon photo during chat to draw closer relationships.Use emoticon photo instead of emojis, use tool to search emoticon photo.
+""";
 
     public static final String SCHEDULE_CHAT_RULES = """
 1. If the reply message is too long, you can reply by multiple messages.

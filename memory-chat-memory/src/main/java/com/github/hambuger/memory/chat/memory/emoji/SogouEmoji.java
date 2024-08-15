@@ -47,7 +47,7 @@ public class SogouEmoji {
     }
 
     @FunctionCallRegistry(functionDesc = "搜索表情图片，返回图片url", scene = {ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NORMAL_USER})
-    public String searchEmoticonPicture(EmoticonPictureQuery query) {
+    public String searchEmoticonPhoto(EmoticonPictureQuery query) {
         try {
             Map<String, String> headers = new HashMap<>();
             headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
@@ -109,6 +109,14 @@ public class SogouEmoji {
             log.error("searchEmoji error", e);
         }
         return null;
+    }
+
+    public String downloadImage(String imageUrl) {
+        try {
+            return downloadImage(imageUrl, directory);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

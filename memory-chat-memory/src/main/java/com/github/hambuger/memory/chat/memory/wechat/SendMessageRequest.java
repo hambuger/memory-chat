@@ -25,8 +25,8 @@ public class SendMessageRequest {
     @JsonProperty(required = false)
     private List<String> sendPictureMessageList;
 
-    @JsonPropertyDescription("发送的表情图片url,可通过工具搜索")
+    @JsonPropertyDescription("发送的表情图片url,必须通过searchEmoticonPhoto工具搜索获得")
     @JsonProperty(required = false)
-    private List<String> emoticonPictureUrlList;
+    private List<String> emoticonPhotoUrlList;
 
 }
