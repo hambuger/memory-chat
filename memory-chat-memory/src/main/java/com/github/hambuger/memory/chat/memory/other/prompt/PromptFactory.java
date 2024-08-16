@@ -5,6 +5,7 @@ import com.github.hambuger.memory.chat.memory.portrait.SelfUpdate;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -104,9 +105,10 @@ public class PromptFactory {
         return PromptTemplate.EMOTION_PROMPT;
     }
 
-    public String getDayPlanPrompt(SelfUpdate.SelfPortrait selfPortrait) {
+    public String getDayPlanPrompt(String task) {
         Map<String, String> templateValueMap = new HashMap<>();
         templateValueMap.put("now", DateUtil.format(new Date(), DatePattern.CHINESE_DATE_PATTERN) + "(" + DateUtil.dayOfWeekEnum(new Date()).toString() + ")");
+        templateValueMap.put("task", StringUtils.isBlank(task) ? "无任务" : task);
         return formatPrompt(PromptTemplate.DAY_PLAN_PROMPT, templateValueMap);
     }
 

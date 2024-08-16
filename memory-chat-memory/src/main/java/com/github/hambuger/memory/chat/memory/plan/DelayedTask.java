@@ -17,9 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +76,27 @@ public class DelayedTask {
         commonRedisTemplate.opsForZSet().add(DELAYED_TASK_KEY, jsonString, executionTime);
         return true;
 
+    }
+
+    public String getAllTask() {
+        StringBuilder builder = new StringBuilder();
+        Set<ZSetOperations.TypedTuple<Object>> tuples = commonRedisTemplate.opsForZSet().rangeWithScores(DELAYED_TASK_KEY, 0, -1);
+        if (tuples != null) {
+            for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
+                if (tuple.getScore() != null) {
+                    Instant instant = Instant.ofEpochMilli(tuple.getScore().longValue() * 1000L);
+                    ZonedDateTime zdt = instant.atZone(ZoneId.systemDefault());
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
+                    String formattedDateTime = zdt.format(formatter);
+                    builder.append(formattedDateTime).append(": ");
+                }
+                if (tuple.getValue() != null) {
+                    TaskInfo taskInfo = JSON.parseObject(tuple.getValue().toString(), TaskInfo.class);
+                    builder.append(taskInfo.getTaskMessage()).append("\n");
+                }
+            }
+        }
+        return builder.toString();
     }
 
     // 执行到期任务

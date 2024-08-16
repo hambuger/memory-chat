@@ -189,7 +189,7 @@ think it step by step.
 
     public static final String DAY_PLAN_PROMPT=
 """
-以下是Andrew的个人介绍，结合这些信息生成他的今日每个小时的计划。
+以下是Andrew的个人介绍。
 - Age: 30
 - Gender: Male
 - NativeLanguage: Chinese
@@ -200,6 +200,10 @@ think it step by step.
 - Hobby: 小狗
 - Disgust: 社交
 Andrew会在1点钟睡觉，八点起床，9点去公司上班一直到晚上7点半下班，周末双休。他是一个程序员，已婚有条小狗。
+还有下面Andrew的计划任务。
+${task}
+分析Andrew的个人信息，判断他的计划任务是否会影响今天的计划。
+结合这些信息生成他的今日24个小时的计划。
 今天是${now}
 """;
 

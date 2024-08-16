@@ -79,10 +79,15 @@ public class SpringAiChat {
     }
 
     public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages, boolean groupFlag, ChatSceneEnum scene) {
+        return generateMsgWithMsgListAndFunctions(messages, groupFlag, scene, this.temperature);
+    }
+
+    public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages, boolean groupFlag, ChatSceneEnum scene, Float temperature) {
         OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
         List<OpenAiApi.FunctionTool> tools = CallFunctionRegistryFactory.getAllFunctionCall(groupFlag, scene);
 
-        OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().withModel(modelName).withTools(tools).withToolChoice(REQUIRED).withTemperature(temperature).build();
+        OpenAiChatOptions chatOptions =
+                OpenAiChatOptions.builder().withModel(modelName).withTools(tools).withToolChoice(REQUIRED).withTemperature(Optional.ofNullable(temperature).orElse(this.temperature)).build();
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
         if (response == null || CollectionUtils.isEmpty(response.getBody().choices())
@@ -100,7 +105,7 @@ public class SpringAiChat {
         }
         messages.add(response.getBody().choices().get(0).message());
         messages.addAll(executionResultMessages);
-        return generateMsgWithMsgListAndFunctions(messages, groupFlag, scene);
+        return generateMsgWithMsgListAndFunctions(messages, groupFlag, scene, temperature);
     }
 
     public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages, boolean jsonFormat) {

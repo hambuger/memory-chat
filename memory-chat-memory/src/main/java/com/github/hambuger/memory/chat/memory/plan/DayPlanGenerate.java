@@ -42,6 +42,9 @@ public class DayPlanGenerate {
     @Resource
     private SpringAiChat springAiChat;
 
+    @Resource
+    private DelayedTask delayedTask;
+
     @Data
     public static class HourPlan {
 
@@ -79,9 +82,10 @@ public class DayPlanGenerate {
 
     @Scheduled(cron = "0 0 1 * * *")
     public void processPlanTasks() {
-        String planPrompt = promptFactory.getDayPlanPrompt(null);
+        String allTask = delayedTask.getAllTask();
+        String planPrompt = promptFactory.getDayPlanPrompt(allTask);
         List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(planPrompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-        OpenAiApi.ChatCompletion chatCompletion = springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.PLAN);
+        OpenAiApi.ChatCompletion chatCompletion = springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.PLAN, 0.7f);
         if(chatCompletion != null && chatCompletion.choices() != null){
             OneDayPlan plan = JSON.parseObject(chatCompletion.choices().get(0).message().toolCalls().get(0).function().arguments(), OneDayPlan.class);
             generateDayPlan(plan);
