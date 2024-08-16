@@ -25,15 +25,15 @@ public class GroupPortrait {
     @JsonProperty(required = true, defaultValue = "Unknown")
     public String name;
 
-    @JsonPropertyDescription("群的其他维度补充信息")
+    @JsonPropertyDescription("群的其他重要补充信息")
     @JsonProperty(required = false)
-    public List<DimensionInfo> otherInfo = new ArrayList<>();
+    public List<ImportantInfo> otherImportantInfo = new ArrayList<>();
 
     public String toMarkDown() {
         StringBuilder otherInfoStr = new StringBuilder();
-        if (CollectionUtils.isNotEmpty(this.otherInfo)) {
-            for (DimensionInfo info : otherInfo) {
-                otherInfoStr.append("- ").append(info.getDimensionName()).append(": ").append(info.getDimensionDescription()).append("\n");
+        if (CollectionUtils.isNotEmpty(this.otherImportantInfo)) {
+            for (ImportantInfo info : otherImportantInfo) {
+                otherInfoStr.append("- ").append(info.getDescriptionName()).append(": ").append(info.getDescriptionDetail()).append("\n");
             }
         }
         String formatStr = """

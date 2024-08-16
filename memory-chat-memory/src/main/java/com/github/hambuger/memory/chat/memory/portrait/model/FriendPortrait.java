@@ -83,22 +83,32 @@ public class FriendPortrait {
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String state = "Unknown";
 
+    @JsonPropertyDescription("好友昵称")
+    @JsonProperty(required = true, defaultValue = "Unknown")
+    private String nickName = "Unknown";
 
-    @JsonPropertyDescription("好友的其他维度补充信息")
+    @JsonPropertyDescription("好友交谈时一些规则")
+    @JsonProperty(required = true, defaultValue = "Unknown")
+    private String chatRules = "Unknown";
+
+
+    @JsonPropertyDescription("好友的其他重要补充信息")
     @JsonProperty(required = false)
-    public List<DimensionInfo> otherInfo = new ArrayList<>();
+    public List<ImportantInfo> otherImportantInfo = new ArrayList<>();
 
 
     public String toMarkDown() {
         String formatStr = """
 ## FriendPortrait
 - Name: %s
+- NickName: %s
 - Age: %s
 - NativeLanguage: %s
 - City: %s
 - Gender: %s
 - Personality: %s
 - Relationship: %s
+- ChatRules: %s
 - LongPlan: %s
 - ShortTermPlan: %s
 - emotion: %s
@@ -109,12 +119,12 @@ public class FriendPortrait {
 %s
 """;
         StringBuilder otherInfoStr = new StringBuilder();
-        if (CollectionUtils.isNotEmpty(this.otherInfo)) {
-            for (DimensionInfo info : otherInfo) {
-                otherInfoStr.append("- ").append(info.getDimensionName()).append(": ").append(info.getDimensionDescription()).append("\n");
+        if (CollectionUtils.isNotEmpty(this.otherImportantInfo)) {
+            for (ImportantInfo info : otherImportantInfo) {
+                otherInfoStr.append("- ").append(info.getDescriptionName()).append(": ").append(info.getDescriptionDetail()).append("\n");
             }
         }
-        return String.format(formatStr, this.name, age, language, city, gender, personality, relationship, longPlan, shortTermPlan, Optional.ofNullable(emotion).map(Enum::name).orElse("Unknown"), hobby, disgust, doing, state, otherInfoStr);
+        return String.format(formatStr, this.name, this.nickName, age, language, city, gender, personality, relationship, chatRules, longPlan, shortTermPlan, Optional.ofNullable(emotion).map(Enum::name).orElse("Unknown"), hobby, disgust, doing, state, otherInfoStr);
     }
 
 }

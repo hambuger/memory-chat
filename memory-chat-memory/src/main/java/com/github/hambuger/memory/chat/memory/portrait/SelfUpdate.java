@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.plan.DayPlanGenerate;
-import com.github.hambuger.memory.chat.memory.portrait.model.DimensionInfo;
+import com.github.hambuger.memory.chat.memory.portrait.model.ImportantInfo;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
 import com.github.hambuger.memory.chat.memory.other.config.CustomEnumDeserializer;
@@ -70,9 +70,9 @@ public class SelfUpdate {
 //        @JsonProperty(required = true, defaultValue = "Unknown")
 //        private String doing = "Unknown";
 
-        @JsonPropertyDescription("其他维度补充信息")
+        @JsonPropertyDescription("其他重要补充信息")
         @JsonProperty(required = false)
-        public List<DimensionInfo> otherInfo = new ArrayList<>();
+        public List<ImportantInfo> otherImportantInfo = new ArrayList<>();
 
     }
 
@@ -118,9 +118,9 @@ public class SelfUpdate {
 %s
 """;
             StringBuilder otherInfoStr = new StringBuilder();
-            if (CollectionUtils.isNotEmpty(selfPortrait.otherInfo)) {
-                for (DimensionInfo info : selfPortrait.otherInfo) {
-                    otherInfoStr.append("- ").append(info.getDimensionName()).append(": ").append(info.getDimensionDescription()).append("\n");
+            if (CollectionUtils.isNotEmpty(selfPortrait.otherImportantInfo)) {
+                for (ImportantInfo info : selfPortrait.otherImportantInfo) {
+                    otherInfoStr.append("- ").append(info.getDescriptionName()).append(": ").append(info.getDescriptionDetail()).append("\n");
                 }
             }
             return String.format(formatStr,

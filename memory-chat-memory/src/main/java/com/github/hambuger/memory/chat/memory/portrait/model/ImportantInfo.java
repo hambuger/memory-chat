@@ -11,13 +11,13 @@ import lombok.Data;
  * @since 2024/8/5
  */
 @Data
-public class DimensionInfo {
+public class ImportantInfo {
 
-    @JsonPropertyDescription("维度名称")
+    @JsonPropertyDescription("描述内容的名称")
     @JsonProperty(required = true)
-    public String dimensionName;
+    public String descriptionName;
 
-    @JsonPropertyDescription("维度描述内容")
+    @JsonPropertyDescription("描述具体内容")
     @JsonProperty(required = true)
-    public String dimensionDescription;
+    public String descriptionDetail;
 }
