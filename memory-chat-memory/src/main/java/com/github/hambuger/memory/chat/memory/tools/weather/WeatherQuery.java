@@ -13,6 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 
 /**
  * @author hanjiabao
@@ -41,7 +44,7 @@ public class WeatherQuery {
     @FunctionCallRegistry(functionDesc = "查询天气", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.PLAN})
     public String getWeather(WeatherParam param) {
         try {
-            String locationName = param.getAddress();
+            String locationName = URLEncoder.encode(param.getAddress(), StandardCharsets.UTF_8);
             String geocodeUrl = String.format(GEOCODE_URL, locationName, weatherKey);
             String geocodeResponse = MyHttpUtils.get(geocodeUrl, null, null);
             JSONObject geocodeJson = JSON.parseObject(geocodeResponse);
@@ -50,7 +53,7 @@ public class WeatherQuery {
                 return null;
             }
             String adcode = geocodes.getJSONObject(0).getString("adcode");
-            String weatherUrl = String.format(WEATHER_URL, adcode, weatherKey);
+            String weatherUrl = String.format(WEATHER_URL, URLEncoder.encode(adcode, StandardCharsets.UTF_8), weatherKey);
             String weatherResponse = MyHttpUtils.get(weatherUrl, null, null);
             JSONObject weatherJson = JSON.parseObject(weatherResponse);
             JSONArray lives = weatherJson.getJSONArray("lives");
