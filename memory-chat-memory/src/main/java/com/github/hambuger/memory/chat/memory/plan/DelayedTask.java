@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
-public class RedisDelayedTaskUtil {
+public class DelayedTask {
 
     @Resource
     private SpringAiChat springAiChat;

@@ -13,7 +13,7 @@ public enum ChatSceneEnum {
     NORMAL_GROUP("正常群沟通", REPLY_MESSAGE_FUNCTION_NAME),
     SCHEDULE("退避尝试发起对话", REPLY_MESSAGE_FUNCTION_NAME),
     NEWS_SCHEDULE("定时根据热点尝试发起对话", REPLY_MESSAGE_FUNCTION_NAME),
-    TASK("延迟任务","sendToOthersMessage"),
+    TASK("延迟任务","updateFinishFlag"),
 
     MEMORY_DIMENSION("补全记忆维度","addNewMemory"),
 

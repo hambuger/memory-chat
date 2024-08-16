@@ -30,7 +30,7 @@ public class MessageSendService {
     }
 
     @FunctionCallRegistry(functionDesc = "给某人发送消息", scene = {ChatSceneEnum.TASK})
-    public boolean sendToOthersMessage(SendOthersMessageRequest sendMessageRequest) {
+    public boolean sendMessageToOthers(SendOthersMessageRequest sendMessageRequest) {
         MemoryDTO memoryDTO = new MemoryDTO();
         memoryDTO.setMessageCreatorId(sendMessageRequest.getReceiveName());
         memoryDTO.setMessageCreatorName(sendMessageRequest.getReceiveName());
