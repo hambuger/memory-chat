@@ -44,13 +44,30 @@ public class HttpUtil {
     /**
      * 用于接收文件或者其它类型的client 无超时时间（例如下载大文件）
      */
-    private static final CloseableHttpClient myHttpClient;
+    private static CloseableHttpClient myHttpClient;
     /**
      * 循环接收消息的client 有超时时间，避免卡住
      */
-    private static final CloseableHttpClient receiveHttpClient;
+    private static CloseableHttpClient receiveHttpClient;
 
-    public static final CookieStore cookieStore;
+    public static CookieStore cookieStore;
+
+    public static CookieStore getCookieStore() {
+        return cookieStore;
+    }
+
+    public static void setCookieStore(CookieStore cookieStore) {
+        HttpUtil.cookieStore = cookieStore;
+        myHttpClient = HttpClients.custom().setDefaultCookieStore(cookieStore)
+                .build();
+        BasicHttpClientConnectionManager connManager = new BasicHttpClientConnectionManager();
+        connManager.setSocketConfig(SocketConfig.custom().setSoTimeout(30000).build());
+        receiveHttpClient = HttpClients.custom().setDefaultCookieStore(cookieStore)
+                .setConnectionManager(connManager)
+                .setConnectionTimeToLive(30000L, TimeUnit.MILLISECONDS)
+                .build();
+    }
+
     private final static WechatConfiguration config = SpringContextHolder.getBean(WechatConfiguration.class);
     static {
         cookieStore = new BasicCookieStore();

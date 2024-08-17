@@ -11,6 +11,7 @@ import com.github.hambuger.memory.chat.wechat.constant.WxReqParamsConstant;
 import com.github.hambuger.memory.chat.wechat.constant.WxRespConstant;
 import com.github.hambuger.memory.chat.wechat.constant.WxURLEnum;
 import com.github.hambuger.memory.chat.wechat.core.Core;
+import com.github.hambuger.memory.chat.wechat.core.LoginResultData;
 import com.github.hambuger.memory.chat.wechat.core.MsgCenter;
 import com.github.hambuger.memory.chat.wechat.dto.request.WxCreateRoomReq;
 import com.github.hambuger.memory.chat.wechat.dto.request.WxSyncReq;
@@ -31,16 +32,25 @@ import com.github.hambuger.memory.chat.wechat.dto.response.wxinit.WxInitResponse
 import com.github.hambuger.memory.chat.wechat.entity.Contacts;
 import com.github.hambuger.memory.chat.wechat.exception.WebWXException;
 import com.github.hambuger.memory.chat.wechat.utils.MD5Util;
+import com.jfinal.kit.PropKit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -396,6 +406,7 @@ public class LoginServiceImpl implements LoginService {
 
         } catch (Exception e) {
             e.printStackTrace();
+            Core.setAlive(false);
             return false;
         }
         return true;
@@ -801,11 +812,79 @@ public class LoginServiceImpl implements LoginService {
     }
 
 
+
+
+    public boolean reload(String cacheFile) throws Exception {
+        log.info("登录数据热加载中");
+        StringBuilder stringBuilder = new StringBuilder();
+        try {
+            FileReader fr = new FileReader(cacheFile);
+            BufferedReader bf = new BufferedReader(fr);
+            String str;
+            // 按行读取字符串
+            while ((str = bf.readLine()) != null) {
+                stringBuilder.append(str);
+            }
+            bf.close();
+            fr.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        String result = stringBuilder.toString();
+        if (StringUtils.isBlank(result)) {
+            return false;
+        }
+        JSONObject jsonObject = JSON.parseObject(result);
+        Core.setLoginResultData(jsonObject.getObject("core", LoginResultData.class));
+        startFromCache(jsonObject.getJSONArray("cookie"));
+        Core.setUuid(jsonObject.getString("uuid"));
+        preLogin(loginInfo -> log.info(loginInfo));
+        log.info("登录数据热加载完成");
+        afterLogin();
+        return true;
+    }
+
+
+    private void startFromCache(JSONArray jsonArray) {
+        BasicCookieStore basicCookieStore = new BasicCookieStore();
+        for (Object o : jsonArray) {
+            JSONObject cookieJson = (JSONObject) o;
+            String name = cookieJson.getString("name");
+            String value = cookieJson.getString("value");
+            String domain = cookieJson.getString("domain");
+            String path = cookieJson.getString("path");
+            Boolean persistent = cookieJson.getBoolean("persistent");
+            Boolean secure = cookieJson.getBoolean("secure");
+            Long expiryDate = cookieJson.getLong("expiryDate");
+            Integer version = cookieJson.getInteger("version");
+            BasicClientCookie cookie = new BasicClientCookie(name, value);
+            cookie.setDomain(domain);
+            cookie.setPath(path);
+            cookie.setSecure(secure);
+            cookie.setExpiryDate(new Date(expiryDate));
+            cookie.setVersion(version);
+            basicCookieStore.addCookie(cookie);
+        }
+        HttpUtil.setCookieStore(basicCookieStore);
+    }
+
+
     @Override
     public void login() {
+        String HOT_RELOAD_DIR = config.getBasePath() + "/reload.txt";
+        File file = new File(HOT_RELOAD_DIR);
+        if (file.exists()) {
+            try {
+                reload(HOT_RELOAD_DIR);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            if (Core.isAlive()) {
+                return;
+            }
+        }
         try {
-            // 防止SSL错误
-//            System.setProperty("jsse.enableSNIExtension", "false");
             while (true) {
                 log.info("获取微信UUID");
                 String uuid = getUuid();
@@ -818,31 +897,52 @@ public class LoginServiceImpl implements LoginService {
             log.info("获取登陆二维码图片");
             getQR();
             log.info("请扫描二维码图片，并在手机上确认");
-            preLogin(loginInfo -> {
-                log.info(loginInfo);
-                return;
-            });
+            preLogin(loginInfo -> log.info(loginInfo));
             //登录失败
             if (!Core.isAlive()) {
                 return;
             }
             log.info("登陆成功，微信初始化");
-            if (!webWxInit()) {
-                log.error(" 微信初始化异常");
-                return;
+            afterLogin();
+            // 持久化
+            try {
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                // 每次覆盖
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("core", Core.getLoginResultData());
+                List<Cookie> cookies = HttpUtil.getCookieStore().getCookies();
+                jsonObject.put("cookie", cookies);
+                jsonObject.put("uuid", Core.getUuid());
+                FileWriter fileWritter = new FileWriter(HOT_RELOAD_DIR, false);
+                fileWritter.write(JSON.toJSONString(jsonObject));
+                fileWritter.close();
+                log.info("登录数据持久化完成");
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            config.setBasePath(config.getBasePath() + File.separator + MD5Util.MD5(Core.getNickName()) + File.separator);
-            log.info("开启微信状态通知");
-            wxStatusNotify();
-            log.info("开始接收消息");
-            startReceiving();
-            log.info("获取联系人信息");
-            webWxGetContact();
-            log.info("获取群好友及群好友列表");
-            WebWxBatchGetContact();
         } catch (Exception e) {
             log.error("login error", e);
         }
+    }
+
+
+    private boolean afterLogin() {
+        if (!webWxInit()) {
+            log.error(" 微信初始化异常");
+            return false;
+        }
+        config.setBasePath(config.getBasePath() + File.separator + MD5Util.MD5(Core.getNickName()) + File.separator);
+        log.info("开启微信状态通知");
+        wxStatusNotify();
+        log.info("开始接收消息");
+        startReceiving();
+        log.info("获取联系人信息");
+        webWxGetContact();
+        log.info("获取群好友及群好友列表");
+        WebWxBatchGetContact();
+        return true;
     }
 
 
