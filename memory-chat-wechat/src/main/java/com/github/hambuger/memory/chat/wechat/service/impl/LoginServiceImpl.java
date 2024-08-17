@@ -32,7 +32,6 @@ import com.github.hambuger.memory.chat.wechat.dto.response.wxinit.WxInitResponse
 import com.github.hambuger.memory.chat.wechat.entity.Contacts;
 import com.github.hambuger.memory.chat.wechat.exception.WebWXException;
 import com.github.hambuger.memory.chat.wechat.utils.MD5Util;
-import com.jfinal.kit.PropKit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Consts;
