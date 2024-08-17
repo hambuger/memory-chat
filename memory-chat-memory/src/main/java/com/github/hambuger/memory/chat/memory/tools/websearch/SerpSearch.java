@@ -12,6 +12,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +40,7 @@ public class SerpSearch {
     public String getSerpSearchResult(SerpQuery query) {
         try {
             Map<String, Object> queryParam = new HashMap<>();
-            queryParam.put("q", query.queryWord);
+            queryParam.put("q", URLEncoder.encode(query.queryWord, StandardCharsets.UTF_8));
             queryParam.put("api_key", apikey);
             queryParam.put("hl", "zh-cn");
             queryParam.put("gl", "cn");

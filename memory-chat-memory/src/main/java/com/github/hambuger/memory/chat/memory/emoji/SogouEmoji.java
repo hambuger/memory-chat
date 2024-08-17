@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +58,7 @@ public class SogouEmoji {
             headers.put("Connection", "keep-alive");
             headers.put("Host", "pic.sogou.com");
             headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
-            String response = MyHttpUtils.get(String.format(emojiWebAddress, query.getEmoticonPictureQueryWord()), headers, null);
+            String response = MyHttpUtils.get(String.format(emojiWebAddress, URLEncoder.encode(query.getEmoticonPictureQueryWord(), StandardCharsets.UTF_8)), headers, null);
             Random random = new Random();
             int randomNumber = random.nextInt(21) - 10;
             String regex;
@@ -86,7 +88,7 @@ public class SogouEmoji {
             headers.put("Connection", "keep-alive");
             headers.put("Host", "pic.sogou.com");
             headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
-            String response = MyHttpUtils.get(String.format(emojiWebAddress, keyword), headers, null);
+            String response = MyHttpUtils.get(String.format(emojiWebAddress, URLEncoder.encode(keyword, StandardCharsets.UTF_8)), headers, null);
             Random random = new Random();
             int randomNumber = random.nextInt(21) - 10;
             String regex;

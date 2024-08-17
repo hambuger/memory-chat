@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +52,7 @@ public class EmojiSpider {
             headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
             headers.put("Web-Agent", "web");
 
-
+            keyword = URLEncoder.encode(keyword, StandardCharsets.UTF_8);
             String response = MyHttpUtils.get(String.format(emojiWebAddress, keyword), headers, null);
             JSONArray array = JSONArray.parseArray(response);
             if (!array.isEmpty()) {
