@@ -1,140 +1,169 @@
-# memory-chat
-a chat bot with long memory,with Java.
+# MEMORY-CHAT
+## A chat bot named Andrew with the ability to remember, plan, and learn.
+- Implementing AI Chat Using OpenAI API,Using SpringAi as the java framework.
+- Using itchat4j code to implement WeChat as chat interface.
 
-启动参数：
--Dhttps.proxyHost=127.0.0.1 
--Dhttps.proxyPort=7890 
--DOPENAI_API_KEY=sk-xxx
 
-需要的es索引
-```json
-{
-  "chat_memory": {
-    "mappings": {
-      "properties": {
-        "aiResponseFlag": {
-          "type": "keyword"
-        },
-        "groupMsgFlag": {
-          "type": "keyword"
-        },
-        "memoryLeafDepth": {
-          "type": "integer"
-        },
-        "messageContent": {
-          "type": "text",
-          "fields": {
-            "keyword": {
-              "type": "keyword",
-              "ignore_above": 256
+## Startup
+- If a proxy is required, JVM startup parameters: -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
+- Copy the template.yaml file as application.ymal, modify the configuration, and run the Application class.
+- After waiting for the project to start, scan the WeChat login QR code, add the logged-in WeChat account as a friend, and then chat.
+    ### Required
+    - Redis is needed to store data such as conversation status and conversation cache.
+    - Required elasticsearch index:chat_memory to keep memory.
+    - Required a github repository access token for picture bed.
+    - Weather and wolframalpha key are optional.
+    ```json
+    {
+      "chat_memory": {
+        "mappings": {
+          "properties": {
+            "aiResponseFlag": {
+              "type": "keyword"
+            },
+            "chatMessage": {
+              "type": "object"
+            },
+            "dealFileFlag": {
+              "type": "boolean"
+            },
+            "emotion": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+                }
+              }
+            },
+            "groupMsgFlag": {
+              "type": "keyword"
+            },
+            "isDeleted": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+                }
+              }
+            },
+            "memoryLeafDepth": {
+              "type": "integer"
+            },
+            "messageContent": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+                }
+              },
+              "analyzer": "ik_max_word"
+            },
+            "messageContentType": {
+              "type": "keyword"
+            },
+            "messageContentVector": {
+              "type": "dense_vector",
+              "dims": 1536
+            },
+            "messageCreateAt": {
+              "type": "date",
+              "format": "yyyy-MM-dd HH:mm:ss"
+            },
+            "messageCreatorId": {
+              "type": "keyword"
+            },
+            "messageCreatorName": {
+              "type": "keyword"
+            },
+            "messageCreatorType": {
+              "type": "keyword"
+            },
+            "messageId": {
+              "type": "keyword"
+            },
+            "messageImportanceScore": {
+              "type": "double"
+            },
+            "messageLastAccessTime": {
+              "type": "date",
+              "format": "yyyy-MM-dd HH:mm:ss"
+            },
+            "messageOwnerId": {
+              "type": "keyword"
+            },
+            "messageOwnerName": {
+              "type": "keyword"
+            },
+            "messageOwnerType": {
+              "type": "keyword"
+            },
+            "messageParentIds": {
+              "type": "keyword"
+            },
+            "messageReceiveId": {
+              "type": "keyword"
+            },
+            "messageReceiveName": {
+              "type": "keyword"
+            },
+            "messageReceiveType": {
+              "type": "keyword"
+            },
+            "realCreatorId": {
+              "type": "keyword"
+            },
+            "realCreatorName": {
+              "type": "keyword"
+            },
+            "summaryWords": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+                }
+              }
+            },
+            "useToken": {
+              "type": "integer"
             }
-          },
-          "analyzer": "ik_max_word"
-        },
-        "messageContentType": {
-          "type": "keyword"
-        },
-        "messageContentVector": {
-          "type": "dense_vector",
-          "dims": 1536
-        },
-        "messageCreateAt": {
-          "type": "date",
-          "format": "yyyy-MM-dd HH:mm:ss"
-        },
-        "messageCreatorId": {
-          "type": "keyword"
-        },
-        "messageCreatorName": {
-          "type": "keyword"
-        },
-        "messageCreatorType": {
-          "type": "keyword"
-        },
-        "messageId": {
-          "type": "keyword"
-        },
-        "messageImportanceScore": {
-          "type": "double"
-        },
-        "messageLastAccessTime": {
-          "type": "date",
-          "format": "yyyy-MM-dd HH:mm:ss"
-        },
-        "messageOwnerId": {
-          "type": "keyword"
-        },
-        "messageOwnerName": {
-          "type": "keyword"
-        },
-        "messageOwnerType": {
-          "type": "keyword"
-        },
-        "messageParentIds": {
-          "type": "keyword"
-        },
-        "messageReceiveId": {
-          "type": "keyword"
-        },
-        "messageReceiveName": {
-          "type": "keyword"
-        },
-        "messageReceiveType": {
-          "type": "keyword"
-        },
-        "realCreatorId": {
-          "type": "keyword"
-        },
-        "realCreatorName": {
-          "type": "keyword"
-        },
-        "useToken": {
-          "type": "integer"
+          }
         }
       }
     }
-  }
-}
-```
+    ```
 
-### Todo
 
-- [x] 1.支持传入文件
+### Features List
 
-- [x] 2.支持回复图片
-考虑加入function_call来解决1和2
+- [x] Supports incoming files
 
-- [x] 3.有可能一个消息回触发多条回复
-需要提供一个send方法以供调用
+- [x] Supports replying to images
 
-- [ ] 4.支持微信语音发送
-itchat办不到，只能通过wechaty,但它收费
-如果要使用wechaty考虑接入openai audio或者chattts
+- [x] Unified processing of multiple messages
 
-- [x] 5.要支持用户自定义system message
+- [x] Supports user-defined system messages
 
-- [x] 6.支持系统消息处理
+- [x] Supports AI to decide whether to reply, and initiate messages based on hot news
 
-- [x] 7.支持ai决定是否回复
+- [x] Exponential backoff to check whether to initiate a message
 
-- [x] 8.使用Java版本itchat4j
+- [x] Supports video message reply
 
-- [x] 9.指数退避去检查是否要发起消息
+- [x] Supports web search
 
-- [x] 10.支持video消息回复
-- 
-- [x] 11.支持网页搜索
-- 
-- [x] 12.支持回复表情
+- [x] Supports replying emoticons
 
-- [x] 13.支持接受好友请求
+- [x] Supports accepting friend requests
 
-- [x] 14.规划时间计划，修改计划，修改个性，主动发起消息
+- [x] Plan time plans, modify plans, modify personality, and actively initiate messages
 
-- [x] 15.记忆更新逻辑，记忆整理，记忆过时。
+- [x] Memory update logic, memory organization, and memory obsolescence.
 
-- [ ] 16.AI学习新的技能并持久化
-
+- [x] AI learns new skills and persists
 
 
 

@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EmojiSpider {
 
 
-    @Value("${emoji.directory}")
+    @Value("${emoji.directory:xxx}")
     private String directory;
 
     // 网址

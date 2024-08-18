@@ -21,10 +21,10 @@ import java.util.Map;
 @Component
 public class SerpSearch {
 
-    @Value("${serp.apiKey}")
+    @Value("${serp.apiKey:xxx}")
     public String apikey;
 
-    @Value("${serp.baseUrl}")
+    @Value("${serp.baseUrl:xxx}")
     public String baseUrl;
 
     @Data

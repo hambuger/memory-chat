@@ -31,16 +31,16 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class EmojiSpider1 {
 
-    @Value("${emoji.baseUrlPrefix}")
+    @Value("${emoji.baseUrlPrefix:xxx}")
     private String baseUrl;
 
-    @Value("${emoji.urlContent}")
+    @Value("${emoji.urlContent:xxx}")
     private String urlContent;
 
-    @Value("${emoji.userAgent}")
+    @Value("${emoji.userAgent:xxx}")
     private String userAgent;
 
-    @Value("${emoji.directory}")
+    @Value("${emoji.directory:xxx}")
     private String directory;
 
 
