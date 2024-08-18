@@ -46,10 +46,6 @@ github:
   accept: application/vnd.github+json
   contentType: application/json
 
-serp:
-  apiKey:
-  baseUrl: https://serpapi.com/search
-
 emoji:
   directory: ${user.dir}${file.separator}temp${file.separator}emoji${file.separator}
 
