@@ -1,5 +1,6 @@
 # MEMORY-CHAT
 ## A chat bot named Andrew with the ability to remember, plan, and learn.
+### Special thanks to [Generative Agents](https://github.com/joonspk-research/generative_agents), without which this project would not have happened.
 - Implementing AI Chat Using OpenAI API,Using SpringAi as the java framework.
 - Using itchat4j code to implement WeChat as chat interface.
 
