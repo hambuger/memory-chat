@@ -44,7 +44,7 @@ public class BaiduSearch {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "去百度搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK})
+    @FunctionCallRegistry(functionDesc = "去百度搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_SKILL})
     public String getBaiduSearchResult(BaiduQuery query) {
         try {
             Document document = Jsoup.connect(String.format(SEARCH_URL, query.getQueryText())).get();
