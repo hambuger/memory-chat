@@ -189,6 +189,12 @@
             <groupId>com.squareup</groupId>
             <artifactId>javapoet</artifactId>
         </dependency>
+        <dependency>
+            <groupId>black.ninia</groupId>
+            <artifactId>jep</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+
 
     </dependencies>
     <build>
