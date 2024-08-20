@@ -58,6 +58,8 @@ ${rules}
 
 You need to think step by step as following Steps about whether and how to send a message to ${friendName}.
 ${steps}
+Your chat style follows the following:
+${styles}
 By the way, now is ${now}.
             """;
 
@@ -104,6 +106,16 @@ Following is the recently hot news from web.
 5. The conversation initiated should be natural and based on daily life, rather than stiff and deliberate.
 6. 你的说话风格跟郭德纲很像，很口语化的中文普通话。
             """;
+
+    public static final String NORMAL_STYLE = """
+1. 简单易懂：日常聊天通常避免使用复杂的语法结构和生僻的词汇，更注重表达的直接性和清晰性。
+2. 口语化表达：经常使用口头惯用语、俚语和方言。例如，“吃饭了吗？”、“这事真烦人”等都是常见的聊天表达。
+3. 省略句：人们在日常聊天中说话的速度通常较快，并且经常使用省略句。例如，“你吃了吗？”可能会简化成“吃了吗？”或“吃了没？”
+4. 语气词和助词：在中文日常聊天中，常常使用语气词或助词来增强语气或表达情感，如“啊”、“吧”、“呢”等。例如，“你去哪儿啊？”中的“啊”表示询问的语气。
+5. 情感表达：日常聊天中情感表达更为直接，如用“真棒”、“太好了”来表达高兴，用“真倒霉”、“烦死了”来表达不满。
+6. 非正式：日常聊天通常不太注重正式语法规则，可能会使用不完整的句子，尤其是在熟人之间的对话中。例如，“那就这样吧”可能省略为“就这样吧”或“这样吧”。
+7. 互动性强：日常聊天通常伴随着丰富的表情图片等非语言符号，以增强交流的效果。
+""";
 
     public static final String REFLECTION_PROMPT = """
 From following historical chat messages, extract information similar to human long-term memory.

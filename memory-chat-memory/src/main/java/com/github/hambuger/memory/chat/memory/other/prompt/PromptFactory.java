@@ -51,6 +51,15 @@ public class PromptFactory {
         }
     };
 
+    Map<ChatSceneEnum, String> chatStyleMap = new HashMap<>() {
+        {
+            put(ChatSceneEnum.NORMAL_USER, PromptTemplate.NORMAL_STYLE);
+            put(ChatSceneEnum.NORMAL_GROUP, PromptTemplate.NORMAL_STYLE);
+            put(ChatSceneEnum.SCHEDULE, PromptTemplate.NORMAL_STYLE);
+            put(ChatSceneEnum.NEWS_SCHEDULE, PromptTemplate.NORMAL_STYLE);
+        }
+    };
+
 
     public String getChatPrompt(String messageFromName, String chatHistory, String news, boolean groupFlag, ChatSceneEnum sceneEnum) {
         Map<String, String> templateValueMap = new HashMap<>();
@@ -62,6 +71,7 @@ public class PromptFactory {
         templateValueMap.put("memory", chatHistory);
         templateValueMap.put("rules", chatRuleMap.get(sceneEnum));
         templateValueMap.put("steps", chatStepMap.get(sceneEnum));
+        templateValueMap.put("styles", chatStyleMap.get(sceneEnum));
         if (sceneEnum == ChatSceneEnum.NEWS_SCHEDULE) {
             templateValueMap.put("hotNews", String.format(PromptTemplate.HOT_NEWS, news));
         }
