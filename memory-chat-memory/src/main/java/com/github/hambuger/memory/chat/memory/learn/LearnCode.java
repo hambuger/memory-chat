@@ -6,18 +6,24 @@ import com.alibaba.fastjson.JSON;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.annotation.PostConstruct;
 import jep.MainInterpreter;
 import jep.SharedInterpreter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 
 @Slf4j
+@Component
 public class LearnCode {
 
     // pip install jep
-    private static final String JEP_PATH = "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/jep/libjep.jnilib";
+    @Value("${python.jep.path}")
+    private String JEP_PATH;
 
-    static {
+    @PostConstruct
+    public void init() {
         MainInterpreter.setJepLibraryPath(JEP_PATH);
     }
 

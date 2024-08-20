@@ -65,3 +65,7 @@ weather:
 wolframalpha:
   key: xxx
 
+
+python:
+  jep:
+    path: D:\Python\Lib\site-packages\jep\jep.dll
