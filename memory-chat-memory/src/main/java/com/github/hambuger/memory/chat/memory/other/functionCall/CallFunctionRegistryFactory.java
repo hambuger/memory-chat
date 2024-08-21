@@ -65,7 +65,7 @@ public class CallFunctionRegistryFactory {
 
 
     public static String executeFunctionResult(String functionName, String arg) {
-        return Optional.ofNullable(FUNCTION_CALL_MAP.get(functionName)).map(function -> function.getFunction().apply(JSON.parseObject(arg, function.argClass)).toString()).orElse(CommonConstants.NULL_STR);
+        return Optional.ofNullable(FUNCTION_CALL_MAP.get(functionName)).map(function -> JSON.toJSONString(function.getFunction().apply(JSON.parseObject(arg, function.argClass)))).orElse(CommonConstants.NULL_STR);
     }
 
 }

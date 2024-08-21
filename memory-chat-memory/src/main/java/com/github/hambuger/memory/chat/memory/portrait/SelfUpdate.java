@@ -78,7 +78,7 @@ public class SelfUpdate {
 
 
     @FunctionCallRegistry(functionDesc = "更新Andrew的自我画像，可与回复消息并行执行", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
-    public boolean updateSelfPortrait(SelfPortrait param) {
+    public Boolean updateSelfPortrait(SelfPortrait param) {
         redisUtil.setString(SELF_PORTRAIT_KEY, JSON.toJSONString(param));
         return true;
     }

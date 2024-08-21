@@ -178,7 +178,7 @@ public class LoginServiceImpl implements LoginService {
      * @throws Exception
      */
     @Override
-    public boolean preLogin(LoginCallBack callBack) throws Exception {
+    public boolean preLogin(boolean reload, LoginCallBack callBack) throws Exception {
 
         boolean isLogin = false;
         // 组装参数和URL
@@ -214,8 +214,14 @@ public class LoginServiceImpl implements LoginService {
                         //  * window.code = 201;
                         //  * window.userAvatar = '头像数据';
                         callBack.CallBack(codeEnum.getMsg());
+                        if(reload){
+                            return isLogin;
+                        }
                         break;
                     case WAIT_SCAN: {
+                        if(reload){
+                            return isLogin;
+                        }
                         callBack.CallBack(codeEnum.getMsg());
                         break;
                     }
@@ -838,7 +844,10 @@ public class LoginServiceImpl implements LoginService {
         Core.setLoginResultData(jsonObject.getObject("core", LoginResultData.class));
         startFromCache(jsonObject.getJSONArray("cookie"));
         Core.setUuid(jsonObject.getString("uuid"));
-        preLogin(loginInfo -> log.info(loginInfo));
+        boolean preLogin = preLogin(true, loginInfo -> log.info(loginInfo));
+        if(!preLogin){
+            return false;
+        }
         log.info("登录数据热加载完成");
         afterLogin();
         return true;
@@ -875,8 +884,12 @@ public class LoginServiceImpl implements LoginService {
         File file = new File(HOT_RELOAD_DIR);
         if (file.exists()) {
             try {
-                reload(HOT_RELOAD_DIR);
+                boolean reload = reload(HOT_RELOAD_DIR);
+                if(!reload){
+                    file.delete();
+                }
             } catch (Exception e) {
+                file.delete();
                 throw new RuntimeException(e);
             }
             if (Core.isAlive()) {
@@ -896,7 +909,7 @@ public class LoginServiceImpl implements LoginService {
             log.info("获取登陆二维码图片");
             getQR();
             log.info("请扫描二维码图片，并在手机上确认");
-            preLogin(loginInfo -> log.info(loginInfo));
+            preLogin(false, loginInfo -> log.info(loginInfo));
             //登录失败
             if (!Core.isAlive()) {
                 return;

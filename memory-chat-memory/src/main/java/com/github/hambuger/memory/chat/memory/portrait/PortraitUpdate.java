@@ -29,14 +29,14 @@ public class PortraitUpdate {
 
 
     @FunctionCallRegistry(functionDesc = "更新微信群的画像，可与回复消息并行执行", scene = {ChatSceneEnum.NORMAL_GROUP})
-    public boolean updateGroupPortrait(GroupPortrait portrait) {
+    public Boolean updateGroupPortrait(GroupPortrait portrait) {
         redisUtil.updateGroupPortrait(portrait.getName(), JSON.toJSONString(portrait));
         return true;
     }
 
 
     @FunctionCallRegistry(functionDesc = "更新微信好友的画像，可与回复消息并行执行", scene = {ChatSceneEnum.NORMAL_USER})
-    public boolean updateFriendPortrait(FriendPortrait portrait) {
+    public Boolean updateFriendPortrait(FriendPortrait portrait) {
         if (StringUtils.isNotBlank(portrait.getDoing()) && !StringUtils.equals(portrait.getDoing(), "Unknown") && !portrait.getDoing().contains("(")) {
             portrait.setDoing(portrait.getDoing() + "(" + DateUtil.now() + ")");
         }

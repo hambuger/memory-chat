@@ -65,7 +65,7 @@ public class DelayedTask {
 
     // 添加延迟任务
     @FunctionCallRegistry(functionDesc = "添加一个任务，以便在未来时间处理", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.TASK})
-    public boolean addTask(TaskInfo taskInfo) {
+    public Boolean addTask(TaskInfo taskInfo) {
         // 将自定义时间单位转换为秒
         long delayInSeconds = taskInfo.getTimeUnit().toSeconds(taskInfo.getDelayTime());
         long executionTime = Instant.now().getEpochSecond() + delayInSeconds;

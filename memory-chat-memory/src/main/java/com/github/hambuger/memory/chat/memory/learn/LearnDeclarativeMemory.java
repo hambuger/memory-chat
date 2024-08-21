@@ -114,7 +114,7 @@ public class LearnDeclarativeMemory {
     }
 
     @FunctionCallRegistry(functionDesc = "处理技能学习", scene = {ChatSceneEnum.LEARN_SKILL})
-    public boolean learnSkillProcess(LearnSkillParam param) {
+    public Boolean learnSkillProcess(LearnSkillParam param) {
         if (param.needLearnSkill) {
             redisUtil.putLearnSkill(param.getSkillEnName(), param.getSkillDetail());
             init();

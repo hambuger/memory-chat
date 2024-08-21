@@ -25,12 +25,12 @@ public class MessageSendService {
 
 
     @FunctionCallRegistry(functionDesc = "回复消息或者发送新消息,所有的回复都应该使用这个方法。如果不需要回复消息或者发送新消息，同样通过这个方法告知。可以使用这个方法发送多条信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE})
-    public boolean replyOrStartNewMessage(SendMessageRequest sendMessageRequest) {
+    public Boolean replyOrStartNewMessage(SendMessageRequest sendMessageRequest) {
         return true;
     }
 
     @FunctionCallRegistry(functionDesc = "给某人发送消息", scene = {ChatSceneEnum.TASK})
-    public boolean sendMessageToOthers(SendOthersMessageRequest sendMessageRequest) {
+    public Boolean sendMessageToOthers(SendOthersMessageRequest sendMessageRequest) {
         MemoryDTO memoryDTO = new MemoryDTO();
         memoryDTO.setMessageCreatorId(sendMessageRequest.getReceiveName());
         memoryDTO.setMessageCreatorName(sendMessageRequest.getReceiveName());

@@ -53,7 +53,7 @@ public interface LoginService {
      * @author SXS
      * @date 2017年5月13日 上午12:14:07
      */
-    boolean preLogin(LoginCallBack loginCallBack) throws Exception;
+    boolean preLogin(boolean reload, LoginCallBack loginCallBack) throws Exception;
     interface LoginCallBack{
         void CallBack(String loginInfo);
     }
