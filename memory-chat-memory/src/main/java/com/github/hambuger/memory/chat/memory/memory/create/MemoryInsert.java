@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.model.CreatorEnum;
-import com.github.hambuger.memory.chat.memory.learn.LearnSkill;
+import com.github.hambuger.memory.chat.memory.learn.LearnDeclarativeMemory;
 import com.github.hambuger.memory.chat.memory.memory.reflection.MemoryMergeTask;
 import com.github.hambuger.memory.chat.memory.memory.reflection.MemoryReflection;
 import com.github.hambuger.memory.chat.memory.memory.search.MemorySearch;
@@ -92,7 +92,7 @@ public class MemoryInsert {
     private MemoryMergeTask memoryMergeTask;
 
     @Resource
-    private LearnSkill learnSkill;
+    private LearnDeclarativeMemory learnDeclarativeMemory;
 
     private static final ThreadPoolExecutor MEMORY_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("memory-pool"),
             new ThreadPoolExecutor.CallerRunsPolicy());
@@ -203,7 +203,7 @@ public class MemoryInsert {
                 }
             }
             memoryMergeTask.memoryMerge(memoryDTO, memory.toString());
-            learnSkill.learnSkillProcess(memory.toString());
+            learnDeclarativeMemory.learnSkillProcess(memory.toString());
         }
     }
 

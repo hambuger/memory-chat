@@ -74,7 +74,7 @@ public class DayPlanGenerate {
         if (oneDayPlan == null || CollectionUtils.isEmpty(oneDayPlan.getTasks())) {
             return false;
         }
-        Map<String, String> hourTaskMap = oneDayPlan.getTasks().stream().collect(Collectors.toMap(k -> k.getHour().toString(), HourPlan::getTask));
+        Map<String, Object> hourTaskMap = oneDayPlan.getTasks().stream().collect(Collectors.toMap(k -> k.getHour().toString(), HourPlan::getTask));
         redisUtil.reset(DAY_PLAN_KEY);
         redisUtil.saveMap(DAY_PLAN_KEY, hourTaskMap);
         return true;

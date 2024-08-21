@@ -44,7 +44,7 @@ public class RedisUtil {
 
     private static final String CHAT_FRIEND_LIST_KEY = "chatFriends";
 
-    public void saveMap(String key, Map<String, String> map) {
+    public void saveMap(String key, Map<String, Object> map) {
         redisTemplate.opsForHash().putAll(key, map);
     }
 

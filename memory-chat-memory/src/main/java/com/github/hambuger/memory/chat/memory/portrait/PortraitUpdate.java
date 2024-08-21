@@ -6,8 +6,12 @@ import com.github.hambuger.memory.chat.memory.portrait.model.FriendPortrait;
 import com.github.hambuger.memory.chat.memory.portrait.model.GroupPortrait;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
+
+import cn.hutool.core.date.DateUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 
@@ -33,6 +37,9 @@ public class PortraitUpdate {
 
     @FunctionCallRegistry(functionDesc = "更新微信好友的画像，可与回复消息并行执行", scene = {ChatSceneEnum.NORMAL_USER})
     public boolean updateFriendPortrait(FriendPortrait portrait) {
+        if (StringUtils.isNotBlank(portrait.getDoing()) && !StringUtils.equals(portrait.getDoing(), "Unknown") && !portrait.getDoing().contains("(")) {
+            portrait.setDoing(portrait.getDoing() + "(" + DateUtil.now() + ")");
+        }
         redisUtil.updateFriendPortrait(portrait.getName(), JSON.toJSONString(portrait));
         return true;
     }

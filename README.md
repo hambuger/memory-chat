@@ -166,6 +166,14 @@
 
 - [x] AI learns new skills and persists
 
+// 个性化修改设定
+
+// 学习并持久化非表述记忆
+
+// 更加口语化
+
+// 天气变化感知
+
 
 
 

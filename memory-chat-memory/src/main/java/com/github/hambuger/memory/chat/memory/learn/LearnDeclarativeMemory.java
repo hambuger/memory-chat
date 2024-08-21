@@ -35,7 +35,7 @@ import static com.github.hambuger.memory.chat.memory.other.functionCall.CallFunc
  */
 @Slf4j
 @Component
-public class LearnSkill {
+public class LearnDeclarativeMemory {
 
     @Resource
     private RedisUtil redisUtil;
@@ -110,8 +110,7 @@ public class LearnSkill {
         FunctionTool functionTool = new FunctionTool();
         functionTool.setScene(new ChatSceneEnum[]{ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NORMAL_USER, ChatSceneEnum.LEARN_SKILL});
         functionTool.setFunctionTool(new OpenAiApi.FunctionTool(new OpenAiApi.FunctionTool.Function("获取学习过的技能说明", "getLearnSkill", methodDesc)));
-        FUNCTION_CALL_METHOD_MAP.put("getLearnSkill", functionTool);
-        FUNCTION_CALL_MAP.put("getLearnSkill", new CallFunctionRegistryFactory.MethodFunction(LearnSkillQuery.class, function));
+        CallFunctionRegistryFactory.registryFunction(functionTool, LearnSkillQuery.class, function);
     }
 
     @FunctionCallRegistry(functionDesc = "处理技能学习", scene = {ChatSceneEnum.LEARN_SKILL})
