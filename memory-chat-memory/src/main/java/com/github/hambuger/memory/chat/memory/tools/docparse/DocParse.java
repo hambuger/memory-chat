@@ -12,8 +12,10 @@ import com.github.hambuger.memory.chat.memory.other.token.TokenCalculation;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.document.MetadataMode;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.reader.TextReader;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.SummaryMetadataEnricher;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
@@ -31,6 +33,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.HTTP;
+import static org.springframework.ai.transformer.SummaryMetadataEnricher.DEFAULT_SUMMARY_EXTRACT_TEMPLATE;
 import static org.springframework.util.ResourceUtils.FILE_URL_PREFIX;
 
 
@@ -91,10 +94,32 @@ public class DocParse {
         return Optional.ofNullable(chatCompletion).map(OpenAiApi.ChatCompletion::choices).map(list -> list.get(0)).map(OpenAiApi.ChatCompletion.Choice::message).map(OpenAiApi.ChatCompletionMessage::content).orElse(null);
     }
 
+    public String summaryUrl(String url, String summaryTemplate) {
+        TextReader doc = new TextReader(url);
+        List<Document> transformDocumentList = doc.get();
+        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT),
+                summaryTemplate, MetadataMode.ALL);
+        int sumTokens;
+        List<Document> transform;
+        while (true) {
+            transform = summaryMetadataEnricher.transform(transformDocumentList);
+            sumTokens = transform.stream().mapToInt(document -> tokenCalculation.getMessageTextTokenCount(document.getMetadata().get("section_summary").toString())).sum();
+            if (sumTokens < 2000) {
+                break;
+            }else {
+                String str = transform.stream().map(document -> document.getMetadata().get("section_summary").toString()).collect(Collectors.joining("\n"));
+                byte[] byteArray = str.getBytes();
+                ByteArrayResource byteArrayResource = new ByteArrayResource(byteArray);
+                transformDocumentList = new TikaDocumentReader(byteArrayResource).read();
+            }
+        }
+        return transform.stream().map(map -> map.getMetadata().get("section_summary").toString()).collect(Collectors.joining("\n"));
+    }
 
-    public String summaryDoc(String fileUrl) {
+
+    public String summaryDoc(String fileUrl, String summaryTemplate) {
         TikaDocumentReader documentReader = new TikaDocumentReader(fileUrl);
-        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT));
+        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT), summaryTemplate, MetadataMode.ALL);
         TokenTextSplitter tokenTextSplitter = new TokenTextSplitter(10000, 8000, 5, 100, true);
         List<Document> transformDocumentList = tokenTextSplitter.transform(documentReader.read());
         List<Document> transform;
@@ -112,6 +137,11 @@ public class DocParse {
             }
         }
         return transform.stream().map(map -> map.getMetadata().get("section_summary").toString()).collect(Collectors.joining("\n"));
+    }
+
+
+    public String summaryDoc(String fileUrl) {
+        return summaryDoc(fileUrl, DEFAULT_SUMMARY_EXTRACT_TEMPLATE);
     }
 
 }

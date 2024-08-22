@@ -23,6 +23,8 @@ public enum ChatSceneEnum {
 
     LEARN_SKILL("技能学习", "learnSkillProcess"),
 
+    LEARN_JUDGE("是否要学习", "updateFinishFlag"),
+
     LEARN_FUNCTION("代码学习", "addNewFunction"),
 
     ;

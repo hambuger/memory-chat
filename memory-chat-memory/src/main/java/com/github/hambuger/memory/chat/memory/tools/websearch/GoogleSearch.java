@@ -69,7 +69,7 @@ public class GoogleSearch {
                     urlList.add(link);
                 }
             }
-            return pageDetailGet.fetchUrlListContent(urlList);
+            return pageDetailGet.fetchUrlListContent(query.getQueryWord(), urlList);
         } catch (Exception e) {
             log.error("getSerpSearchResult error", e);
         }

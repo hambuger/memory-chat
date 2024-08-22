@@ -1,18 +1,23 @@
 package com.github.hambuger.memory.chat.memory.learn;
 
 
+import com.google.common.collect.Lists;
+
 import cn.hutool.core.map.MapUtil;
 import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.other.functionCall.CallFunctionRegistryFactory;
 import com.github.hambuger.memory.chat.memory.other.functionCall.FunctionTool;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
+import jep.JepConfig;
 import jep.MainInterpreter;
 import jep.SharedInterpreter;
 import lombok.Data;
@@ -25,6 +30,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -41,10 +47,18 @@ public class LearnProceduralMemory {
     @Resource
     private RedisUtil redisUtil;
 
+    @Resource
+    private SpringAiChat springAiChat;
+
+    @Resource
+    private PromptFactory promptFactory;
+
     private static final String PROCEDURE_MEMORY_SKILL = "procedureMemorySkill";
 
+    private static final String PYTHON_PATH = Paths.get("memory-chat-memory/src/main/java/com/github/hambuger/memory/chat/memory/tools/pythons").toAbsolutePath().toString();
+
     @Data
-    public class FunctionDefinitionAndCode {
+    public static class FunctionDefinitionAndCode {
 
         @JsonPropertyDescription("方法名，英文命名")
         @JsonProperty(required = true)
@@ -62,7 +76,7 @@ public class LearnProceduralMemory {
         @JsonProperty(required = true)
         private List<String> packages;
 
-        @JsonPropertyDescription("方法的全部代码")
+        @JsonPropertyDescription("方法的全部代码,不包含测试代码")
         @JsonProperty(required = true)
         private String functionCode;
 
@@ -72,6 +86,9 @@ public class LearnProceduralMemory {
 
     }
 
+    static {
+        SharedInterpreter.setConfig(new JepConfig().addIncludePaths(PYTHON_PATH));
+    }
 
     @PostConstruct
     public void init() {
@@ -92,23 +109,28 @@ public class LearnProceduralMemory {
         }
     }
 
+
+    public void learnCodeSkillProcess(String memory) {
+        String prompt = promptFactory.getLearnCodeSkillPrompt(memory);
+        List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+        springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.LEARN_JUDGE);
+    }
+
     @FunctionCallRegistry(functionDesc = "新增一个程序方法", scene = {ChatSceneEnum.LEARN_FUNCTION})
     public Boolean addNewFunction(FunctionDefinitionAndCode param) {
         String filePath = writePythonCodeToFile(param.getName(), param.getFunctionCode());
         param.setFilepath(filePath);
-        redisUtil.putKeyValue(PROCEDURE_MEMORY_SKILL, param.getName(), param);
-        init();
+         redisUtil.putKeyValue(PROCEDURE_MEMORY_SKILL, param.getName(), param);
+         init();
         return true;
     }
 
 
-    public String writePythonCodeToFile(String methodName, String pythonCode) {
+    public static String writePythonCodeToFile(String methodName, String pythonCode) {
         // 生成文件名：方法名.py
         String fileName = methodName + ".py";
-        // 获取当前目录的绝对路径
-        String currentDir = Paths.get("").toAbsolutePath().toString();
         // 拼接文件路径
-        String filePath = Paths.get(currentDir, fileName).toString();
+        String filePath = Paths.get(PYTHON_PATH, fileName).toString();
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             writer.write(pythonCode);
         } catch (IOException e) {
@@ -118,7 +140,7 @@ public class LearnProceduralMemory {
     }
 
     @Data
-    public class FunctionCodeTest {
+    public static class FunctionCodeTest {
 
         @JsonPropertyDescription("方法名，英文命名")
         @JsonProperty(required = true)
@@ -133,6 +155,26 @@ public class LearnProceduralMemory {
         private Map<String, Object> functionArgs;
 
 
+    }
+
+
+    @FunctionCallRegistry(functionDesc = "学习并持久化一个技能，通过代码的方式", scene = {ChatSceneEnum.LEARN_JUDGE})
+    public Boolean learnAndSaveAsSkill(LearnSKillParam param){
+        String prompt = """
+Generate python code for the skill: %s.
+1. use 'installPackages' to install the modules that code required
+2. use 'executePythonCode' to check whether the code is correct
+3. use 'addNewFunction' to save the final generated code
+4. If you need outside help，you can use Baidu to query the required information and repair errors
+5. If the error happened, try to fix it.
+6. If a same error happened many times,please think carefully and modify the code from another way
+7. The final saved code needs to be all the code required for a complete .py file.(No test code included)
+Do it and think step by step.
+""";
+        List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
+        messages.add(new OpenAiApi.ChatCompletionMessage(String.format(prompt, param.getSkillDescription()),OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+        springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.LEARN_FUNCTION);
+        return true;
     }
 
     // 执行Python代码块并返回结果
@@ -150,7 +192,7 @@ public class LearnProceduralMemory {
     }
 
     @Data
-    public class InstallPackagesParam {
+    public static class InstallPackagesParam {
 
         @JsonPropertyDescription("方法代码执行需要安装的包")
         @JsonProperty(required = true)
@@ -179,6 +221,20 @@ public class LearnProceduralMemory {
     public String invokePythonFunction(String functionName, Map<String, Object> args) {
         try (SharedInterpreter interp = new SharedInterpreter()) {
             interp.runScript(((FunctionDefinitionAndCode) redisUtil.getMap(PROCEDURE_MEMORY_SKILL).get(functionName)).getFilepath());
+            Object result = interp.invoke(functionName, args);
+            return JSON.toJSONString(result);
+        } catch (Exception e) {
+            log.error("invokePythonFunction error", e);
+            return "invokePythonFunction error:\n" + e.getMessage();
+        }
+    }
+
+    public String invokePythonFunction(List<String> filePaths, String functionName, Map<String, Object> args) {
+        try (SharedInterpreter interp = new SharedInterpreter()) {
+            interp.set("scriptPath", PYTHON_PATH);
+            for (String filePath : filePaths) {
+                interp.runScript(filePath);
+            }
             Object result = interp.invoke(functionName, args);
             return JSON.toJSONString(result);
         } catch (Exception e) {

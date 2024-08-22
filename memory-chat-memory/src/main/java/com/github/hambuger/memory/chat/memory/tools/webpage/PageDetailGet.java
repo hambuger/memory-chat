@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.tools.docparse.DocParse;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
@@ -24,6 +25,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class PageDetailGet {
+
+
+    @Resource
+    private DocParse docParse;
 
     private static final ThreadPoolExecutor FETCH_URL_POOL = new ThreadPoolExecutor(20, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(2000));
 
@@ -60,7 +66,7 @@ public class PageDetailGet {
     }
 
 
-    public String fetchUrlListContent(List<String> urlList) {
+    public String fetchUrlListContent(String query, List<String> urlList) {
         try {
             if (CollectionUtils.isEmpty(urlList)) {
                 return null;
@@ -70,7 +76,9 @@ public class PageDetailGet {
             for (String url : urlList) {
                 FETCH_URL_POOL.execute(() -> {
                     try {
-                        String content = getWebPageDetail(new WebPageUrl(url));
+//                        String content = getWebPageDetail(new WebPageUrl(url));
+                        String content = docParse.summaryUrl(url, String.format("这是一个关于搜索关键词：“%s”的搜索页面结果页的内容文本：\\n{context_str}\\n总结这个网页的主要内容，主要关注关键词的内容，对于关键词问题可能用到的代码，你要在总结中保留。直接给出总结内容\\nSummary:"
+                                , query));
                         if (StringUtils.isNotBlank(content) && content.length() > 10) {
                             urlAndContent.put(url, content);
                         }
@@ -90,7 +98,7 @@ public class PageDetailGet {
                 }
                 stringBuilder.append(index).append(". ").append(urlAndContent.get(url)).append("\n");
                 index++;
-                if (index > 6) {
+                if (index > 3) {
                     break;
                 }
             }

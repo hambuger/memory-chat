@@ -1,19 +1,21 @@
 package com.github.hambuger.memory.chat.memory.tools.websearch;
 
+import com.google.common.collect.Lists;
+
+import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.learn.LearnProceduralMemory;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.tools.webpage.PageDetailGet;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.annotation.Resource;
 import lombok.Data;
@@ -31,6 +33,9 @@ public class BaiduSearch {
     @Resource
     private PageDetailGet pageDetailGet;
 
+    @Resource
+    private LearnProceduralMemory learnProceduralMemory;
+
     private static final String SEARCH_URL = "http://www.baidu.com/s?pn=0&wd=%s";
 
 
@@ -44,23 +49,31 @@ public class BaiduSearch {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "去百度搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_SKILL, ChatSceneEnum.LEARN_FUNCTION})
+    @FunctionCallRegistry(functionDesc = "去百度搜索相关信息", scene = {ChatSceneEnum.LEARN_FUNCTION})
+    public String getSearchResultFromBaidu(BaiduQuery query) {
+        try {
+            String basePath = Paths.get("memory-chat-memory/src/main/java/com/github/hambuger/memory/chat/memory/tools/pythons").toAbsolutePath() + "/websearch";
+            List<String> paths = Lists.newArrayList(basePath + "/search.py", basePath + "/base_search.py", basePath + "/exceptions.py", basePath + "/utils.py");
+            String result = learnProceduralMemory.invokePythonFunction(paths, "get_baidu", new HashMap<>() {{
+                put("word", query.queryText);
+            }});
+            Map<String, String> urlMap = JSON.parseObject(result, Map.class);
+            return pageDetailGet.fetchUrlListContent(query.getQueryText(), urlMap.keySet().stream().toList());
+        } catch (Exception ex) {
+            log.error("搜索出错", ex);
+        }
+        return "搜索结果：空";
+    }
+
+    @FunctionCallRegistry(functionDesc = "去百度搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_SKILL})
     public String getBaiduSearchResult(BaiduQuery query) {
         try {
-            Document document = Jsoup.connect(String.format(SEARCH_URL, query.getQueryText())).get();
-            // 获取所有包含mu属性的div元素
-            Elements divElements = document.select("div[srcid][mu]");
-
-            // 创建一个列表来存储mu链接
-            List<String> muLinks = new ArrayList<>();
-
-            // 遍历每个div元素并提取mu属性的值
-            for (Element div : divElements) {
-                String muLink = div.attr("mu");
-                muLinks.add(muLink);
-            }
-            return pageDetailGet.fetchUrlListContent(muLinks);
-
+            String basePath = Paths.get("memory-chat-memory/src/main/java/com/github/hambuger/memory/chat/memory/tools/pythons").toAbsolutePath() + "/websearch";
+            List<String> paths = Lists.newArrayList(basePath + "/search.py", basePath + "/base_search.py", basePath + "/exceptions.py", basePath + "/utils.py");
+            String result = learnProceduralMemory.invokePythonFunction(paths, "get_baidu", new HashMap<>() {{
+                put("word", query.queryText);
+            }});
+            return result;
         } catch (Exception ex) {
             log.error("搜索出错", ex);
         }

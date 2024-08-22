@@ -93,6 +93,12 @@ public class PromptFactory {
         return template.replaceAll("\\$\\{[^}]+}", "");
     }
 
+
+    public String getLearnCodeSkillPrompt(String memory) {
+        return String.format(PromptTemplate.CODE_LEARN_PROMPT, memory);
+    }
+
+
     public String getMsgReflectionPrompt(String... param) {
         return String.format(PromptTemplate.REFLECTION_PROMPT, param);
     }
