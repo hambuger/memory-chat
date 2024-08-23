@@ -10,5 +10,8 @@ import lombok.Data;
 @Data
 public class SelfPortrait extends BasePortrait{
 
-
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }
