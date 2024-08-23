@@ -166,13 +166,13 @@
 
 - [x] AI learns new skills and persists
 
-// 个性化修改设定
+- [x] Personalized modification settings
 
-// 学习并持久化非表述记忆
+- [x] Learning and persisting non-declarative memory
 
-// 更加口语化
+- [x] More colloquial
 
-// 天气变化感知
+- [x] Weather change perception
 
 
 

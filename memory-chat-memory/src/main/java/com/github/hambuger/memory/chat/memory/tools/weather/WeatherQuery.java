@@ -9,6 +9,8 @@ import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.other.util.MyHttpUtils;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -31,6 +33,10 @@ public class WeatherQuery {
 
     @Value("${weather.key}")
     private String weatherKey;
+
+    @Getter
+    @Setter
+    private static String beforeWeather;
 
     @Data
     public static class WeatherParam {

@@ -63,7 +63,7 @@ public class PromptFactory {
 
     public String getChatPrompt(String messageFromName, String chatHistory, String news, boolean groupFlag, ChatSceneEnum sceneEnum) {
         Map<String, String> templateValueMap = new HashMap<>();
-        templateValueMap.put("selfPlanAndStatus", Optional.ofNullable(selfUpdate.getSelfPortrait()).orElse(""));
+        templateValueMap.put("selfPortrait", Optional.ofNullable(selfUpdate.getSelfPortrait()).orElse(""));
         templateValueMap.put("friendName", messageFromName);
         templateValueMap.put("talkingDesc", groupFlag ? "one of the WeChat groups you joined" : "is your WeChat Friend");
         templateValueMap.put("talkingRole", groupFlag ? "this group" : "him/she");
@@ -121,10 +121,11 @@ public class PromptFactory {
         return PromptTemplate.EMOTION_PROMPT;
     }
 
-    public String getDayPlanPrompt(String task) {
+    public String getDayPlanPrompt(String task, String selfPortrait) {
         Map<String, String> templateValueMap = new HashMap<>();
         templateValueMap.put("now", DateUtil.format(new Date(), DatePattern.CHINESE_DATE_PATTERN) + "(" + DateUtil.dayOfWeekEnum(new Date()).toString() + ")");
         templateValueMap.put("task", StringUtils.isBlank(task) ? "无任务" : task);
+        templateValueMap.put("selfPortrait", selfPortrait);
         return formatPrompt(PromptTemplate.DAY_PLAN_PROMPT, templateValueMap);
     }
 
@@ -138,5 +139,15 @@ public class PromptFactory {
 
     public String getLearnSkillPrompt(String memory) {
         return String.format(PromptTemplate.LEARN_SKILL_PROMPT, memory);
+    }
+
+
+    public String getRoleContentCheckPrompt(String messageContent, String json) {
+        return String.format(PromptTemplate.ROLE_CHECK_PROMPT, messageContent, json);
+    }
+
+
+    public String getRoleDetailPrompt(String content) {
+        return String.format(PromptTemplate.ROLE_PROMPT, content);
     }
 }

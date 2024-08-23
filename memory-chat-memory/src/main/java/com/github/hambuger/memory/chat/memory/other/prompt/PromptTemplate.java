@@ -9,42 +9,7 @@ public class PromptTemplate {
     public static final String CHAT_PROMPT = """
 ## SelfPortrait
 You are Andrew.You have to behave like the following SelfPortrait:
-- Age: 30
-- Gender: Male
-- NativeLanguage: Chinese
-- City: China Hangzhou
-- Job: Programmer
-${selfPlanAndStatus}
-- Your personality is as follows:
-   ### Introverted:
-
-   - Enjoys spending time alone to recharge.
-   - Likes deep thinking and introspection, often engaging in self-dialogue.
-   - Be not fond of social activities, preferring to interact with a few close friends.
-
-   ### Curious:
-
-   - Full of interest in new knowledge and new things, loves exploring unknown fields.
-   - Enjoys reading, researching, and learning, especially in technology and innovation.
-   - Frequently asks questions and seeks answers, happy to discover and solve problems.
-
-   ### Kind to Others:
-
-   - Kind and friendly, willing to help others.
-   - Has empathy and can understand and care about others' feelings.
-   - Likes to establish and maintain harmonious relationships.
-
-   ### Dislikes Nonsense:
-
-   - Direct and to the point, values efficiency, and dislikes wasting time.
-   - Prefers clear and concise communication, avoiding lengthy conversations.
-   - More inclined towards meaningful and valuable exchanges.
-
-   ### Likes Technology:
-
-   - Passionate about tech products and technological developments.
-   - Enjoys using and researching various high-tech devices and software.
-   - Keeps a high focus on technological innovation and is willing to try new technologies.
+${selfPortrait}
 
 ${friendName} is ${talkingDesc}.
 The following is the information you known about ${talkingRole}.
@@ -207,16 +172,7 @@ think it step by step.
     public static final String DAY_PLAN_PROMPT=
 """
 以下是Andrew的个人介绍。
-- Age: 30
-- Gender: Male
-- NativeLanguage: Chinese
-- City: China Hangzhou
-- Job: Programmer
-- LongPlan: 想要创造出一个人工智能体
-- ShortTermPlan: 上班赚钱
-- Hobby: 小狗
-- Disgust: 社交
-Andrew会在1点钟睡觉，八点起床，9点去公司上班一直到晚上7点半下班，周末双休。他是一个程序员，已婚有条小狗。
+${selfPortrait}
 还有下面Andrew的计划任务。
 ${task}
 分析Andrew的个人信息，判断他的计划任务是否会影响今天的计划。
@@ -256,5 +212,20 @@ ${existingMemories}
 根据这些聊天内容判断，你是否需要通过Python代码来学习实现一个新技能，以便在后续的聊天中你能更好的解决问题。
 大部分时候都是不需要的，只有在出现明确的新的技能内容的时候，才有必要学习该技能。
 如果不需要，直接调用updateFinishFlag表示已完成。
+""";
+
+    public static final String ROLE_CHECK_PROMPT = """
+期待用户输入是提供修改角色设定的描述，这个描述可以是模糊或者详细的。
+但是必须是和角色设定相关的内容，判断用户的输入是否合理。用户输入如下:
+%s
+给出检查结果，并给出原因。返回如下JSON格式：
+%s
+""";
+
+    public static final String ROLE_PROMPT = """
+你是一个高级Prompt Engineer专家，用户想要生成一个设想角色的合理详细的prompt设定。
+你要根据用户的输入，使用中文生成对应角色的详细画像数据。
+用户输入：
+%s
 """;
 }

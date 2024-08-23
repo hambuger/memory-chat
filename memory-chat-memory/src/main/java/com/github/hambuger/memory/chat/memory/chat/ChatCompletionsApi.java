@@ -3,6 +3,7 @@ package com.github.hambuger.memory.chat.memory.chat;
 import com.google.common.collect.Lists;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.audio.SpringAiAudio;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatMember;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatResponse;
@@ -26,7 +27,11 @@ import com.github.hambuger.memory.chat.memory.other.util.IdUtil;
 import com.github.hambuger.memory.chat.memory.other.util.ImageUploadUtils;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 import com.github.hambuger.memory.chat.memory.other.util.VideoUtil;
+import com.github.hambuger.memory.chat.memory.plan.DayPlanGenerate;
+import com.github.hambuger.memory.chat.memory.portrait.SelfUpdate;
+import com.github.hambuger.memory.chat.memory.portrait.model.FriendPortrait;
 import com.github.hambuger.memory.chat.memory.tools.docparse.DocParse;
+import com.github.hambuger.memory.chat.memory.tools.weather.WeatherQuery;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
@@ -75,6 +80,7 @@ import static com.github.hambuger.memory.chat.memory.other.constants.CommonConst
 import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.YES_STR;
 import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.CHAT_LOCK_KEY;
 import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
+import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.SELF_PORTRAIT_KEY;
 import static org.springframework.util.ResourceUtils.FILE_URL_PREFIX;
 
 
@@ -134,6 +140,12 @@ public class ChatCompletionsApi {
     @Resource
     private DocParse docParse;
 
+    @Resource
+    private SelfUpdate selfUpdate;
+
+    @Resource
+    private WeatherQuery weatherQuery;
+
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
         String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageReceiveId() :
@@ -148,6 +160,9 @@ public class ChatCompletionsApi {
         String lockKey = UUID.randomUUID().toString();
         try {
             log.info("get a new msg:{}", JSON.toJSONString(baseMemoryDTO));
+            if (checkCommandMessage(baseMemoryDTO)) {
+                return getCommandResponse(baseMemoryDTO);
+            }
             redisUtil.setString(String.format(CHAT_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
             SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
             String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
@@ -222,6 +237,66 @@ public class ChatCompletionsApi {
     }
 
 
+    private ChatResponse getCommandResponse(BaseMemoryDTO baseMemoryDTO) {
+        String messageContent = baseMemoryDTO.getMessageContent().trim();
+        List<SendMessage> sendMessageList = new ArrayList<>();
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setMessageContentType(ContentTypeEnum.TEXT.getType());
+        String replyContent;
+        if (StringUtils.isBlank(messageContent)) {
+            replyContent = "你提供的内容为空，重新输入！";
+        }else {
+            if (checkRoleContent(messageContent)) {
+                replyContent = "修改设定如下:\n" + getRoleDetail(messageContent);
+            }else {
+                replyContent = "你提供的内容和设定无关！";
+            }
+        }
+        sendMessage.setMessageContent(replyContent);
+        sendMessageList.add(sendMessage);
+        return new ChatResponse(sendMessageList);
+    }
+
+
+    private boolean checkRoleContent(String messageContent) {
+        String json = """
+{
+    "relatedToRoleSetting": false,
+    "reason": ""
+}
+""";
+        String checkPrompt = promptFactory.getRoleContentCheckPrompt(messageContent, json);
+        String aiResult = springAiChat.generateJsonWithSingleMsgAndPrompt(checkPrompt);
+        if (StringUtils.isBlank(aiResult)) {
+            return false;
+        }
+        JSONObject jsonObject = JSONObject.parseObject(aiResult);
+        return jsonObject.getBoolean("relatedToRoleSetting");
+    }
+
+
+    private String getRoleDetail(String content) {
+        String rolePrompt = promptFactory.getRoleDetailPrompt(content);
+        List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(rolePrompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+        springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.ROLE_CHANGE, 0.7f);
+        return selfUpdate.getSelfPortrait();
+    }
+
+
+    private boolean checkCommandMessage(BaseMemoryDTO baseMemoryDTO) {
+        String messageContent = baseMemoryDTO.getMessageContent();
+        if (StringUtils.isBlank(messageContent)) {
+            return false;
+        }
+        String lowerStr = messageContent.trim().toLowerCase();
+        if (lowerStr.startsWith("/change") || lowerStr.startsWith("/变身")) {
+            baseMemoryDTO.setMessageContent(messageContent.replace("/change", "").replace("/变身", "").trim());
+            return true;
+        }
+        return false;
+    }
+
+
     public void sendWxChatMessageList(String remarkName, List<SendMessage> sendMessageList, long receiveMsgTime) {
         for (SendMessage sendMessage : sendMessageList) {
             Message message = new Message();
@@ -292,6 +367,7 @@ public class ChatCompletionsApi {
                 List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
                 messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
                 messages.add(new OpenAiApi.ChatCompletionMessage(String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复", memoryDTO.getMessageCreatorName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND))), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+                addPerceptionMessage(memoryDTO.getMessageCreatorName(), messages);
                 OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, ChatSceneEnum.SCHEDULE);
                 if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
                     return false;
@@ -320,6 +396,31 @@ public class ChatCompletionsApi {
                 redisUtil.releaseLock(String.format(CHAT_LOCK_KEY, memoryDTO.getMessageCreatorName()), memoryDTO.getMessageCreatorName());
             }
         });
+    }
+
+    private void addPerceptionMessage(String name, List<OpenAiApi.ChatCompletionMessage> messages) {
+        FriendPortrait portraitInfo = redisUtil.getFriendPortraitInfo(name);
+        if (portraitInfo == null || StringUtils.isBlank(portraitInfo.getCity()) || StringUtils.equalsIgnoreCase(portraitInfo.getCity(), "Unknown")) {
+            return;
+        }
+        WeatherQuery.WeatherParam param = new WeatherQuery.WeatherParam();
+        param.setAddress(portraitInfo.getCity());
+        String weather = weatherQuery.getWeather(param);
+        if (StringUtils.isBlank(weather)) {
+            return;
+        }
+        JSONObject weatherObject = JSON.parseObject(weather);
+        String weatherStr = weatherObject.getString("weather");
+        if (StringUtils.isBlank(weatherStr)) {
+            return;
+        }
+        String beforeWeather = WeatherQuery.getBeforeWeather();
+        if (StringUtils.isNotBlank(beforeWeather) && !StringUtils.equals(beforeWeather, weatherStr)) {
+            OpenAiApi.ChatCompletionMessage newMsg = new OpenAiApi.ChatCompletionMessage(String.format("%s的天气由%s变成了%s", portraitInfo.getCity(), beforeWeather, weatherStr),
+                    OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
+            messages.add(newMsg);
+            WeatherQuery.setBeforeWeather(weatherStr);
+        }
     }
 
 
@@ -707,6 +808,7 @@ public class ChatCompletionsApi {
             List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
             messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
             messages.add(new OpenAiApi.ChatCompletionMessage(String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复", chatMember.getName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND))), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+            addPerceptionMessage(chatMember.getName(), messages);
             OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, ChatSceneEnum.NEWS_SCHEDULE);
             if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
                 return;

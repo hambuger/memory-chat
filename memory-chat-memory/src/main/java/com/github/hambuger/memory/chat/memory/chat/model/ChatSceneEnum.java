@@ -27,6 +27,8 @@ public enum ChatSceneEnum {
 
     LEARN_FUNCTION("代码学习", "addNewFunction"),
 
+    ROLE_CHANGE("角色变更","updateFinishFlag"),
+
     ;
 
     private String desc;

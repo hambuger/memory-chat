@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 
 import java.util.List;
@@ -13,6 +14,8 @@ import java.util.stream.Collectors;
 
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
+import com.github.hambuger.memory.chat.memory.portrait.model.SelfPortrait;
+
 import com.google.common.collect.Lists;
 import jakarta.annotation.Resource;
 import lombok.Data;
@@ -83,7 +86,9 @@ public class DayPlanGenerate {
     @Scheduled(cron = "0 0 1 * * *")
     public void processPlanTasks() {
         String allTask = delayedTask.getAllTask();
-        String planPrompt = promptFactory.getDayPlanPrompt(allTask);
+        String portraitStr = redisUtil.getString(MemoryChatConstants.SELF_PORTRAIT_KEY);
+        SelfPortrait selfPortrait = JSON.parseObject(portraitStr, SelfPortrait.class);
+        String planPrompt = promptFactory.getDayPlanPrompt(allTask, selfPortrait.toMarkDown());
         List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(planPrompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
         OpenAiApi.ChatCompletion chatCompletion = springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.PLAN, 0.7f);
         if(chatCompletion != null && chatCompletion.choices() != null){
