@@ -69,3 +69,11 @@ wolframalpha:
 python:
   jep:
     path: D:\Python\Lib\site-packages\jep\jep.dll
+
+logging:
+  file:
+    name:
+  level:
+    root: info
+  pattern:
+    console: "%red(%d{yyyy-MM-dd HH:mm:ss.SSS}) %green([%thread]) %blue([%-5level]) %cyan(%logger{36}:%line) %msg%n"
