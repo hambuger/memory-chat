@@ -7,24 +7,24 @@ import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCal
 import com.github.hambuger.memory.chat.memory.other.util.MyHttpUtils;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
-
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -115,11 +115,72 @@ public class SogouEmoji {
 
     public String downloadImage(String imageUrl) {
         try {
-            return downloadImage(imageUrl, directory);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            String fileName = getFileNameFromUrl(imageUrl);
+            String format = detectImageFormat(imageUrl);
+            String destinationFile = directory + fileName + "." + format;
+            File file = new File(destinationFile);
+            if (file.exists()) {
+                return destinationFile;
+            }
+            downloadImageFromUrl(imageUrl, destinationFile);
+            return destinationFile;
+        } catch (IOException e) {
+            log.error("downloadImage error", e);
+        }
+        return null;
+    }
+
+    // 从URL中提取文件名
+    public static String getFileNameFromUrl(String url) {
+        return url.substring(url.lastIndexOf('/') + 1);
+    }
+
+    // 检测图片格式
+    public static String detectImageFormat(String imageUrl) throws IOException {
+        URL url = new URL(imageUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setDoInput(true);
+
+        try (InputStream inputStream = connection.getInputStream()) {
+            byte[] header = new byte[8];
+            if (inputStream.read(header) != -1) {
+                if (isPNG(header)) {
+                    return "png";
+                } else if (isJPEG(header)) {
+                    return "jpg";
+                } else if (isGIF(header)) {
+                    return "gif";
+                }
+                // 扩展其他图片类型时可在此添加判断
+            }
+        }
+        return "png";
+    }
+
+    // 判断是否为PNG格式
+    private static boolean isPNG(byte[] header) {
+        return (header[0] == (byte) 0x89 && header[1] == (byte) 0x50 && header[2] == (byte) 0x4E && header[3] == (byte) 0x47);
+    }
+
+    // 判断是否为JPEG格式
+    private static boolean isJPEG(byte[] header) {
+        return (header[0] == (byte) 0xFF && header[1] == (byte) 0xD8);
+    }
+
+    // 判断是否为GIF格式
+    private static boolean isGIF(byte[] header) {
+        return (header[0] == (byte) 0x47 && header[1] == (byte) 0x49 && header[2] == (byte) 0x46);
+    }
+
+    // 下载并保存图片
+    public static void downloadImageFromUrl(String imageUrl, String destinationFile) throws IOException {
+        URL url = new URL(imageUrl);
+        try (InputStream in = url.openStream()) {
+            Files.copy(in, Paths.get(destinationFile));
         }
     }
+
 
 
     /**
@@ -132,9 +193,9 @@ public class SogouEmoji {
             // 获取内容类型并根据此信息设置文件扩展名
             List<String> contentTypes = response.getHeaders().get("Content-Type");
             if (contentTypes != null && contentTypes.size() > 0) {
-                destinationFilePath = destinationFilePath + contentTypes.get(0).replace("image/", ".");
+                destinationFilePath = destinationFilePath + UUID.randomUUID() +contentTypes.get(0).replace("image/", ".");
             }else {
-                destinationFilePath = destinationFilePath + ".png";
+                destinationFilePath = destinationFilePath  + UUID.randomUUID() + ".png";
             }
 
             // 确保目录存在

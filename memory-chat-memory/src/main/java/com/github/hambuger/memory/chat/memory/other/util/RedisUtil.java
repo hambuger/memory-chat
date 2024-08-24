@@ -4,10 +4,10 @@ import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.portrait.model.FriendPortrait;
 import com.github.hambuger.memory.chat.memory.portrait.model.GroupPortrait;
-import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +19,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-
-import lombok.extern.slf4j.Slf4j;
 
 import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.PORTRAIT_KEY_SUFFIX;
 
@@ -37,8 +35,6 @@ public class RedisUtil {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    private static final String EMOJI_AND_MEDIA_ID_MAP_KEY = "emojiAndMediaIdMap";
 
     private static final String LEARN_SKILL_KEY = "learnSkillMap";
 
@@ -195,16 +191,6 @@ public class RedisUtil {
         return msgList;
     }
 
-
-    public void putEmojiAndMediaId(String key, List<String> value) {
-        try {
-            String json = objectMapper.writeValueAsString(value);
-            redisTemplate.opsForHash().put(EMOJI_AND_MEDIA_ID_MAP_KEY, key, json);
-        } catch (JsonProcessingException e) {
-            log.warn("putEmojiAndMediaId error", e);
-        }
-    }
-
     public void putLearnSkill(String key, String value) {
         try {
             redisTemplate.opsForHash().put(LEARN_SKILL_KEY, key, value);
@@ -230,19 +216,6 @@ public class RedisUtil {
             log.warn("getLearnSkill error", e);
         }
         return null;
-    }
-
-
-    public List<String> getEmojiAndMediaId(String key) {
-        String json = (String) redisTemplate.opsForHash().get(EMOJI_AND_MEDIA_ID_MAP_KEY, key);
-        if (json != null) {
-            try {
-                return objectMapper.readValue(json, List.class);
-            } catch (JsonProcessingException e) {
-                log.warn("getEmojiAndMediaId error", e);
-            }
-        }
-        return new ArrayList<>();
     }
 
 

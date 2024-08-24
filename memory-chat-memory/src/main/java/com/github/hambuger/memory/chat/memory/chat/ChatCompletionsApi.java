@@ -1,33 +1,27 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
-import com.google.common.collect.Lists;
-
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUnit;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.Pair;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.audio.SpringAiAudio;
-import com.github.hambuger.memory.chat.memory.chat.model.ChatMember;
-import com.github.hambuger.memory.chat.memory.chat.model.ChatResponse;
-import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
-import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
-import com.github.hambuger.memory.chat.memory.chat.model.CreatorEnum;
-import com.github.hambuger.memory.chat.memory.memory.model.SpringAiChatMessageMemoryDTO;
-import com.github.hambuger.memory.chat.memory.other.constants.CommonConstants;
-import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
+import com.github.hambuger.memory.chat.memory.chat.model.*;
 import com.github.hambuger.memory.chat.memory.emoji.SogouEmoji;
-import com.github.hambuger.memory.chat.memory.other.functionCall.CallFunctionRegistryFactory;
 import com.github.hambuger.memory.chat.memory.memory.create.MemoryInsert;
-import com.github.hambuger.memory.chat.memory.memory.search.MemorySearch;
-import com.github.hambuger.memory.chat.memory.memory.update.MemoryUpdate;
 import com.github.hambuger.memory.chat.memory.memory.model.BaseMemoryDTO;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
+import com.github.hambuger.memory.chat.memory.memory.model.SpringAiChatMessageMemoryDTO;
+import com.github.hambuger.memory.chat.memory.memory.search.MemorySearch;
+import com.github.hambuger.memory.chat.memory.memory.update.MemoryUpdate;
+import com.github.hambuger.memory.chat.memory.other.constants.CommonConstants;
+import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
+import com.github.hambuger.memory.chat.memory.other.functionCall.CallFunctionRegistryFactory;
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.token.TokenCalculation;
-import com.github.hambuger.memory.chat.memory.other.util.FileUtil;
-import com.github.hambuger.memory.chat.memory.other.util.IdUtil;
-import com.github.hambuger.memory.chat.memory.other.util.ImageUploadUtils;
-import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
-import com.github.hambuger.memory.chat.memory.other.util.VideoUtil;
-import com.github.hambuger.memory.chat.memory.plan.DayPlanGenerate;
+import com.github.hambuger.memory.chat.memory.other.util.*;
 import com.github.hambuger.memory.chat.memory.portrait.SelfUpdate;
 import com.github.hambuger.memory.chat.memory.portrait.model.FriendPortrait;
 import com.github.hambuger.memory.chat.memory.tools.docparse.DocParse;
@@ -36,9 +30,10 @@ import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
 import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
 import com.github.hambuger.memory.chat.wechat.api.MessageTools;
-import com.github.hambuger.memory.chat.wechat.dto.response.msg.send.WebWXSendMsgResponse;
 import com.github.hambuger.memory.chat.wechat.entity.Message;
-
+import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -52,35 +47,13 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUnit;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.lang.Pair;
-import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
-
-import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.DOUBLE_COLON;
-import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.HTTP;
-import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.NO_STR;
-import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.YES_STR;
+import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.*;
 import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.CHAT_LOCK_KEY;
 import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.REPLY_MESSAGE_FUNCTION_NAME;
-import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.SELF_PORTRAIT_KEY;
 import static org.springframework.util.ResourceUtils.FILE_URL_PREFIX;
 
 
@@ -304,31 +277,19 @@ public class ChatCompletionsApi {
             message.setContent(sendMessage.getMessageContent());
             ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(sendMessage.getMessageContentType());
             message.setMsgType(contentTypeEnum == null ? ContentTypeEnum.TEXT.getMsgType() : contentTypeEnum.getMsgType());
-            List<String> emojiTypeAndMediaId = new ArrayList<>();
             if (contentTypeEnum == ContentTypeEnum.PICTURE) {
                 String filePath = FileUtil.downloadImage(sendMessage.getMessageContent());
                 message.setFilePath(filePath);
                 message.setContent(null);
             }else if (contentTypeEnum == ContentTypeEnum.EMOJI) {
-                if (CollectionUtils.isEmpty(redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent()))) {
-                    String emojiPath = sogouEmoji.downloadImage(sendMessage.getMessageContent());
-                    if (StringUtils.isBlank(emojiPath)) {
-                        message.setMsgType(ContentTypeEnum.TEXT.getMsgType());
-                    }else {
-                        message.setFilePath(emojiPath);
-                        if (!emojiPath.endsWith("gif")) {
-                            message.setMsgType(ContentTypeEnum.PICTURE.getMsgType());
-                            emojiTypeAndMediaId.add("png");
-                        }else {
-                            emojiTypeAndMediaId.add("gif");
-                        }
-                    }
+                String emojiPath = sogouEmoji.downloadImage(sendMessage.getMessageContent());
+                if (StringUtils.isBlank(emojiPath)) {
+                    message.setMsgType(ContentTypeEnum.TEXT.getMsgType());
                 }else {
-                    List<String> list = redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent());
-                    if (!list.get(0).equals("gif")) {
+                    message.setFilePath(emojiPath);
+                    if (!emojiPath.endsWith("gif")) {
                         message.setMsgType(ContentTypeEnum.PICTURE.getMsgType());
                     }
-                    message.setMediaId(list.get(1));
                 }
                 message.setContent(null);
             }else if (contentTypeEnum == ContentTypeEnum.TEXT) {
@@ -341,11 +302,7 @@ public class ChatCompletionsApi {
                     }
                 }
             }
-            WebWXSendMsgResponse webWXSendMsgResponse = MessageTools.sendMsgByRemarkName(message);
-            if (contentTypeEnum == ContentTypeEnum.EMOJI && CollectionUtils.isEmpty(redisUtil.getEmojiAndMediaId(sendMessage.getMessageContent()))) {
-                emojiTypeAndMediaId.add(webWXSendMsgResponse.getMediaId());
-                redisUtil.putEmojiAndMediaId(sendMessage.getMessageContent(), emojiTypeAndMediaId);
-            }
+            MessageTools.sendMsgByRemarkName(message);
             receiveMsgTime = System.currentTimeMillis();
         }
     }
