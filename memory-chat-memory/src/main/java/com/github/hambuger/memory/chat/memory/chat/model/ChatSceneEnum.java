@@ -29,6 +29,10 @@ public enum ChatSceneEnum {
 
     ROLE_CHANGE("角色变更","updateFinishFlag"),
 
+    UPDATE_FRIEND_PORTRAIT("好友画像变更","updateFinishFlag"),
+
+    UPDATE_SELF_PORTRAIT("Andrew画像变更","updateFinishFlag"),
+
     ;
 
     private String desc;

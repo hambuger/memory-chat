@@ -64,7 +64,7 @@ public class SpringAiChat {
         boolean finishStatus;
     }
 
-    @FunctionCallRegistry(functionDesc = "完成所有操作并获取到操作结果后，更新完成状态", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.MEMORY_MERGE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_JUDGE, ChatSceneEnum.ROLE_CHANGE})
+    @FunctionCallRegistry(functionDesc = "完成所有操作并获取到操作结果后，更新完成状态", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.MEMORY_MERGE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_JUDGE, ChatSceneEnum.ROLE_CHANGE,ChatSceneEnum.UPDATE_FRIEND_PORTRAIT, ChatSceneEnum.UPDATE_SELF_PORTRAIT})
     public Boolean updateFinishFlag(FinishParam success) {
         return true;
     }

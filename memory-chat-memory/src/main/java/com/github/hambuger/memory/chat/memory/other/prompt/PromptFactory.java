@@ -150,4 +150,12 @@ public class PromptFactory {
     public String getRoleDetailPrompt(String content) {
         return String.format(PromptTemplate.ROLE_PROMPT, content);
     }
+
+    public String getFriendPortraitUpdatePrompt(String name, String beforePortrait, String afterPortrait) {
+        return String.format(PromptTemplate.FRIEND_PORTRAIT_UPDATE_PROMPT, name, beforePortrait, afterPortrait);
+    }
+
+    public String getSelfPortraitUpdatePrompt(String beforePortrait, String afterPortrait) {
+        return String.format(PromptTemplate.SELF_PORTRAIT_UPDATE_PROMPT, beforePortrait, afterPortrait);
+    }
 }
