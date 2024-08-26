@@ -101,6 +101,10 @@ public class MsgCenter {
         if (wxReceiveMsgCodeEnum == null) {
             return;
         }
+        Contacts contact = ContactsTools.getContactByUserName(msg.getFromUsername());
+        if (contact != null && contact.getType() == Contacts.ContactsType.PUBLIC_USER) {
+            return;
+        }
         switch (wxReceiveMsgCodeEnum) {
             case MSGTYPE_MAP:
                 messages = msgHandler.mapMsgHandle(msg);
