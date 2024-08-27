@@ -48,6 +48,9 @@ public class PortraitUpdate {
 
     @FunctionCallRegistry(functionDesc = "更新好友的画像", scene = {ChatSceneEnum.UPDATE_FRIEND_PORTRAIT})
     public Boolean updateFriendPortraitInfo(FriendPortrait portrait) {
+        if (StringUtils.isBlank(portrait.getName())) {
+            return true;
+        }
         redisUtil.updateFriendPortrait(portrait.getName(), JSON.toJSONString(portrait));
         return true;
     }

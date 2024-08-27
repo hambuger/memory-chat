@@ -69,7 +69,6 @@ Following is the recently hot news from web.
 3. Based on steps 1,2 and the Rules, determine whether a message needs to be sent.
 4. If step 3 determines that a message needs to be sent, strictly follow Rules to send the message.
 5. Your text should not be too long and can be split into multiple messages.
-6. Use more emoticon photo during chat to draw closer relationships.Use emoticon photo instead of emojis, use tool to search emoticon photo.
             """;
 
     public static final String NEWS_SCHEDULE_STEPS = """
