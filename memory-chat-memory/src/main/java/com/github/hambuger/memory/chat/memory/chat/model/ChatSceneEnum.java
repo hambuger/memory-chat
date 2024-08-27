@@ -33,6 +33,8 @@ public enum ChatSceneEnum {
 
     UPDATE_SELF_PORTRAIT("Andrew画像变更","updateFinishFlag"),
 
+    RULE_CHANGE("规则变更", "updateFinishFlag"),
+
     ;
 
     private String desc;

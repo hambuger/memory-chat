@@ -19,6 +19,7 @@ import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.other.token.TokenCalculation;
 import com.github.hambuger.memory.chat.memory.other.util.IdUtil;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
+import com.github.hambuger.memory.chat.memory.portrait.RuleUpdate;
 
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.index.IndexRequest;
@@ -97,6 +98,9 @@ public class MemoryInsert {
 
     @Resource
     private LearnProceduralMemory learnProceduralMemory;
+
+    @Resource
+    private RuleUpdate ruleUpdate;
 
     private static final ThreadPoolExecutor MEMORY_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("memory-pool"),
             new ThreadPoolExecutor.CallerRunsPolicy());
@@ -209,6 +213,7 @@ public class MemoryInsert {
             memoryMergeTask.memoryMerge(memoryDTO, memory.toString());
             learnDeclarativeMemory.learnSkillProcess(memory.toString());
             learnProceduralMemory.learnCodeSkillProcess(memory.toString());
+            ruleUpdate.checkAndMergeChatRules(memory.toString());
         }
     }
 

@@ -1,6 +1,7 @@
 package com.github.hambuger.memory.chat.memory.other.prompt;
 
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.portrait.RuleUpdate;
 import com.github.hambuger.memory.chat.memory.portrait.SelfUpdate;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 
@@ -32,6 +33,9 @@ public class PromptFactory {
 
     @Resource
     private SelfUpdate selfUpdate;
+
+    @Resource
+    private RuleUpdate ruleUpdate;
 
     Map<ChatSceneEnum, String> chatRuleMap = new HashMap<>() {
         {
@@ -69,7 +73,7 @@ public class PromptFactory {
         templateValueMap.put("talkingRole", groupFlag ? "this group" : "him/she");
         templateValueMap.put("talkingInfo", Optional.ofNullable(groupFlag ? redisUtil.getGroupPortrait(messageFromName) : redisUtil.getFriendPortrait(messageFromName)).orElse(String.format("- Name: %s", messageFromName)));
         templateValueMap.put("memory", chatHistory);
-        templateValueMap.put("rules", chatRuleMap.get(sceneEnum));
+        templateValueMap.put("rules", Optional.ofNullable(ruleUpdate.getChatRules()).orElse(chatRuleMap.get(sceneEnum)));
         templateValueMap.put("steps", chatStepMap.get(sceneEnum));
         templateValueMap.put("styles", chatStyleMap.get(sceneEnum));
         if (sceneEnum == ChatSceneEnum.NEWS_SCHEDULE) {
@@ -91,6 +95,11 @@ public class PromptFactory {
             }
         }
         return template.replaceAll("\\$\\{[^}]+}", "");
+    }
+
+
+    public String getCheckChatRulesPrompt(String chatHistory) {
+        return String.format(PromptTemplate.CHECK_RULE_PROMPT, chatHistory);
     }
 
 
@@ -144,6 +153,10 @@ public class PromptFactory {
 
     public String getRoleContentCheckPrompt(String messageContent, String json) {
         return String.format(PromptTemplate.ROLE_CHECK_PROMPT, messageContent, json);
+    }
+
+    public String getRuleMergePrompt(String messageContent, String json) {
+        return String.format(PromptTemplate.RULE_MERGE_PROMPT, messageContent, json);
     }
 
 

@@ -69,6 +69,7 @@ Following is the recently hot news from web.
 3. Based on steps 1,2 and the Rules, determine whether a message needs to be sent.
 4. If step 3 determines that a message needs to be sent, strictly follow Rules to send the message.
 5. Your text should not be too long and can be split into multiple messages.
+6. Use more emoticon photo during chat to draw closer relationships.Use emoticon photo instead of emojis, use tool to search emoticon photo.
             """;
 
     public static final String NEWS_SCHEDULE_STEPS = """
@@ -247,4 +248,25 @@ ${existingMemories}
 %s
 """;
 
+    public static final String RULE_MERGE_PROMPT = """
+Andrew的任务是模仿用户的朋友和用户进行自然的交流，它不能让用户发现它是一个人工智能。
+你需要将Andrew的默认聊天规则整理一下。
+整理方法如下。
+- 如果规则内容重复，则将重复的规则合并为一条;
+- 如果规则过时，则只保留靠后的最新规则;
+
+以下是Andrew的默认聊天规则：
+%s
+你需要返回格式如下的json结构，其中mergeRuleList是合并后的规则列表，reason是你这么做的思考。
+%s
+""";
+
+    public static final String CHECK_RULE_PROMPT = """
+将会给出Andrew和用户的对话，Andrew是一个人工智能体。
+Andrew的任务是模仿用户的朋友和用户进行自然的交流，它不能让用户发现它是一个人工智能。
+你的任务是评估如下对话中，Andrew的对话是否合理，并给出理由。
+如果你的评估认为有问题，你需要给Andrew追加一个规则描述，以便Andrew在下次对话中不会重复这个错误。
+对话如下：
+%s
+""";
 }
