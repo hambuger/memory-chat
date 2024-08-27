@@ -51,6 +51,7 @@ public class SogouEmoji {
     @FunctionCallRegistry(functionDesc = "搜索表情图片，返回图片url", scene = {ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NORMAL_USER})
     public String searchEmoticonPhoto(EmoticonPictureQuery query) {
         try {
+            log.info("emoji query:{}", query.getEmoticonPictureQueryWord());
             Map<String, String> headers = new HashMap<>();
             headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
             headers.put("Accept-Encoding", "gzip, deflate, br, zstd");
@@ -60,13 +61,14 @@ public class SogouEmoji {
             headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
             String response = MyHttpUtils.get(String.format(emojiWebAddress, URLEncoder.encode(query.getEmoticonPictureQueryWord(), StandardCharsets.UTF_8)), headers, null);
             Random random = new Random();
-            int randomNumber = random.nextInt(11) - 5;
+            int randomNumber = random.nextInt(5);
             String regex;
-            if (randomNumber > 0) {
-                regex = "\"thumbSrc\":\"(https:[^\"]+)\",\"idx\":" + randomNumber;
-            } else {
-                regex = "\"emoGroupList\":\\[\\[\\{\"groupName\":\"[^\"]+\",\"groupId\":[0-9]+,\"picUrl\":\"(https:[^\"]+)\",\"pic";
-            }
+//            if (randomNumber > 0) {
+//                regex = "\"thumbSrc\":\"(https:[^\"]+)\",\"idx\":" + randomNumber;
+//            } else {
+//                regex = "\"emoGroupList\":\\[\\[\\{\"groupName\":\"[^\"]+\",\"groupId\":[0-9]+,\"picUrl\":\"(https:[^\"]+)\",\"pic";
+//            }
+            regex = "\"thumbSrc\":\"(https:[^\"]+)\",\"idx\":" + randomNumber;
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(response);
             if (matcher.find()) {
