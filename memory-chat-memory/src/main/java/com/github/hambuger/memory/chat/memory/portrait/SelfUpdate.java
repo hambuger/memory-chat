@@ -35,9 +35,20 @@ public class SelfUpdate {
     @Resource
     private SpringAiChat springAiChat;
 
+    @Resource
+    private DayPlanGenerate dayPlanGenerate;
+
     @FunctionCallRegistry(functionDesc = "更新画像数据", scene = {ChatSceneEnum.UPDATE_SELF_PORTRAIT})
     public Boolean updatePortraitInfo(SelfPortrait param) {
         redisUtil.setString(SELF_PORTRAIT_KEY, JSON.toJSONString(param));
+        return true;
+    }
+
+    @FunctionCallRegistry(functionDesc = "新增角色的画像数据", scene = {ChatSceneEnum.ROLE_CHANGE})
+    public Boolean addRole(SelfPortrait selfPortrait) {
+        updateSelfPortrait(selfPortrait);
+        redisUtil.reset(DayPlanGenerate.DAY_PLAN_KEY);
+        dayPlanGenerate.processPlanTasks();
         return true;
     }
 
