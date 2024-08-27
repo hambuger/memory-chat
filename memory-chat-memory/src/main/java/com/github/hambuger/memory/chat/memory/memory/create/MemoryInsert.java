@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
@@ -185,7 +186,8 @@ public class MemoryInsert {
         if (redisUtil.get(depthLeafKey) < reflectionTokenLimit) {
             return;
         }
-        List<MemoryReflection.ReflectionResult.Reflection> reflectionList = memoryReflection.extractReflectionFromMessages(receiveName, redisUtil.getList(depthLeafListKey));
+        List<String> msgList = redisUtil.getList(depthLeafListKey);
+        List<MemoryReflection.ReflectionResult.Reflection> reflectionList = memoryReflection.extractReflectionFromMessages(receiveName, msgList);
         redisUtil.reset(depthLeafKey);
         redisUtil.reset(depthLeafListKey);
         if (CollectionUtils.isEmpty(reflectionList)) {
@@ -211,10 +213,11 @@ public class MemoryInsert {
                 }
             }
             memoryMergeTask.memoryMerge(memoryDTO, memory.toString());
-            learnDeclarativeMemory.learnSkillProcess(memory.toString());
-            learnProceduralMemory.learnCodeSkillProcess(memory.toString());
-            ruleUpdate.checkAndMergeChatRules(memory.toString());
         }
+        String chatHistory = StringUtils.join(msgList.stream().map(str -> str.replaceAll("\\(MID\\d+\\)", "")).collect(Collectors.toList()), "\n");
+        learnDeclarativeMemory.learnSkillProcess(chatHistory);
+        learnProceduralMemory.learnCodeSkillProcess(chatHistory);
+        ruleUpdate.checkAndMergeChatRules(chatHistory);
     }
 
 }
