@@ -243,5 +243,18 @@ Do it and think step by step.
         }
     }
 
+    public String invokeSinglePythonFunction(List<String> filePaths, String functionName, Map<String, Object> args) {
+        try (SharedInterpreter interp = new SharedInterpreter()) {
+            for (String filePath : filePaths) {
+                interp.runScript(PYTHON_PATH + filePath);
+            }
+            Object result = interp.invoke(functionName, args);
+            return JSON.toJSONString(result);
+        } catch (Exception e) {
+            log.error("invokeSinglePythonFunction error", e);
+            return "invokeSinglePythonFunction error:\n" + e.getMessage();
+        }
+    }
+
 }
 
