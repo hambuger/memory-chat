@@ -60,7 +60,7 @@ public class SogouEmoji {
             headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
             String response = MyHttpUtils.get(String.format(emojiWebAddress, URLEncoder.encode(query.getEmoticonPictureQueryWord(), StandardCharsets.UTF_8)), headers, null);
             Random random = new Random();
-            int randomNumber = random.nextInt(21) - 10;
+            int randomNumber = random.nextInt(11) - 5;
             String regex;
             if (randomNumber > 0) {
                 regex = "\"thumbSrc\":\"(https:[^\"]+)\",\"idx\":" + randomNumber;
