@@ -73,7 +73,11 @@ public class PromptFactory {
         templateValueMap.put("talkingRole", groupFlag ? "this group" : "him/she");
         templateValueMap.put("talkingInfo", Optional.ofNullable(groupFlag ? redisUtil.getGroupPortrait(messageFromName) : redisUtil.getFriendPortrait(messageFromName)).orElse(String.format("- Name: %s", messageFromName)));
         templateValueMap.put("memory", chatHistory);
-        templateValueMap.put("rules", Optional.ofNullable(ruleUpdate.getChatRules()).orElse(chatRuleMap.get(sceneEnum)));
+        if (sceneEnum == ChatSceneEnum.NORMAL_GROUP || sceneEnum == ChatSceneEnum.NORMAL_USER) {
+            templateValueMap.put("rules", Optional.ofNullable(ruleUpdate.getChatRules()).orElse(chatRuleMap.get(sceneEnum)));
+        }else {
+            templateValueMap.put("rules", chatRuleMap.get(sceneEnum));
+        }
         templateValueMap.put("steps", chatStepMap.get(sceneEnum));
         templateValueMap.put("styles", chatStyleMap.get(sceneEnum));
         if (sceneEnum == ChatSceneEnum.NEWS_SCHEDULE) {
