@@ -49,13 +49,13 @@ public class DayPlanGenerate {
     private DelayedTask delayedTask;
 
     @Data
-    public static class HourPlan {
+    public static class HourActivity {
 
         @JsonPropertyDescription("小时时间点，取值范围为0到23的整数")
         @JsonProperty(required = true)
         private Integer hour;
 
-        @JsonPropertyDescription("要做的事情的描述")
+        @JsonPropertyDescription("做的事情的描述")
         @JsonProperty(required = true)
         private String task;
 
@@ -63,21 +63,21 @@ public class DayPlanGenerate {
 
 
     @Data
-    public static class OneDayPlan {
+    public static class OneDayActivity {
 
-        @JsonPropertyDescription("每个小时(0-23)计划,需要全部的24个小时")
+        @JsonPropertyDescription("每个小时(0-23)活动内容,需要全部的24个小时")
         @JsonProperty(required = true)
-        private List<HourPlan> tasks;
+        private List<HourActivity> tasks;
 
     }
 
 
-    @FunctionCallRegistry(functionDesc = "生成今日24个小时计划list", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.TASK})
-    public Boolean generateDayPlan(OneDayPlan oneDayPlan) {
-        if (oneDayPlan == null || CollectionUtils.isEmpty(oneDayPlan.getTasks())) {
+    @FunctionCallRegistry(functionDesc = "生成一天24个小时活动内容", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.TASK})
+    public Boolean generateDayActivity(OneDayActivity oneDayActivity) {
+        if (oneDayActivity == null || CollectionUtils.isEmpty(oneDayActivity.getTasks())) {
             return false;
         }
-        Map<String, Object> hourTaskMap = oneDayPlan.getTasks().stream().collect(Collectors.toMap(k -> k.getHour().toString(), HourPlan::getTask));
+        Map<String, Object> hourTaskMap = oneDayActivity.getTasks().stream().collect(Collectors.toMap(k -> k.getHour().toString(), HourActivity::getTask));
         redisUtil.reset(DAY_PLAN_KEY);
         redisUtil.saveMap(DAY_PLAN_KEY, hourTaskMap);
         return true;
@@ -92,8 +92,8 @@ public class DayPlanGenerate {
         List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(planPrompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
         OpenAiApi.ChatCompletion chatCompletion = springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.PLAN, 1.0f);
         if(chatCompletion != null && chatCompletion.choices() != null){
-            OneDayPlan plan = JSON.parseObject(chatCompletion.choices().get(0).message().toolCalls().get(0).function().arguments(), OneDayPlan.class);
-            generateDayPlan(plan);
+            OneDayActivity plan = JSON.parseObject(chatCompletion.choices().get(0).message().toolCalls().get(0).function().arguments(), OneDayActivity.class);
+            generateDayActivity(plan);
         }
     }
 

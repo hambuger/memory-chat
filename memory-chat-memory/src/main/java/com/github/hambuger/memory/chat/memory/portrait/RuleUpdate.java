@@ -95,7 +95,7 @@ public class RuleUpdate {
             List<String> ruleList = JSON.parseArray(ruleStr, String.class);
             if (!CollectionUtils.isEmpty(ruleList)) {
                 ruleList.addAll(finalRules);
-                if (ruleList.size() < 10) {
+                if (ruleList.size() < 12) {
                     finalRules = ruleList;
                 }else {
                     List<String> mergeRules = mergeRules(ruleList);

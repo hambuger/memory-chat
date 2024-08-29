@@ -177,9 +177,9 @@ think it step by step.
 ${selfPortrait}
 还有下面Andrew的计划任务。
 ${task}
-分析Andrew的个人信息，判断他的计划任务是否会影响今天的计划。
-结合这些信息生成他的今日24个小时的计划。
-今天是${now}
+分析Andrew的个人信息，判断他的计划任务是否会影响今天的活动内容。
+结合这些信息推测生成他的今天24个小时可能的活动内容，可以在他的活动中加入一些偶然事件。
+注意工作日，节假日这种时间的特殊性，今天是${now}
 """;
 
     public static final String MEMORY_MERGE_PROMPT= """

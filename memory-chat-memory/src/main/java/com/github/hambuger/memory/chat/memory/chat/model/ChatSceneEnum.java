@@ -17,7 +17,7 @@ public enum ChatSceneEnum {
 
     MEMORY_DIMENSION("补全记忆维度","addNewMemory"),
 
-    PLAN("计划生成","generateDayPlan"),
+    PLAN("计划生成","generateDayActivity"),
 
     MEMORY_MERGE("记忆整理", "updateFinishFlag"),
 

@@ -33,6 +33,10 @@ public class FriendPortrait extends BasePortrait{
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String doing = "Unknown";
 
+    @JsonPropertyDescription("和Andrew的熟悉程度")
+    @JsonProperty(required = true)
+    private String familiarityDegree;
+
 
     public String toMarkDown() {
         String formatStr = """
