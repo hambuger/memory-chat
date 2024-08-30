@@ -8,7 +8,9 @@
 ### 特别感谢 [Generative Agents](https://github.com/joonspk-research/generative_agents)，没有他们的帮助，这个项目就不会发生。
 - 使用 OpenAI API 实现人工智能聊天，使用 SpringAi 作为 java 框架。
 - 使用 itchat4j 代码实现微信作为聊天接口。
-
+<p align="center">
+    <img src="Memory-chat.png" width="400"/>
+<p>
 ## 启动
 - 如果需要代理，JVM 启动参数：-Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
 - 将 template.yaml 文件复制为 application.ymal，修改配置，运行 Application 类。

@@ -8,7 +8,9 @@
 ### Special thanks to [Generative Agents](https://github.com/joonspk-research/generative_agents), without which this project would not have happened.
 - Implementing AI Chat Using OpenAI API,Using SpringAi as the java framework.
 - Using itchat4j code to implement WeChat as chat interface.
-
+<p align="center">
+    <img src="Memory-chat.png" width="400"/>
+<p>
 
 ## Startup
 - If a proxy is required, JVM startup parameters: -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
