@@ -65,7 +65,7 @@ public class BaiduSearch {
         return "搜索结果：空";
     }
 
-    @FunctionCallRegistry(functionDesc = "去百度搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_SKILL})
+    @FunctionCallRegistry(functionDesc = "去百度搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_SKILL})
     public String getBaiduSearchResult(BaiduQuery query) {
         try {
             String basePath = Paths.get("memory-chat-memory/src/main/java/com/github/hambuger/memory/chat/memory/tools/pythons").toAbsolutePath() + "/websearch";
