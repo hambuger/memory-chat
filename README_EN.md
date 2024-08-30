@@ -1,23 +1,24 @@
 <p align="center">
-        中文</a>&nbsp ｜ &nbsp<a href="README_EN.md">English</a>
+        English</a>&nbsp ｜ &nbsp<a href="README.md">中文</a>
 </p>
 
 ---
 # MEMORY-CHAT
-## 一个名叫 Andrew 的聊天机器人，具备记忆、计划和学习的能力。
-### 特别感谢 [Generative Agents](https://github.com/joonspk-research/generative_agents)，没有他们的帮助，这个项目就不会发生。
-- 使用 OpenAI API 实现人工智能聊天，使用 SpringAi 作为 java 框架。
-- 使用 itchat4j 代码实现微信作为聊天接口。
+## A chat bot named Andrew with the ability to remember, plan, and learn.
+### Special thanks to [Generative Agents](https://github.com/joonspk-research/generative_agents), without which this project would not have happened.
+- Implementing AI Chat Using OpenAI API,Using SpringAi as the java framework.
+- Using itchat4j code to implement WeChat as chat interface.
 
-## 启动
-- 如果需要代理，JVM 启动参数：-Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
-- 将 template.yaml 文件复制为 application.ymal，修改配置，运行 Application 类。
-- 等待项目启动后，扫描微信登录二维码，将登录的微信账号添加为好友，即可聊天。
-### 必备
-- 需要 Redis 来存储对话状态、对话缓存等数据。
-- 需要 elasticsearch index:chat_memory 来保存内存。
-- 需要图片床的 github 存储库访问令牌。
-- 天气和 wolframalpha 密钥是可选的。
+
+## Startup
+- If a proxy is required, JVM startup parameters: -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
+- Copy the template.yaml file as application.ymal, modify the configuration, and run the Application class.
+- After waiting for the project to start, scan the WeChat login QR code, add the logged-in WeChat account as a friend, and then chat.
+    ### Required
+    - Redis is needed to store data such as conversation status and conversation cache.
+    - Required elasticsearch index:chat_memory to keep memory.
+    - Required a github repository access token for picture bed.
+    - Weather and wolframalpha key are optional.
     ```json
     {
       "chat_memory": {
@@ -142,41 +143,41 @@
     ```
 
 
-### 功能列表
+### Features List
 
-- [x] 支持传入文件
+- [x] Supports incoming files
 
-- [x] 支持回复图片
+- [x] Supports replying to images
 
-- [x] 多条消息统一处理
+- [x] Unified processing of multiple messages
 
-- [x] 支持用户自定义系统消息
+- [x] Supports user-defined system messages
 
-- [x] 支持AI决定是否回复，根据热点新闻发起消息
+- [x] Supports AI to decide whether to reply, and initiate messages based on hot news
 
-- [x] 指数退避检查是否发起消息
+- [x] Exponential backoff to check whether to initiate a message
 
-- [x] 支持视频消息回复
+- [x] Supports video message reply
 
-- [x] 支持网页搜索
+- [x] Supports web search
 
-- [x] 支持回复表情包
+- [x] Supports replying emoticons
 
-- [x] 支持接受好友请求
+- [x] Supports accepting friend requests
 
-- [x] 规划时间计划、修改计划、修改个性、主动发起消息
+- [x] Plan time plans, modify plans, modify personality, and actively initiate messages
 
-- [x] 记忆更新逻辑、记忆组织、记忆淘汰
+- [x] Memory update logic, memory organization, and memory obsolescence.
 
-- [x] AI学习新技能并坚持
+- [x] AI learns new skills and persists
 
-- [x] 个性化修改设置
+- [x] Personalized modification settings
 
-- [x] 非陈述性记忆的学习和坚持
+- [x] Learning and persisting non-declarative memory
 
-- [x] 更加口语化
+- [x] More colloquial
 
-- [x] 天气变化感知
+- [x] Weather change perception
 
 
 
