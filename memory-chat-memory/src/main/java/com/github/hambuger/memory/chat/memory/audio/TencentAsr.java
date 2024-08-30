@@ -35,9 +35,9 @@ public class TencentAsr {
     public static void main(String[] args) {
         //在腾讯云控制台[账号信息](https://console.cloud.tencent.com/developer)页面查看账号APPID，[访问管理](https://console.cloud.tencent.com/cam/capi)页面获取 SecretID 和 SecretKey 。
         //todo 在使用该接口前，需要开通该服务，并请将下面appId、secretId、secretKey替换为自己账号信息。
-        String appId = "1255828410";
-        String secretId = "AKID41oS7hEuX2MTMju0DPVXbq01tb8at581";
-        String secretKey = "rbBjEe1KXfhYDhOxOjy78GQSSPCrSNWk";
+        String appId = "xxx";
+        String secretId = "xxx";
+        String secretKey = "xxx";
         process(appId, secretId, secretKey);
         proxy.shutdown();
     }

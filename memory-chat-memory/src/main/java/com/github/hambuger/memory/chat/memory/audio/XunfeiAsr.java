@@ -37,7 +37,7 @@ public class XunfeiAsr {
 
     public static void send() throws InterruptedException {
         // 初始化讯飞RTASR客户端
-        RtasrClient rtasrClient = new RtasrClient.Builder().signature("2f6fc2b9", "8eb0429e8b038d2fc3db9baad4994cca").build();
+        RtasrClient rtasrClient = new RtasrClient.Builder().signature("xxx", "xxx").build();
         CountDownLatch latch = new CountDownLatch(1);
         WebSocket webSocket = rtasrClient.newWebSocket(new AbstractRtasrWebSocketListener() {
             @Override
