@@ -32,7 +32,7 @@ import static com.github.hambuger.memory.chat.memory.other.constants.CommonConst
 
 
 /**
- * @author hanjiabao
+ * @author hamburger
  * @since 2024/8/9
  */
 @Slf4j

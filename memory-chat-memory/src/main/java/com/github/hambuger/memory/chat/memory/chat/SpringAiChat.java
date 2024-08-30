@@ -35,7 +35,7 @@ import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatC
 
 
 /**
- * @author hanjiabao
+ * @author hamburger
  * @since 2024/6/23
  */
 @Slf4j

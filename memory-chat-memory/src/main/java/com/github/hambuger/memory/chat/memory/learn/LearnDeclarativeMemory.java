@@ -30,7 +30,7 @@ import static com.github.hambuger.memory.chat.memory.other.functionCall.CallFunc
 
 
 /**
- * @author hanjiabao
+ * @author hamburger
  * @since 2024/8/15
  */
 @Slf4j

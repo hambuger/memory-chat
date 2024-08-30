@@ -1,7 +1,7 @@
 package com.github.hambuger.memory.chat.memory.emoji;
 
 /**
- * @author hanjiabao
+ * @author hamburger
  * @since 2024/7/2
  */
 
