@@ -11,6 +11,7 @@
 <p align="center">
     <img src="Memory-chat.png" width="400"/>
 <p>
+
 ## 启动
 - 如果需要代理，JVM 启动参数：-Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
 - 将 template.yaml 文件复制为 application.ymal，修改配置，运行 Application 类。
@@ -20,7 +21,7 @@
 - 需要 elasticsearch index:chat_memory 来保存内存。
 - 需要图片床的 github 存储库访问令牌。
 - 天气和 wolframalpha 密钥是可选的。
-    ```json
+```json
     {
       "chat_memory": {
         "mappings": {
@@ -141,7 +142,7 @@
         }
       }
     }
-    ```
+```
 
 
 ### 功能列表
