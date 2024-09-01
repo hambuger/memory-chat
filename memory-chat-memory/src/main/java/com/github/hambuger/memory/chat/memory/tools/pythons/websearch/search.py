@@ -130,7 +130,7 @@ def get_baidu(word):
         else:
             return get_duckduckgo(word)
     except Exception as e:
-        log.error("get_baidu error", e)
+        return get_duckduckgo(word)
     return get_duckduckgo(word)
 
 
