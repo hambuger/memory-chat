@@ -117,16 +117,14 @@ def get_baidu(word):
         for div_element in div_elements:
             # 获取 "mu" 属性值
             mu_link = div_element.get('mu')
-            print(f"mu 链接: {mu_link}")
             span_element = div_element.find('span', class_='content-right_1THTn')
             if not span_element:
                 span_element = div_element.find('span', class_='content-right_2s-H4')
             if span_element:
                 span_text = span_element.text
                 result[mu_link] = span_text
-                print(f"content-right_1THTn 文本: {span_text}")
             else:
-                print("未找到 url 的 span 元素")
+                pass
         if result:
             return result
         else:

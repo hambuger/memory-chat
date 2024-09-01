@@ -1,7 +1,5 @@
 package com.github.hambuger.memory.chat.memory.tools.docparse;
 
-import com.google.common.collect.Lists;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
@@ -9,28 +7,28 @@ import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.other.embeddings.SpringAiEmbeddings;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.other.token.TokenCalculation;
-
+import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.document.DocumentReader;
 import org.springframework.ai.document.MetadataMode;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.reader.TextReader;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.SummaryMetadataEnricher;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import jakarta.annotation.Resource;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.HTTP;
 import static org.springframework.ai.transformer.SummaryMetadataEnricher.DEFAULT_SUMMARY_EXTRACT_TEMPLATE;
@@ -117,10 +115,15 @@ public class DocParse {
     }
 
 
-    public String summaryDoc(String fileUrl, String summaryTemplate) {
-        TikaDocumentReader documentReader = new TikaDocumentReader(fileUrl);
-        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT), summaryTemplate, MetadataMode.ALL);
-        TokenTextSplitter tokenTextSplitter = new TokenTextSplitter(10000, 8000, 5, 100, true);
+    public String summaryDoc2(String fileUrl, String summaryTemplate) {
+        DocumentReader documentReader;
+        if (fileUrl.endsWith(".txt")) {
+            documentReader = new TextReader(fileUrl);
+        } else {
+            documentReader = new TikaDocumentReader(fileUrl);
+        }
+        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi, OpenAiChatOptions.builder().withModel(OpenAiApi.ChatModel.GPT_4_O_MINI).withTemperature(0.7F).build()), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT), summaryTemplate, MetadataMode.ALL);
+        TokenTextSplitter tokenTextSplitter = new TokenTextSplitter(10000, 8000, 5, 1000, true);
         List<Document> transformDocumentList = tokenTextSplitter.transform(documentReader.read());
         List<Document> transform;
         int sumTokens;
@@ -133,7 +136,7 @@ public class DocParse {
                 String str = transform.stream().map(doc -> doc.getMetadata().get("section_summary").toString()).collect(Collectors.joining("\n"));
                 byte[] byteArray = str.getBytes();
                 ByteArrayResource byteArrayResource = new ByteArrayResource(byteArray);
-                transformDocumentList = new TikaDocumentReader(byteArrayResource).read();
+                transformDocumentList = tokenTextSplitter.transform(new TikaDocumentReader(byteArrayResource).read());
             }
         }
         return transform.stream().map(map -> map.getMetadata().get("section_summary").toString()).collect(Collectors.joining("\n"));
@@ -141,7 +144,7 @@ public class DocParse {
 
 
     public String summaryDoc(String fileUrl) {
-        return summaryDoc(fileUrl, DEFAULT_SUMMARY_EXTRACT_TEMPLATE);
+        return summaryDoc2(fileUrl, DEFAULT_SUMMARY_EXTRACT_TEMPLATE);
     }
 
 }
