@@ -1,15 +1,22 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.other.functionCall.CallFunctionRegistryFactory;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
+import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator;
 
 import lombok.Data;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
@@ -119,10 +126,29 @@ public class SpringAiChat {
         return  response.getBody();
     }
 
-    public String generateJsonWithSingleMsgAndPrompt(String prompt) {
-        List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(prompt,
-                OpenAiApi.ChatCompletionMessage.Role.USER));
-        OpenAiApi.ChatCompletion chatCompletion = generateMsgWithMsgList(messages, true);
+    public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages, Class<T> paramClass, String paramName) {
+        try {
+            OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
+            OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().withModel(modelName).withTemperature(temperature).build();
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+            JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(objectMapper);
+            JsonNode jsonSchema = jsonSchemaGenerator.generateJsonSchema(paramClass);
+            chatOptions.setResponseFormat(new OpenAiApi.ChatCompletionRequest.ResponseFormat(OpenAiApi.ChatCompletionRequest.ResponseFormat.Type.JSON_SCHEMA,
+                    new OpenAiApi.ChatCompletionRequest.ResponseFormat.JsonSchema(paramName, objectMapper.writeValueAsString(jsonSchema))));
+            chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
+            ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
+            return response.getBody();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return null;
+    }
+
+    public String generateJsonWithSingleMsgAndPrompt(String prompt, Class paramClass) {
+        List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+        OpenAiApi.ChatCompletion chatCompletion = generateMsgWithMsgList(messages, paramClass, paramClass.getSimpleName());
         return Optional.ofNullable(chatCompletion).map(OpenAiApi.ChatCompletion::choices).map(list -> list.get(0)).map(OpenAiApi.ChatCompletion.Choice::message).map(OpenAiApi.ChatCompletionMessage::content).orElse(null);
     }
 

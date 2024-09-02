@@ -1,6 +1,8 @@
 package com.github.hambuger.memory.chat.memory.memory.reflection;
 
 import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 
@@ -33,13 +35,19 @@ public class MemoryReflection {
     @Data
     public static class ReflectionResult {
 
+        @JsonPropertyDescription("reflection内容列表")
+        @JsonProperty(required = true)
         public List<Reflection> reflectionList = new ArrayList<>();
 
         @Data
-        public class Reflection {
+        public static class Reflection {
 
+            @JsonPropertyDescription("reflection内容")
+            @JsonProperty(required = true)
             private String text = "";
 
+            @JsonPropertyDescription("来源")
+            @JsonProperty(required = true)
             private List<String> p_ids = new ArrayList<>();
 
         }
@@ -61,7 +69,7 @@ public class MemoryReflection {
 
 
     public List<ReflectionResult.Reflection> extractReflectionFromMessages(String receiverName, List<String> msgList) {
-        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(promptFactory.getMsgReflectionPrompt(receiverName, StringUtils.join(msgList, "\n"), ReflectionResult.getJsonTemplate()));
+        String result = springAiChat.generateJsonWithSingleMsgAndPrompt(promptFactory.getMsgReflectionPrompt(receiverName, StringUtils.join(msgList, "\n"), ReflectionResult.getJsonTemplate()), ReflectionResult.class);
         if (StringUtils.isBlank(result)) {
             return new ArrayList<>();
         }

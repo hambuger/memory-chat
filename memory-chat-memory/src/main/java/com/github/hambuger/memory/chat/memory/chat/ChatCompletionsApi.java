@@ -7,6 +7,8 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Pair;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.audio.SpringAiAudio;
 import com.github.hambuger.memory.chat.memory.chat.model.*;
 import com.github.hambuger.memory.chat.memory.emoji.SogouEmoji;
@@ -33,6 +35,7 @@ import com.github.hambuger.memory.chat.wechat.api.MessageTools;
 import com.github.hambuger.memory.chat.wechat.entity.Message;
 import com.google.common.collect.Lists;
 import jakarta.annotation.Resource;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -45,6 +48,8 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.Serial;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -230,6 +235,22 @@ public class ChatCompletionsApi {
         return new ChatResponse(sendMessageList);
     }
 
+    @Data
+    public static class CheckRoleContentResult implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = -3058233413971990660L;
+
+        @JsonPropertyDescription("内容是否和角色设定相关")
+        @JsonProperty(required = true)
+        private boolean relatedToRoleSetting;
+
+        @JsonPropertyDescription("理由")
+        @JsonProperty(required = true)
+        private String reason;
+
+    }
+
 
     private boolean checkRoleContent(String messageContent) {
         String json = """
@@ -239,7 +260,7 @@ public class ChatCompletionsApi {
 }
 """;
         String checkPrompt = promptFactory.getRoleContentCheckPrompt(messageContent, json);
-        String aiResult = springAiChat.generateJsonWithSingleMsgAndPrompt(checkPrompt);
+        String aiResult = springAiChat.generateJsonWithSingleMsgAndPrompt(checkPrompt, CheckRoleContentResult.class);
         if (StringUtils.isBlank(aiResult)) {
             return false;
         }
@@ -799,6 +820,21 @@ public class ChatCompletionsApi {
         }
     }
 
+    public static class NeedSendResult implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 543081299572723565L;
+
+        @JsonPropertyDescription("是否需要发送")
+        @JsonProperty(required = true)
+        private boolean needSend;
+
+        @JsonPropertyDescription("理由")
+        @JsonProperty(required = true)
+        private String reason;
+
+    }
+
     private boolean checkNeedSendNewMsg(OpenAiApi.ChatCompletionMessage responseMessage, List<MemoryDTO> memoryDTOS, String memberName) {
         List<String> newMsgs = Optional.ofNullable(responseMessage.toolCalls()).orElse(new ArrayList<>()).stream().filter(tool -> tool.function().name().equals(REPLY_MESSAGE_FUNCTION_NAME)).flatMap(tool -> {
             SendMessageRequest sendMessageRequest = JSON.parseObject(tool.function().arguments(), SendMessageRequest.class);
@@ -809,7 +845,7 @@ public class ChatCompletionsApi {
         }
         String newMsg = StringUtils.join(newMsgs, "\n");
         StringBuilder memoryStr = getMemoryStrFromMemoryList(memoryDTOS);
-        String response = springAiChat.generateJsonWithSingleMsgAndPrompt(promptFactory.getNewMsgCheckPrompt(memoryStr.toString(), memberName, newMsg));
+        String response = springAiChat.generateJsonWithSingleMsgAndPrompt(promptFactory.getNewMsgCheckPrompt(memoryStr.toString(), memberName, newMsg), NeedSendResult.class);
         return Optional.ofNullable(JSON.parseObject(response).getBoolean("needSend")).orElse(false);
     }
 

@@ -18,6 +18,8 @@ import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 
 import cn.hutool.core.collection.CollectionUtil;
@@ -109,6 +111,22 @@ public class RuleUpdate {
         return true;
     }
 
+    @Data
+    public static class MergeRules implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = -4177796120936939874L;
+
+        @JsonPropertyDescription("merge Rule list")
+        @JsonProperty(required = true)
+        private List<String> mergeRuleList;
+
+        @JsonPropertyDescription("理由")
+        @JsonProperty(required = true)
+        private String reason;
+
+    }
+
 
     private List<String> mergeRules(List<String> ruleList) {
         String json = """
@@ -118,7 +136,7 @@ public class RuleUpdate {
                 }
                 """;
         String ruleMergePrompt = promptFactory.getRuleMergePrompt(JSON.toJSONString(ruleList), json);
-        String ruleStr = springAiChat.generateJsonWithSingleMsgAndPrompt(ruleMergePrompt);
+        String ruleStr = springAiChat.generateJsonWithSingleMsgAndPrompt(ruleMergePrompt, MergeRules.class);
         if (StringUtil.isNotBlank(ruleStr)) {
             JSONObject ruleObj = JSON.parseObject(ruleStr);
             JSONArray mergeRuleList = ruleObj.getJSONArray("mergeRuleList");
