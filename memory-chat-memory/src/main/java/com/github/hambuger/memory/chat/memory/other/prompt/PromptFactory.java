@@ -107,6 +107,10 @@ public class PromptFactory {
     }
 
 
+    public String getGenerateCustomChatModelPrompt() {
+        return PromptTemplate.GENERATE_CUSTOM_MODEL_PROMPT;
+    }
+
     public String getLearnCodeSkillPrompt(String memory) {
         return String.format(PromptTemplate.CODE_LEARN_PROMPT, memory);
     }

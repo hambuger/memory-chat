@@ -20,6 +20,8 @@ spring:
         options:
           model: dall-e-3
           size: 1792x1024
+      fine-tuning:
+          model: gpt-4o-2024-08-06
       temperature: 0.0
   redis:
     host: 127.0.0.1

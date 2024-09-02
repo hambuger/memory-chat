@@ -138,6 +138,7 @@ public class ChatCompletionsApi {
         String lockKey = UUID.randomUUID().toString();
         try {
             log.info("get a new msg:{}", JSON.toJSONString(baseMemoryDTO));
+            UserInfoUtil.putUser(baseMemoryDTO.getMessageCreatorName());
             if (checkCommandMessage(baseMemoryDTO)) {
                 return getCommandResponse(baseMemoryDTO);
             }

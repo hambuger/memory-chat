@@ -42,6 +42,8 @@ public class DelayedTask {
 
     private static final String DELAYED_TASK_KEY = "delayedTasks";
 
+    private static final String CUSTOM_DELAYED_TASK_KEY = "%s:delayedTasks";
+
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
