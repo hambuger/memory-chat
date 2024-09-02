@@ -28,7 +28,7 @@ public class TokenCalculation {
 
     @PostConstruct
     public void init() {
-        this.encoding = Encodings.newLazyEncodingRegistry().getEncodingForModel(modelName);
+        this.encoding = Encodings.newLazyEncodingRegistry().getEncodingForModel(OpenAiApi.ChatModel.GPT_4_O.getName());
     }
 
 

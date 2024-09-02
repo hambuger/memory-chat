@@ -16,6 +16,7 @@ import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator;
 
 import lombok.Data;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -95,6 +96,7 @@ public class SpringAiChat {
 
         OpenAiChatOptions chatOptions =
                 OpenAiChatOptions.builder().withModel(modelName).withTools(tools).withToolChoice(REQUIRED).withTemperature(Optional.ofNullable(temperature).orElse(this.temperature)).build();
+        switchImageModel(messages, chatOptions);
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
         if (response == null || CollectionUtils.isEmpty(response.getBody().choices())
@@ -121,9 +123,32 @@ public class SpringAiChat {
         if (jsonFormat) {
             chatOptions.setResponseFormat(new OpenAiApi.ChatCompletionRequest.ResponseFormat(OpenAiApi.ChatCompletionRequest.ResponseFormat.Type.JSON_OBJECT));
         }
+        switchImageModel(messages, chatOptions);
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
         return  response.getBody();
+    }
+
+    private void switchImageModel(List<OpenAiApi.ChatCompletionMessage> messages, OpenAiChatOptions chatOptions) {
+        if (CollectionUtils.isEmpty(messages)) {
+            return;
+        }
+        boolean imageFlag = messages.stream().anyMatch(msg -> {
+            if (!msg.role().equals(OpenAiApi.ChatCompletionMessage.Role.USER)) {
+                return false;
+            }
+            if (msg.rawContent() instanceof List) {
+                return ((List<?>) msg.rawContent()).stream().anyMatch(obj -> {
+                    OpenAiApi.ChatCompletionMessage.MediaContent mediaContent = (OpenAiApi.ChatCompletionMessage.MediaContent) obj;
+                    return StringUtils.equals(mediaContent.type(), "image_url");
+                });
+            } else {
+                return false;
+            }
+        });
+        if (imageFlag) {
+            chatOptions.setModel(OpenAiApi.ChatModel.GPT_4_O.getName());
+        }
     }
 
     public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages, Class<T> paramClass, String paramName) {

@@ -95,8 +95,7 @@ public class DocParse {
     public String summaryUrl(String url, String summaryTemplate) {
         TextReader doc = new TextReader(url);
         List<Document> transformDocumentList = doc.get();
-        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT),
-                summaryTemplate, MetadataMode.ALL);
+        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi, OpenAiChatOptions.builder().withModel(OpenAiApi.ChatModel.GPT_4_O_MINI).withTemperature(0.7F).build()), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT), summaryTemplate, MetadataMode.ALL);
         int sumTokens;
         List<Document> transform;
         while (true) {
@@ -104,7 +103,7 @@ public class DocParse {
             sumTokens = transform.stream().mapToInt(document -> tokenCalculation.getMessageTextTokenCount(document.getMetadata().get("section_summary").toString())).sum();
             if (sumTokens < 2000) {
                 break;
-            }else {
+            } else {
                 String str = transform.stream().map(document -> document.getMetadata().get("section_summary").toString()).collect(Collectors.joining("\n"));
                 byte[] byteArray = str.getBytes();
                 ByteArrayResource byteArrayResource = new ByteArrayResource(byteArray);
