@@ -6,7 +6,7 @@ package com.github.hambuger.memory.chat.memory.other.constants;
  */
 public class MemoryChatConstants {
 
-    public static final String MSG_LIST_KEY_SUFFIX = "::msg";
+    public static final String MSG_LIST_KEY_SUFFIX = "::context_msg";
 
     public static final String REPLY_MESSAGE_FUNCTION_NAME = "replyOrStartNewMessage";
 
@@ -14,7 +14,9 @@ public class MemoryChatConstants {
 
     public static final String EMOJI_TYPE = "image/gif";
 
-    public static final String DEPTH_LEAF_LIST_KEY_MID = "::list::";
+    public static final String DEPTH_LEAF_LIST_KEY_MID = "::reflection::";
+
+    public static final String DEPTH_LEAF_TOKEN_COUNT_KEY_MID = "::reflection_token_count::";
 
     public static final String JSON_OBJECT = "json_object";
 

@@ -1,26 +1,27 @@
 package com.github.hambuger.memory.chat.memory.memory.create;
 
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.model.CreatorEnum;
 import com.github.hambuger.memory.chat.memory.learn.LearnDeclarativeMemory;
 import com.github.hambuger.memory.chat.memory.learn.LearnProceduralMemory;
+import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
+import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
 import com.github.hambuger.memory.chat.memory.memory.reflection.MemoryMergeTask;
 import com.github.hambuger.memory.chat.memory.memory.reflection.MemoryReflection;
 import com.github.hambuger.memory.chat.memory.memory.search.MemorySearch;
-import com.github.hambuger.memory.chat.memory.other.constants.CommonConstants;
-import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
-import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
-import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
-import com.github.hambuger.memory.chat.memory.other.util.EsClient;
 import com.github.hambuger.memory.chat.memory.other.embeddings.SpringAiEmbeddings;
-import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
+import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.token.TokenCalculation;
+import com.github.hambuger.memory.chat.memory.other.util.EsClient;
 import com.github.hambuger.memory.chat.memory.other.util.IdUtil;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 import com.github.hambuger.memory.chat.memory.portrait.RuleUpdate;
-
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -38,11 +39,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
-import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
 
 import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.NO_STR;
 
@@ -111,10 +107,8 @@ public class MemoryInsert {
         if (StringUtils.isBlank(memoryDTO.getMessageId())) {
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
         }
-        boolean userMsgFlag = StringUtils.equals(memoryDTO.getAiResponseFlag(), NO_STR);
-        boolean reflectionFlag = StringUtils.equals(memoryDTO.getMessageCreatorType(), CreatorEnum.REFLECTION.getType());
-        String msgListKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + ((userMsgFlag && !reflectionFlag) ? memoryDTO.getMessageCreatorId() :
-                memoryDTO.getMessageReceiveId()) + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
+        boolean userMsgFlag = memoryDTO.userMsgFlag();
+        String msgListKey = memoryDTO.msgCacheListKey();
         if (!userMsgFlag) {
             redisUtil.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
@@ -150,8 +144,8 @@ public class MemoryInsert {
 
     private synchronized void checkAndGetReflection(MemoryDTO memoryDTO, boolean textMsgFlag) {
         if (textMsgFlag) {
-            String depthLeafCountKey = memoryDTO.getMessageOwnerId() + CommonConstants.DOUBLE_COLON + memoryDTO.getMemoryLeafDepth();
-            String depthLeafListKey = memoryDTO.getMessageOwnerId() + MemoryChatConstants.DEPTH_LEAF_LIST_KEY_MID + memoryDTO.getMemoryLeafDepth();
+            String depthLeafCountKey = memoryDTO.msgReflectionCountKey();
+            String depthLeafListKey = memoryDTO.msgReflectionListKey();
             redisUtil.incrBy(depthLeafCountKey, memoryDTO.getUseToken());
             String jsonInfo = getAiUseJsonInfo(memoryDTO);
             redisUtil.addElement(depthLeafListKey, jsonInfo);
@@ -166,12 +160,6 @@ public class MemoryInsert {
 
 
     private static String getAiUseJsonInfo(MemoryDTO memoryDTO) {
-//        MemoryDTO newMemoryDTO = new MemoryDTO();
-//        newMemoryDTO.setMessageId(memoryDTO.getMessageId());
-//        newMemoryDTO.setMessageContent(memoryDTO.getMessageContent());
-//        newMemoryDTO.setMessageCreatorName(Optional.ofNullable(memoryDTO.getRealCreatorName()).orElse(memoryDTO.getMessageCreatorName()));
-//        newMemoryDTO.setMessageCreateAt(memoryDTO.getMessageCreateAt());
-//        newMemoryDTO.setMessageImportanceScore(memoryDTO.getMessageImportanceScore());
         return "(" + memoryDTO.getMessageId() + ") " + Optional.ofNullable(memoryDTO.getRealCreatorName()).orElse(memoryDTO.getMessageCreatorName()) + ": " + memoryDTO.getMessageContent() + "(" + memoryDTO.getMessageCreateAt() + ")";
     }
 

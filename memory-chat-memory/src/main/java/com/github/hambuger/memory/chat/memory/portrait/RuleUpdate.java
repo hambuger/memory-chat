@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.portrait;
 
+import com.github.hambuger.memory.chat.memory.other.util.UserInfoUtil;
 import com.google.common.collect.Lists;
 
 import com.alibaba.fastjson.JSON;
@@ -47,6 +48,8 @@ public class RuleUpdate {
 
     private static final String RULE_KEY = "selfRules";
 
+    private static final String CUSTOM_RULE_KEY = "%s::selfRules";
+
     @Data
     public static class ChatRuleUpdate {
 
@@ -65,7 +68,7 @@ public class RuleUpdate {
     }
 
     public String getChatRules() {
-        String ruleStr = redisUtil.getString(RULE_KEY);
+        String ruleStr = redisUtil.getString(String.format(CUSTOM_RULE_KEY, UserInfoUtil.getUser()));
         if (StringUtil.isNotBlank(ruleStr)) {
             List<String> ruleList = JSON.parseArray(ruleStr, String.class);
             StringBuilder sb = new StringBuilder();
@@ -91,7 +94,7 @@ public class RuleUpdate {
         if (param == null || param.getChatContentReasonable() || CollectionUtils.isEmpty(param.getImprovedRules())) {
             return true;
         }
-        String ruleStr = redisUtil.getString(RULE_KEY);
+        String ruleStr = redisUtil.getString(String.format(CUSTOM_RULE_KEY, UserInfoUtil.getUser()));
         List<String> finalRules = param.getImprovedRules();
         if (StringUtil.isNotBlank(ruleStr)) {
             List<String> ruleList = JSON.parseArray(ruleStr, String.class);
@@ -107,7 +110,7 @@ public class RuleUpdate {
                 }
             }
         }
-        redisUtil.setString(RULE_KEY, JSON.toJSONString(finalRules));
+        redisUtil.setString(String.format(CUSTOM_RULE_KEY, UserInfoUtil.getUser()), JSON.toJSONString(finalRules));
         return true;
     }
 

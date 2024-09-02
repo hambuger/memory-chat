@@ -107,7 +107,7 @@ public class DayPlanGenerate {
             if (StringUtil.isBlank(name)) {
                 continue;
             }
-            String allTask = delayedTask.getAllTask();
+            String allTask = delayedTask.getAllTask(name);
             String portraitStr = redisUtil.getString(String.format(SelfUpdate.CUSTOM_SELF_PORTRAIT, name));
             SelfPortrait selfPortrait = JSON.parseObject(portraitStr, SelfPortrait.class);
             String planPrompt = promptFactory.getDayPlanPrompt(allTask, selfPortrait.toMarkDown());

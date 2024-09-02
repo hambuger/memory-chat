@@ -2,11 +2,13 @@ package com.github.hambuger.memory.chat.memory.plan;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.other.util.UserInfoUtil;
 import com.google.common.collect.Lists;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
@@ -14,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -42,8 +45,6 @@ public class DelayedTask {
 
     private static final String DELAYED_TASK_KEY = "delayedTasks";
 
-    private static final String CUSTOM_DELAYED_TASK_KEY = "%s:delayedTasks";
-
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -61,6 +62,9 @@ public class DelayedTask {
         @JsonProperty(required = true)
         private TimeUnit timeUnit;
 
+        @JsonIgnore
+        private String ownerName;
+
 
     }
 
@@ -72,6 +76,7 @@ public class DelayedTask {
         long delayInSeconds = taskInfo.getTimeUnit().toSeconds(taskInfo.getDelayTime());
         long executionTime = Instant.now().getEpochSecond() + delayInSeconds;
         // 序列化 TaskInfo 对象为 JSON 字符串
+        taskInfo.setOwnerName(UserInfoUtil.getUser());
         String jsonString = JSON.toJSONString(taskInfo);
 
         // 将序列化后的 JSON 字符串存储到 Redis 中
@@ -80,21 +85,25 @@ public class DelayedTask {
 
     }
 
-    public String getAllTask() {
+    public String getAllTask(String owner) {
         StringBuilder builder = new StringBuilder();
         Set<ZSetOperations.TypedTuple<Object>> tuples = commonRedisTemplate.opsForZSet().rangeWithScores(DELAYED_TASK_KEY, 0, -1);
         if (tuples != null) {
             for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
+                StringBuilder single = new StringBuilder();
                 if (tuple.getScore() != null) {
                     Instant instant = Instant.ofEpochMilli(tuple.getScore().longValue() * 1000L);
                     ZonedDateTime zdt = instant.atZone(ZoneId.systemDefault());
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
                     String formattedDateTime = zdt.format(formatter);
-                    builder.append(formattedDateTime).append(": ");
+                    single.append(formattedDateTime).append(": ");
                 }
                 if (tuple.getValue() != null) {
                     TaskInfo taskInfo = JSON.parseObject(tuple.getValue().toString(), TaskInfo.class);
-                    builder.append(taskInfo.getTaskMessage()).append("\n");
+                    if (StringUtils.isNotBlank(owner) && StringUtils.equals(owner, taskInfo.getOwnerName())) {
+                        single.append(taskInfo.getTaskMessage()).append("\n");
+                        builder.append(single);
+                    }
                 }
             }
         }
