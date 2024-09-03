@@ -134,6 +134,20 @@ public class RedisUtil {
         redisTemplate.opsForList().rightPush(key, element);
     }
 
+    public void addElement(String key, String element, int maxSize) {
+        // 添加元素到List末尾
+        redisTemplate.opsForList().rightPush(key, element);
+
+        // 获取当前List的长度
+        Long size = redisTemplate.opsForList().size(key);
+
+        // 如果List长度超过最大尺寸，进行修剪
+        if (size != null && size > maxSize) {
+            // 保留List的最后 maxSize 个元素
+            redisTemplate.opsForList().trim(key, size - maxSize, size - 1);
+        }
+    }
+
 
     public void reset(String key) {
         redisTemplate.delete(key);

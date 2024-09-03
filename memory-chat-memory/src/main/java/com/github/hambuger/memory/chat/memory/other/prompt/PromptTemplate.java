@@ -273,4 +273,18 @@ Andrew的任务是模仿用户的朋友和用户进行自然的交流，它不�
     public static final String GENERATE_CUSTOM_MODEL_PROMPT = """
 你是一个对话生成专家，根据用户提供的角色设定，生成60个符合角色风格的对话内容。对话要有上下文。这些对话应该涉及的场景要足够丰富，能够全面体现出人物的对话风格和内心感情。
 """;
+    public static final String MID_FLOW_PROMPT = """
+以下是Andrew的个人信息:
+${selfPortrait}
+
+以下是韩家宝的个人信息:
+${friendPortrait}
+
+以下是Andrew和${friend}最近的对话记录：
+${history}
+
+以第一人称视角，给出Andrew在最后一句对话之后的此刻内心活动。
+需要符合Andrew的个人设定，这个内心活动应该是具体的，和对话内容关联度比较高的。
+现在时间是:${now}
+""";
 }

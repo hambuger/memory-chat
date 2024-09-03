@@ -1,6 +1,7 @@
 package com.github.hambuger.memory.chat.memory.other.prompt;
 
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
+import com.github.hambuger.memory.chat.memory.other.util.UserInfoUtil;
 import com.github.hambuger.memory.chat.memory.portrait.RuleUpdate;
 import com.github.hambuger.memory.chat.memory.portrait.SelfUpdate;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
@@ -178,5 +179,15 @@ public class PromptFactory {
 
     public String getSelfPortraitUpdatePrompt(String beforePortrait, String afterPortrait) {
         return String.format(PromptTemplate.SELF_PORTRAIT_UPDATE_PROMPT, beforePortrait, afterPortrait);
+    }
+
+    public String getMidFlowPrompt(String history) {
+        Map<String, String> templateValueMap = new HashMap<>();
+        templateValueMap.put("selfPortrait", Optional.ofNullable(selfUpdate.getSelfPortrait()).orElse(""));
+        templateValueMap.put("friendPortrait", redisUtil.getFriendPortrait(UserInfoUtil.getUser()));
+        templateValueMap.put("friend", UserInfoUtil.getUser());
+        templateValueMap.put("history", history);
+        templateValueMap.put("now", DateUtil.now());
+        return formatPrompt(PromptTemplate.MID_FLOW_PROMPT, templateValueMap);
     }
 }

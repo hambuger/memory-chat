@@ -12,6 +12,7 @@ import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDimensionInfo;
 import com.github.hambuger.memory.chat.memory.memory.reflection.MemoryMergeTask;
 import com.github.hambuger.memory.chat.memory.memory.reflection.MemoryReflection;
+import com.github.hambuger.memory.chat.memory.memory.reflection.MindFlow;
 import com.github.hambuger.memory.chat.memory.memory.search.MemorySearch;
 import com.github.hambuger.memory.chat.memory.other.embeddings.SpringAiEmbeddings;
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
@@ -99,6 +100,9 @@ public class MemoryInsert {
     @Resource
     private RuleUpdate ruleUpdate;
 
+    @Resource
+    private MindFlow mindFlow;
+
     private static final ThreadPoolExecutor MEMORY_POOL = new ThreadPoolExecutor(10, 20, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new CustomizableThreadFactory("memory-pool"),
             new ThreadPoolExecutor.CallerRunsPolicy());
 
@@ -108,12 +112,18 @@ public class MemoryInsert {
             memoryDTO.setMessageId(IdUtil.generateUniqueId());
         }
         boolean userMsgFlag = memoryDTO.userMsgFlag();
+        boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) || StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.NOTE.getType());
         String msgListKey = memoryDTO.msgCacheListKey();
         if (!userMsgFlag) {
-            redisUtil.addMsg(msgListKey,
-                    MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
+            redisUtil.addMsg(msgListKey, MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
+            if (textMsgFlag) {
+                MEMORY_POOL.execute(() -> {
+                    List<MemoryDTO> msgList = redisUtil.getMsg(msgListKey);
+                    String history = StringUtils.join(msgList.stream().map(msg -> Optional.ofNullable(msg.getRealCreatorName()).orElse(msg.getMessageCreatorName()) + ": " + msg.getMessageContent() + "(" + msg.getMessageCreateAt() + ")").collect(Collectors.toList()), "\n");
+                    mindFlow.generateMindFlowFromMsg(memoryDTO.getMessageId(), history);
+                });
+            }
         }
-        boolean textMsgFlag = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) || StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.NOTE.getType());
         List<OpenAiApi.ChatCompletionMessage> historyMessageList = chatCompletionsApi.getAllHistoryMessageList(msgListKey);
         OpenAiApi.ChatCompletionMessage dimensionSystemMessage = new OpenAiApi.ChatCompletionMessage(promptFactory.getEmotionPrompt(), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         historyMessageList.add(historyMessageList.size() - 1, dimensionSystemMessage);
