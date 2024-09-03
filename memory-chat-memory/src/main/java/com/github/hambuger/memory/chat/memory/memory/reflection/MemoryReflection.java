@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +34,7 @@ public class MemoryReflection {
 
 
     @Data
+    @NoArgsConstructor
     public static class ReflectionResult {
 
         @JsonPropertyDescription("reflection内容列表")
@@ -40,6 +42,7 @@ public class MemoryReflection {
         public List<Reflection> reflectionList = new ArrayList<>();
 
         @Data
+        @NoArgsConstructor
         public static class Reflection {
 
             @JsonPropertyDescription("reflection内容")
