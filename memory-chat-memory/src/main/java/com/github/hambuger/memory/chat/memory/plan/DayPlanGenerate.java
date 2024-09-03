@@ -90,8 +90,8 @@ public class DayPlanGenerate {
             return false;
         }
         Map<String, Object> hourTaskMap = oneDayActivity.getTasks().stream().collect(Collectors.toMap(k -> k.getHour().toString(), HourActivity::getTask));
-        redisUtil.reset(DAY_PLAN_KEY);
-        redisUtil.saveMap(DAY_PLAN_KEY, hourTaskMap);
+        redisUtil.reset(getCustomDayPlanKey());
+        redisUtil.saveMap(getCustomDayPlanKey(), hourTaskMap);
         return true;
     }
 

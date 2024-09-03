@@ -10,12 +10,15 @@ import com.github.hambuger.memory.chat.memory.other.util.UserInfoUtil;
 import com.github.hambuger.memory.chat.memory.plan.DayPlanGenerate;
 import com.github.hambuger.memory.chat.memory.portrait.model.SelfPortrait;
 
-import org.apache.catalina.User;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import cn.hutool.core.date.DateUtil;
 import jakarta.annotation.Resource;

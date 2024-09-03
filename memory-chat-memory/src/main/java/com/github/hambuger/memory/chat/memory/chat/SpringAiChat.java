@@ -12,8 +12,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.other.functionCall.CallFunctionRegistryFactory;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.portrait.PortraitGenerate;
 import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator;
 
+import jakarta.annotation.Resource;
 import lombok.Data;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -64,6 +66,9 @@ public class SpringAiChat {
 
     public OpenAiApi openAiApi;
 
+    @Resource
+    private PortraitGenerate portraitGenerate;
+
     @Data
     public static class FinishParam {
 
@@ -96,7 +101,7 @@ public class SpringAiChat {
 
         OpenAiChatOptions chatOptions =
                 OpenAiChatOptions.builder().withModel(modelName).withTools(tools).withToolChoice(REQUIRED).withTemperature(Optional.ofNullable(temperature).orElse(this.temperature)).build();
-        switchImageModel(messages, chatOptions);
+        switchCustomModel(messages, chatOptions);
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
         if (response == null || CollectionUtils.isEmpty(response.getBody().choices())
@@ -123,13 +128,12 @@ public class SpringAiChat {
         if (jsonFormat) {
             chatOptions.setResponseFormat(new OpenAiApi.ChatCompletionRequest.ResponseFormat(OpenAiApi.ChatCompletionRequest.ResponseFormat.Type.JSON_OBJECT));
         }
-        switchImageModel(messages, chatOptions);
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
         return  response.getBody();
     }
 
-    private void switchImageModel(List<OpenAiApi.ChatCompletionMessage> messages, OpenAiChatOptions chatOptions) {
+    private void switchCustomModel(List<OpenAiApi.ChatCompletionMessage> messages, OpenAiChatOptions chatOptions) {
         if (CollectionUtils.isEmpty(messages)) {
             return;
         }
@@ -146,8 +150,11 @@ public class SpringAiChat {
                 return false;
             }
         });
+        String customChatModel = portraitGenerate.getCustomModel();
         if (imageFlag) {
             chatOptions.setModel(OpenAiApi.ChatModel.GPT_4_O.getName());
+        }else if (StringUtils.isNotBlank(customChatModel)) {
+            chatOptions.setModel(customChatModel);
         }
     }
 

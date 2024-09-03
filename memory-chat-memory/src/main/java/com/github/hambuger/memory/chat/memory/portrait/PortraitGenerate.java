@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
+import com.github.hambuger.memory.chat.memory.other.util.UserInfoUtil;
 import com.github.hambuger.memory.chat.wechat.configuration.WechatConfiguration;
 
 import org.apache.poi.util.StringUtil;
@@ -68,6 +69,10 @@ public class PortraitGenerate {
     public static final String CUSTOM_MODEL_KEY = "%s:custom:model";
 
     private static final RestTemplate restTemplate = new RestTemplate();
+
+    public String getCustomModel() {
+        return redisUtil.getString(String.format(CUSTOM_MODEL_KEY, UserInfoUtil.getUser()));
+    }
 
     @Data
     public static class ConversationExampleResult {

@@ -24,6 +24,7 @@ import com.github.hambuger.memory.chat.memory.other.functionCall.CallFunctionReg
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.token.TokenCalculation;
 import com.github.hambuger.memory.chat.memory.other.util.*;
+import com.github.hambuger.memory.chat.memory.portrait.PortraitGenerate;
 import com.github.hambuger.memory.chat.memory.portrait.SelfUpdate;
 import com.github.hambuger.memory.chat.memory.portrait.model.FriendPortrait;
 import com.github.hambuger.memory.chat.memory.tools.docparse.DocParse;
@@ -82,6 +83,9 @@ public class ChatCompletionsApi {
     @Value("${maxMsgToken}")
     private Integer maxMsgToken;
 
+    @Value("${maxMsgCount}")
+    private Integer maxMsgCount;
+
     @Autowired
     private SpringAiAudio springAiAudio;
 
@@ -124,11 +128,12 @@ public class ChatCompletionsApi {
     @Resource
     private WeatherQuery weatherQuery;
 
+    @Resource
+    private PortraitGenerate portraitGenerate;
+
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
-        String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + (StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageReceiveId() :
-                memoryDTO.getMessageCreatorId());
-        String oldMsgId = LAST_MESSAGE_ID_MAP.get().get(lastMsgIdMapKey);
+        String oldMsgId = LAST_MESSAGE_ID_MAP.get().get(memoryDTO.lastMsgIdMapKey());
         return StringUtils.isNotBlank(oldMsgId) && !StringUtils.equals(oldMsgId, StringUtils.equals(memoryDTO.getAiResponseFlag(), YES_STR) ? memoryDTO.getMessageParentIds().get(0) :
                 memoryDTO.getMessageId());
     }
@@ -142,11 +147,9 @@ public class ChatCompletionsApi {
             if (checkCommandMessage(baseMemoryDTO)) {
                 return getCommandResponse(baseMemoryDTO);
             }
-            redisUtil.setString(String.format(CHAT_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
+            redisUtil.setString(baseMemoryDTO.chatLockKey(), lockKey);
             SpringAiChatMessageMemoryDTO memoryDTO = getChatMemory(baseMemoryDTO);
-            String lastMsgIdMapKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId();
-            String msgListKey = memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
-            boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
+            String msgListKey = memoryDTO.msgCacheListKey();
             redisUtil.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             if (!memoryDTO.isDealFileFlag()) {
@@ -154,7 +157,7 @@ public class ChatCompletionsApi {
                 CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(memoryDTO, false));
             }
             // 更新最后一条消息id
-            LAST_MESSAGE_ID_MAP.get().put(lastMsgIdMapKey, memoryDTO.getMessageId());
+            LAST_MESSAGE_ID_MAP.get().put(memoryDTO.lastMsgIdMapKey(), memoryDTO.getMessageId());
             // 检查是否是最后一条消息
             if (checkLastMessageId(memoryDTO)) {
                 return null;
@@ -180,7 +183,7 @@ public class ChatCompletionsApi {
                 return null;
             }
             // 获取AI回复
-            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, groupFlag, ChatSceneEnum.NORMAL_USER);
+            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, memoryDTO.groupFlag(), ChatSceneEnum.NORMAL_USER);
             if (aiMessageResponse == null || CollectionUtils.isEmpty(aiMessageResponse.choices())) {
                 return null;
             }
@@ -194,7 +197,7 @@ public class ChatCompletionsApi {
                 aiMsgDTOList.forEach(dto -> memoryInsert.insertNewMemory(dto, false));
                 ChatMember chatMember = new ChatMember();
                 chatMember.setName(memoryDTO.getMessageCreatorName());
-                chatMember.setGroupFlag(StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR));
+                chatMember.setGroupFlag(memoryDTO.groupFlag());
                 redisUtil.addMember(chatMember);
             });
             // 转换成发送消息
@@ -211,7 +214,7 @@ public class ChatCompletionsApi {
             log.error("error", e);
             return null;
         } finally {
-            redisUtil.releaseLock(String.format(CHAT_LOCK_KEY, baseMemoryDTO.getMessageCreatorName()), lockKey);
+            redisUtil.releaseLock(baseMemoryDTO.chatLockKey(), lockKey);
         }
     }
 
@@ -227,6 +230,7 @@ public class ChatCompletionsApi {
         }else {
             if (checkRoleContent(messageContent)) {
                 replyContent = "修改设定如下:\n" + getRoleDetail(messageContent);
+                CHAT_POOL.execute(() -> portraitGenerate.generateCustomChatModel(baseMemoryDTO.getMessageCreatorName(), messageContent));
             }else {
                 replyContent = "你提供的内容和设定无关！";
             }
@@ -333,12 +337,12 @@ public class ChatCompletionsApi {
     private void startNewTaskForContact(MemoryDTO memoryDTO, String msgListKey) {
         StartConversationCheckTask.startTaskForContact(msgListKey, () -> {
             try {
-                redisUtil.acquireLock(String.format(CHAT_LOCK_KEY, memoryDTO.getMessageCreatorName()), memoryDTO.getMessageCreatorName(), 30 * 1000L, 60 * 1000L);
+                redisUtil.acquireLock(memoryDTO.chatLockKey(), memoryDTO.getMessageCreatorName(), 30 * 1000L, 60 * 1000L);
                 List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);
                 if (CollectionUtils.isEmpty(memoryDTOS)) {
                     return false;
                 }
-                boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
+                boolean groupFlag = memoryDTO.groupFlag();
                 String prompt = getCheckStartMsgPrompt(memoryDTO.getMessageCreatorName(), groupFlag, memoryDTOS);
                 if (StringUtils.isBlank(prompt)) {
                     return false;
@@ -372,7 +376,7 @@ public class ChatCompletionsApi {
                 log.error("startNewTaskForContact error", e);
                 return false;
             } finally {
-                redisUtil.releaseLock(String.format(CHAT_LOCK_KEY, memoryDTO.getMessageCreatorName()), memoryDTO.getMessageCreatorName());
+                redisUtil.releaseLock(memoryDTO.chatLockKey(), memoryDTO.getMessageCreatorName());
             }
         });
     }
@@ -464,7 +468,7 @@ public class ChatCompletionsApi {
 
     private @NotNull OpenAiApi.ChatCompletionMessage getSystemMessage(MemoryDTO memoryDTO, List<MemoryDTO> searchMemoryList, List<String> existMsgIds) {
         OpenAiApi.ChatCompletionMessage systemMessage;
-        boolean groupFlag = StringUtils.equals(memoryDTO.getGroupMsgFlag(), YES_STR);
+        boolean groupFlag = memoryDTO.groupFlag();
         // 选择prompt
         if (CollectionUtils.isEmpty(searchMemoryList)) {
             systemMessage = new OpenAiApi.ChatCompletionMessage(promptFactory.getChatPrompt(memoryDTO.getMessageCreatorName(), null, null, groupFlag, ChatSceneEnum.NORMAL_USER), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
@@ -497,7 +501,6 @@ public class ChatCompletionsApi {
             DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             memoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
             memoryDTO.setMessageContent(String.format("%s给你发过来一个视频，正在查看中", Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName())));
-//            baseMemoryDTO.setMessageContent(getVideoInfo(baseMemoryDTO));
         }else if(StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.PICTURE.getType()) || StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.EMOJI.getType())){
             DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             memoryDTO.setMessageContent(imageUploadUtils.uploadImg(baseMemoryDTO.getMessageContent()));
@@ -505,10 +508,9 @@ public class ChatCompletionsApi {
             DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             memoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
             memoryDTO.setMessageContent(String.format("%s给你发过来一个文件,文件路径：%s，正在查看中", Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName()), baseMemoryDTO.getMessageContent()));
-//            memoryDTO.setMessageContent(getFileInfo(baseMemoryDTO));
         }
         memoryDTO.setMessageCreatorId(memoryDTO.getMessageCreatorName());
-        memoryDTO.setMessageCreatorType(StringUtils.equals(YES_STR, baseMemoryDTO.getGroupMsgFlag()) ? CreatorEnum.GROUP.getType() : CreatorEnum.USER.getType());
+        memoryDTO.setMessageCreatorType(baseMemoryDTO.groupFlag() ? CreatorEnum.GROUP.getType() : CreatorEnum.USER.getType());
         memoryDTO.setMessageReceiveId(CreatorEnum.Andrew.getUserId());
         memoryDTO.setMessageReceiveName(CreatorEnum.Andrew.getUserName());
         memoryDTO.setMessageReceiveType(CreatorEnum.Andrew.getType());
@@ -529,7 +531,7 @@ public class ChatCompletionsApi {
                 String fileDesc = StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.VIDEO.getType()) ? getVideoInfo(baseMemoryDTO) : getFileInfo(baseMemoryDTO);
                 memoryDTO.setMessageContent(fileDesc);
                 memoryInsert.insertNewMemory(memoryDTO, true);
-                redisUtil.updateMsgContentById(memoryDTO.getMessageOwnerId() + DOUBLE_COLON + memoryDTO.getMessageCreatorId() + MemoryChatConstants.MSG_LIST_KEY_SUFFIX, memoryDTO.getMessageId(), fileDesc);
+                redisUtil.updateMsgContentById(memoryDTO.msgCacheListKey(), memoryDTO.getMessageId(), fileDesc);
             });
         }
         return memoryDTO;
@@ -737,7 +739,7 @@ public class ChatCompletionsApi {
                 sumMsgToken = sumMsgToken + tokenCalculation.getUserMessageToken(chatMessage);
             }
             msgCount++;
-            if (sumMsgToken < maxMsgToken && msgCount <= 30) {
+            if (sumMsgToken < maxMsgToken && msgCount <= maxMsgCount) {
                 messageList.addFirst(chatMessage);
                 existMsgIdList.add(memoryDTO.getMessageId());
             }else {
@@ -773,7 +775,7 @@ public class ChatCompletionsApi {
 
         String memberName = chatMember.getName();
         boolean groupFlag = chatMember.isGroupFlag();
-        String msgListKey = CreatorEnum.Andrew.getUserId() + DOUBLE_COLON + memberName + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
+        String msgListKey = memberName + MemoryChatConstants.MSG_LIST_KEY_SUFFIX;
         try {
             redisUtil.acquireLock(String.format(CHAT_LOCK_KEY, memberName), memberName, 30 * 1000L, 60 * 1000L);
             List<MemoryDTO> memoryDTOS = redisUtil.getMsg(msgListKey);

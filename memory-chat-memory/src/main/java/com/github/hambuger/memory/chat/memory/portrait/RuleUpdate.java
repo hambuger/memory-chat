@@ -22,6 +22,7 @@ import org.springframework.util.CollectionUtils;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 
 import cn.hutool.core.collection.CollectionUtil;
 import jakarta.annotation.Resource;
@@ -68,7 +69,7 @@ public class RuleUpdate {
     }
 
     public String getChatRules() {
-        String ruleStr = redisUtil.getString(String.format(CUSTOM_RULE_KEY, UserInfoUtil.getUser()));
+        String ruleStr = Optional.ofNullable(redisUtil.getString(String.format(CUSTOM_RULE_KEY, UserInfoUtil.getUser()))).orElse(redisUtil.getString(RULE_KEY));
         if (StringUtil.isNotBlank(ruleStr)) {
             List<String> ruleList = JSON.parseArray(ruleStr, String.class);
             StringBuilder sb = new StringBuilder();
@@ -94,7 +95,7 @@ public class RuleUpdate {
         if (param == null || param.getChatContentReasonable() || CollectionUtils.isEmpty(param.getImprovedRules())) {
             return true;
         }
-        String ruleStr = redisUtil.getString(String.format(CUSTOM_RULE_KEY, UserInfoUtil.getUser()));
+        String ruleStr = Optional.ofNullable(redisUtil.getString(String.format(CUSTOM_RULE_KEY, UserInfoUtil.getUser()))).orElse(redisUtil.getString(RULE_KEY));
         List<String> finalRules = param.getImprovedRules();
         if (StringUtil.isNotBlank(ruleStr)) {
             List<String> ruleList = JSON.parseArray(ruleStr, String.class);

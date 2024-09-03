@@ -92,7 +92,6 @@ public class MemoryMergeTask {
             Script inline = new Script(ScriptType.INLINE, "painless", "ctx._source.messageContent = params.messageContent", params);
             updateByQueryRequest.setScript(inline);
             esClient.updateByQuery(updateByQueryRequest);
-            ;
         } catch (IOException e) {
             log.warn("updateOldMemory error", e);
         }

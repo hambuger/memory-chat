@@ -3,6 +3,7 @@ package com.github.hambuger.memory.chat.memory.memory.search;
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.model.ContentTypeEnum;
 import com.github.hambuger.memory.chat.memory.chat.model.CreatorEnum;
+import com.github.hambuger.memory.chat.memory.other.util.UserInfoUtil;
 import com.github.hambuger.memory.chat.memory.portrait.model.FriendPortrait;
 import com.github.hambuger.memory.chat.memory.other.util.EsClient;
 import com.github.hambuger.memory.chat.memory.other.embeddings.SpringAiEmbeddings;
@@ -34,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.Resource;
@@ -76,6 +78,7 @@ public class MemorySearch {
             // 数据隔离
             mustQuery.must(new TermQueryBuilder("messageOwnerId", ownerId));
         }
+        creatorId = Optional.ofNullable(creatorId).orElse(UserInfoUtil.getUser());
         if (StringUtils.isNotBlank(creatorId)) {
             BoolQueryBuilder builder = new BoolQueryBuilder();
             builder.should(new TermQueryBuilder("messageCreatorId", creatorId));

@@ -1,9 +1,15 @@
 package com.github.hambuger.memory.chat.memory.memory.model;
 
+import org.apache.commons.lang3.StringUtils;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import static com.github.hambuger.memory.chat.memory.other.constants.CommonConstants.YES_STR;
+import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.CHAT_LOCK_KEY;
+import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.LAST_MSG_ID_KEY;
 
 
 /**
@@ -92,5 +98,18 @@ public class BaseMemoryDTO {
      * 真正的消息发送者名称
      */
     private String realCreatorName;
+
+
+    public boolean groupFlag() {
+        return StringUtils.equals(this.getGroupMsgFlag(), YES_STR);
+    }
+
+    public String chatLockKey() {
+        return String.format(CHAT_LOCK_KEY, this.getMessageCreatorName());
+    }
+
+    public String lastMsgIdMapKey() {
+        return String.format(LAST_MSG_ID_KEY, this.getMessageCreatorName());
+    }
 
 }
