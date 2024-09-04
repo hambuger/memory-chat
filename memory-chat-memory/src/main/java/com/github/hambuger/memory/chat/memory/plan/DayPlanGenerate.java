@@ -11,6 +11,7 @@ import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCal
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,8 @@ import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.SELF_PORTRAIT_KEY;
 
 
 /**
@@ -108,7 +111,7 @@ public class DayPlanGenerate {
                 continue;
             }
             String allTask = delayedTask.getAllTask(name);
-            String portraitStr = redisUtil.getString(String.format(SelfUpdate.CUSTOM_SELF_PORTRAIT, name));
+            String portraitStr = Optional.ofNullable(redisUtil.getString(String.format(SelfUpdate.CUSTOM_SELF_PORTRAIT, name))).orElse(redisUtil.getString(SELF_PORTRAIT_KEY));
             SelfPortrait selfPortrait = JSON.parseObject(portraitStr, SelfPortrait.class);
             String planPrompt = promptFactory.getDayPlanPrompt(allTask, selfPortrait.toMarkDown());
             List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(planPrompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
