@@ -190,4 +190,8 @@ public class PromptFactory {
         templateValueMap.put("now", DateUtil.now());
         return formatPrompt(PromptTemplate.MID_FLOW_PROMPT, templateValueMap);
     }
+
+    public String getEmojiExtraPrompt() {
+        return PromptTemplate.EMOJI_EXTRA_PROMPT;
+    }
 }

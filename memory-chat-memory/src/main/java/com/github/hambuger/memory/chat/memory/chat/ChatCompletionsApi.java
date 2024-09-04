@@ -357,7 +357,7 @@ public class ChatCompletionsApi {
                 String history = StringUtils.join(memoryDTOS.stream().map(msg -> Optional.ofNullable(msg.getRealCreatorName()).orElse(msg.getMessageCreatorName()) + ": " + msg.getMessageContent() + "(" + msg.getMessageCreateAt() + ")").collect(Collectors.toList()), "\n");
                 history = history + String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复", memoryDTO.getMessageCreatorName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND)));
                 String mindFlowStr = mindFlow.getMindFlowFromMsg(history);
-                messages.add(new OpenAiApi.ChatCompletionMessage(String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复。【你的内心活动：%】", memoryDTO.getMessageCreatorName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND)), mindFlowStr), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+                messages.add(new OpenAiApi.ChatCompletionMessage(String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复。【你的内心活动：%s】", memoryDTO.getMessageCreatorName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND)), mindFlowStr), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
                 addPerceptionMessage(memoryDTO.getMessageCreatorName(), messages);
                 OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, ChatSceneEnum.SCHEDULE);
                 if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
@@ -487,12 +487,7 @@ public class ChatCompletionsApi {
                 if (existMsgIds.contains(memorySingle.getMessageId())) {
                     continue;
                 }
-                String mind = mindFlow.getMindFlowByMsgId(memorySingle.getMessageId());
-                String content = memorySingle.getMessageContent();
-                if (StringUtils.isNotBlank(mind)) {
-                    content = content + "[内心活动：" + mind + "]";
-                }
-                memory.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorName()).orElse(memorySingle.getMessageCreatorName())).append(":").append(content).append("\n");
+                memory.append(i).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorName()).orElse(memorySingle.getMessageCreatorName())).append(":").append(memorySingle.getMessageContent()).append("\n");
                 memoryUpdate.updateMemoryAccessTime(memorySingle.getMessageId());
             }
             systemMessage = new OpenAiApi.ChatCompletionMessage(promptFactory.getChatPrompt(memoryDTO.getMessageCreatorName(), memory.toString(), null, groupFlag, ChatSceneEnum.NORMAL_USER),
@@ -745,7 +740,12 @@ public class ChatCompletionsApi {
                 continue;
             }
             if (memoryDTO.getAiResponseFlag().equals(YES_STR)) {
-                chatMessage = new OpenAiApi.ChatCompletionMessage(memoryDTO.getMessageContent(), OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
+                String mind = mindFlow.getMindFlowByMsgId(memoryDTO.getMessageId());
+                String content = memoryDTO.getMessageContent();
+                if (StringUtils.isNotBlank(mind)) {
+                    content = content + "[内心活动：" + mind + "]";
+                }
+                chatMessage = new OpenAiApi.ChatCompletionMessage(content, OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
                 sumMsgToken = sumMsgToken + tokenCalculation.getUserMessageToken(chatMessage);
             }else {
                 chatMessage = convertMemoryMsg2SpringAiModelMsg(memoryDTO);

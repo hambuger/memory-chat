@@ -158,7 +158,7 @@ public class SpringAiChat {
         }
     }
 
-    public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages, Class<T> paramClass, String paramName) {
+    public OpenAiApi.ChatCompletion generateMsgWithMsgList(List<OpenAiApi.ChatCompletionMessage> messages, Class paramClass, String paramName) {
         try {
             OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
             OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().withModel(modelName).withTemperature(temperature).build();
