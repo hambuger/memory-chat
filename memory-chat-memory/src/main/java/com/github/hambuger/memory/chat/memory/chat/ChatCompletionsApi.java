@@ -98,7 +98,7 @@ public class ChatCompletionsApi {
     private VideoUtil videoUtil;
 
     @Resource
-    private ImageUploadUtils imageUploadUtils;
+    private PicBedUtil imageUploadUtils;
 
     @Resource
     private MemoryInsert memoryInsert;
@@ -511,7 +511,7 @@ public class ChatCompletionsApi {
             memoryDTO.setMessageContent(String.format("%s给你发过来一个视频，正在查看中", Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName())));
         }else if(StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.PICTURE.getType()) || StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.EMOJI.getType())){
             DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
-            memoryDTO.setMessageContent(imageUploadUtils.uploadImg(baseMemoryDTO.getMessageContent()));
+            memoryDTO.setMessageContent(imageUploadUtils.uploadImage(baseMemoryDTO.getMessageContent()));
         }else if(StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.APP.getType())) {
             DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             memoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
@@ -694,7 +694,7 @@ public class ChatCompletionsApi {
         }
         contentList.add(new OpenAiApi.ChatCompletionMessage.MediaContent(prompt.toString()));
         if (CollectionUtils.isNotEmpty(imageList)) {
-            List<String> uploadedImageList = imageUploadUtils.uploadImageList(imageList);
+            List<String> uploadedImageList = imageUploadUtils.uploadImages(imageList);
             for (String image : uploadedImageList) {
                 contentList.add(new OpenAiApi.ChatCompletionMessage.MediaContent(new OpenAiApi.ChatCompletionMessage.MediaContent.ImageUrl(image, "low")));
             }

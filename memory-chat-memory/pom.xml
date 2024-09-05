@@ -204,6 +204,11 @@
             <artifactId>tencentcloud-speech-sdk-java</artifactId>
             <version>1.0.49</version>
         </dependency>
+        <dependency>
+            <groupId>net.coobird</groupId>
+            <artifactId>thumbnailator</artifactId>
+        </dependency>
+
 
     </dependencies>
     <build>

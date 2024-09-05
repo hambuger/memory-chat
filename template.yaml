@@ -71,6 +71,10 @@ python:
   jep:
     path: D:\Python\Lib\site-packages\jep\jep.dll
 
+image:
+  upload:
+    telegraph_url:
+
 logging:
   file:
     name:
