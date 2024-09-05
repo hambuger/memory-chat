@@ -120,7 +120,7 @@ public class MemoryInsert {
                 MEMORY_POOL.execute(() -> {
                     List<MemoryDTO> msgList = redisUtil.getMsg(msgListKey);
                     String history = StringUtils.join(msgList.stream().map(msg -> Optional.ofNullable(msg.getRealCreatorName()).orElse(msg.getMessageCreatorName()) + ": " + msg.getMessageContent() + "(" + msg.getMessageCreateAt() + ")").collect(Collectors.toList()), "\n");
-                    mindFlow.generateMindFlowFromMsg(memoryDTO.getMessageId(), history);
+                    mindFlow.generateMindFlowFromMsg(memoryDTO.getMessageId(), memoryDTO.getMessageReceiveName(), history);
                 });
             }
         }

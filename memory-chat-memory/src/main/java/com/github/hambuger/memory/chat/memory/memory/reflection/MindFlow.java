@@ -37,9 +37,9 @@ public class MindFlow {
         return chatCompletion.choices().get(0).message().content();
     }
 
-    public void generateMindFlowFromMsg(String messageId, String history) {
+    public void generateMindFlowFromMsg(String messageId, String userName, String history) {
         String mind = getMindFlowFromMsg(history);
-        redisUtil.addElement(getMindFlowKey(), messageId + "::" + mind, 6);
+        redisUtil.addElement(Optional.ofNullable(getMindFlowKey()).orElse(userName), messageId + "::" + mind, 6);
     }
 
     public Map<String, String> getMindFlowMap() {
