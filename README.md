@@ -19,7 +19,7 @@
 ### 必备
 - 需要 Redis 来存储对话状态、对话缓存等数据。
 - 需要 elasticsearch index:chat_memory 来保存内存。
-- 需要图片床的 github 存储库访问令牌。
+- 需要图片床的 github 存储库访问令牌，或者你的自定义图床地址telegraph_url。
 - 天气和 wolframalpha 密钥是可选的。
 ```json
     {

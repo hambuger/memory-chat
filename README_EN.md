@@ -19,7 +19,7 @@
     ### Required
     - Redis is needed to store data such as conversation status and conversation cache.
     - Required elasticsearch index:chat_memory to keep memory.
-    - Required a github repository access token for picture bed.
+    - Required a github repository access token for picture bed.Or your custom image hosting address telegraph_url.
     - Weather and wolframalpha key are optional.
     ```json
     {

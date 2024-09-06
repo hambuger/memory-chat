@@ -1,12 +1,12 @@
 package com.github.hambuger.memory.chat.memory.plan;
 
 import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatMember;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
-import com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 
 import java.util.List;
@@ -84,6 +84,9 @@ public class DayPlanGenerate {
         @JsonProperty(required = true)
         private List<HourActivity> tasks;
 
+        @JsonIgnore
+        private String userName;
+
     }
 
 
@@ -93,8 +96,14 @@ public class DayPlanGenerate {
             return false;
         }
         Map<String, Object> hourTaskMap = oneDayActivity.getTasks().stream().collect(Collectors.toMap(k -> k.getHour().toString(), HourActivity::getTask));
-        redisUtil.reset(getCustomDayPlanKey());
-        redisUtil.saveMap(getCustomDayPlanKey(), hourTaskMap);
+        String planKey;
+        if (StringUtil.isBlank(UserInfoUtil.getUser())) {
+            planKey = String.format(CUSTOM_DAY_PLAN_KEY, oneDayActivity.getUserName());
+        }else {
+            planKey = getCustomDayPlanKey();
+        }
+        redisUtil.reset(planKey);
+        redisUtil.saveMap(planKey, hourTaskMap);
         return true;
     }
 
