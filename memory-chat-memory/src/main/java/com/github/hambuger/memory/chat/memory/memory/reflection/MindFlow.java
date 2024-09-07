@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.memory.reflection;
 
+import com.drew.lang.StringUtil;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
@@ -7,6 +8,7 @@ import com.github.hambuger.memory.chat.memory.other.util.UserInfoUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.tika.utils.StringUtils;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Component;
 
@@ -39,7 +41,13 @@ public class MindFlow {
 
     public void generateMindFlowFromMsg(String messageId, String userName, String history) {
         String mind = getMindFlowFromMsg(history);
-        redisUtil.addElement(Optional.ofNullable(getMindFlowKey()).orElse(userName), messageId + "::" + mind, 6);
+        String key;
+        if (!StringUtils.isBlank(UserInfoUtil.getUser())) {
+            key = getMindFlowKey();
+        } else {
+            key = String.format("%s::mind_flow", userName);
+        }
+        redisUtil.addElement(key, messageId + "::" + mind, 6);
     }
 
     public Map<String, String> getMindFlowMap() {
