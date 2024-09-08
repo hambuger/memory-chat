@@ -1,7 +1,6 @@
 package com.github.hambuger.memory.chat.memory.other.util;
 
-import com.github.hambuger.memory.chat.wechat.configuration.WechatConfiguration;
-import jakarta.annotation.Resource;
+
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
@@ -19,6 +18,7 @@ import java.util.UUID;
 import javax.imageio.ImageIO;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 
@@ -26,8 +26,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class VideoUtil {
 
-    @Resource
-    private WechatConfiguration config;
+    @Value("${temp.path}")
+    private String tempPath;
 
     public List<String> getVideoImg(String filePath) {
         File folder = new File(filePath);
@@ -64,7 +64,7 @@ public class VideoUtil {
                 if (rotate != null) {
                     bufferedImage = rotate(bufferedImage, Integer.parseInt(rotate));
                 }
-                String newFileName = config.getBasePath() + File.separator + UUID.randomUUID() + "_VIDEO" + count + ".jpeg";
+                String newFileName = tempPath + File.separator + UUID.randomUUID() + "_VIDEO" + count + ".jpeg";
                 ImageIO.write(bufferedImage, "jpeg", new File(newFileName));
                 frameNumber += frameInterval;
                 count++;

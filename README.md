@@ -14,7 +14,7 @@
 
 ## 启动
 - 如果需要代理，JVM 启动参数：-Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
-- 将 template.yaml 文件复制为 application.ymal，修改配置，运行 Application 类。
+- 将 template.yaml 文件复制为 application.ymal，修改配置，运行 com.github.hambuger.memory.chat.wechat.Application 类。
 - 等待项目启动后，扫描微信登录二维码，将登录的微信账号添加为好友，即可聊天。
 ### 必备
 - 需要 Redis 来存储对话状态、对话缓存等数据。

@@ -32,9 +32,6 @@ import com.github.hambuger.memory.chat.memory.tools.docparse.DocParse;
 import com.github.hambuger.memory.chat.memory.tools.weather.WeatherQuery;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
 import com.github.hambuger.memory.chat.memory.wechat.SendMessageRequest;
-import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
-import com.github.hambuger.memory.chat.wechat.api.MessageTools;
-import com.github.hambuger.memory.chat.wechat.entity.Message;
 import com.google.common.collect.Lists;
 import jakarta.annotation.Resource;
 import lombok.Data;
@@ -136,6 +133,12 @@ public class ChatCompletionsApi {
     @Resource
     private MindFlow mindFlow;
 
+    @Resource
+    private CommonMessageHandler commonMessageHandler;
+
+    @Resource
+    private FileUtil fileUtil;
+
 
     public static boolean checkLastMessageId(MemoryDTO memoryDTO) {
         String oldMsgId = LAST_MESSAGE_ID_MAP.get().get(memoryDTO.lastMsgIdMapKey());
@@ -144,7 +147,7 @@ public class ChatCompletionsApi {
     }
 
 
-    public ChatResponse chat(BaseMemoryDTO baseMemoryDTO) {
+    public ChatResponse chat(BaseReceiveMessage baseMemoryDTO) {
         String lockKey = UUID.randomUUID().toString();
         try {
             log.info("get a new msg:{}", JSON.toJSONString(baseMemoryDTO));
@@ -203,6 +206,7 @@ public class ChatCompletionsApi {
                 ChatMember chatMember = new ChatMember();
                 chatMember.setName(memoryDTO.getMessageCreatorName());
                 chatMember.setGroupFlag(memoryDTO.groupFlag());
+                chatMember.setSendUserId(baseMemoryDTO.getReceiveMessageUserId());
                 redisUtil.addMember(chatMember);
             });
             // 转换成发送消息
@@ -301,30 +305,30 @@ public class ChatCompletionsApi {
     }
 
 
-    public void sendWxChatMessageList(String remarkName, List<SendMessage> sendMessageList, long receiveMsgTime) {
+    public void sendWxChatMessageList(String toUserId, List<SendMessage> sendMessageList, long receiveMsgTime) {
         for (SendMessage sendMessage : sendMessageList) {
-            Message message = new Message();
-            message.setToRemarkname(remarkName);
-            message.setContent(sendMessage.getMessageContent());
+            SendChannelMessageRequest message = new SendChannelMessageRequest();
+            message.setToUserId(toUserId);
+            message.setMessageContent(sendMessage.getMessageContent());
             ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(sendMessage.getMessageContentType());
-            message.setMsgType(contentTypeEnum == null ? ContentTypeEnum.TEXT.getMsgType() : contentTypeEnum.getMsgType());
+            message.setMessageContentType(sendMessage.getMessageContentType());
             if (contentTypeEnum == ContentTypeEnum.PICTURE) {
-                String filePath = FileUtil.downloadImage(sendMessage.getMessageContent());
+                String filePath = fileUtil.downloadImage(sendMessage.getMessageContent());
                 message.setFilePath(filePath);
-                message.setContent(null);
+                message.setMessageContent(null);
             }else if (contentTypeEnum == ContentTypeEnum.EMOJI) {
                 String emojiPath = sogouEmoji.downloadImage(sendMessage.getMessageContent());
                 if (StringUtils.isBlank(emojiPath)) {
-                    message.setMsgType(ContentTypeEnum.TEXT.getMsgType());
+                    message.setMessageContentType(ContentTypeEnum.TEXT.getType());
                 }else {
                     message.setFilePath(emojiPath);
                     if (!emojiPath.endsWith("gif")) {
-                        message.setMsgType(ContentTypeEnum.PICTURE.getMsgType());
+                        message.setMessageContentType(ContentTypeEnum.PICTURE.getType());
                     }
                 }
-                message.setContent(null);
+                message.setMessageContent(null);
             }else if (contentTypeEnum == ContentTypeEnum.TEXT) {
-                int waste = message.getContent().length() * 1000 / 4;
+                int waste = message.getMessageContent().length() * 1000 / 4;
                 if (System.currentTimeMillis() < receiveMsgTime + waste) {
                     try {
                         Thread.sleep(receiveMsgTime + waste - System.currentTimeMillis());
@@ -333,7 +337,7 @@ public class ChatCompletionsApi {
                     }
                 }
             }
-            MessageTools.sendMsgByRemarkName(message);
+            commonMessageHandler.sendMessage(message);
             receiveMsgTime = System.currentTimeMillis();
         }
     }
@@ -502,18 +506,14 @@ public class ChatCompletionsApi {
         memoryDTO.setMessageId(IdUtil.generateUniqueId());
         BeanUtil.copyProperties(baseMemoryDTO, memoryDTO);
         if (StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.AUDIO.getType())) {
-            DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             memoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
             memoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(new FileSystemResource(baseMemoryDTO.getMessageContent())));
         }else if (StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.VIDEO.getType())) {
-            DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             memoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
             memoryDTO.setMessageContent(String.format("%s给你发过来一个视频，正在查看中", Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName())));
         }else if(StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.PICTURE.getType()) || StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.EMOJI.getType())){
-            DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             memoryDTO.setMessageContent(picBedUtil.uploadImage(baseMemoryDTO.getMessageContent()));
         }else if(StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.APP.getType())) {
-            DownloadTools.awaitDownload(baseMemoryDTO.getMessageContent());
             memoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
             memoryDTO.setMessageContent(String.format("%s给你发过来一个文件,文件路径：%s，正在查看中", Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName()), baseMemoryDTO.getMessageContent()));
         }

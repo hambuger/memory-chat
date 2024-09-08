@@ -1,5 +1,6 @@
-import com.github.hambuger.memory.chat.wechat.service.LoginService;
+package com.github.hambuger.memory.chat.wechat;
 
+import com.github.hambuger.memory.chat.wechat.service.LoginService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;

@@ -7,7 +7,6 @@ import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 import com.github.hambuger.memory.chat.memory.other.util.UserInfoUtil;
-import com.github.hambuger.memory.chat.wechat.configuration.WechatConfiguration;
 
 import org.apache.poi.util.StringUtil;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,8 +59,8 @@ public class PortraitGenerate {
     @Resource
     private PromptFactory promptFactory;
 
-    @Resource
-    private WechatConfiguration config;
+    @Value("${temp.path}")
+    private String tempPath;
 
     @Resource
     private RedisUtil redisUtil;
@@ -115,7 +114,7 @@ public class PortraitGenerate {
         if (exampleResult == null || CollectionUtils.isEmpty(exampleResult.getExampleList())) {
             return;
         }
-        String dataPath = config.getBasePath() + File.separator + UUID.randomUUID() + "_data.jsonl";
+        String dataPath = tempPath + File.separator + UUID.randomUUID() + "_data.jsonl";
         List<String> list =
                 exampleResult.getExampleList().stream().map(example -> String.format("{\"messages\": [{\"role\": \"user\", \"content\": \"%s\"}, {\"role\": \"assistant\", \"content\": " + "\"%s" +
                         "\"}]}", example.getPreviousConversation(), example.getReplyContent())).toList();

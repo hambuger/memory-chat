@@ -14,7 +14,7 @@
 
 ## Startup
 - If a proxy is required, JVM startup parameters: -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
-- Copy the template.yaml file as application.ymal, modify the configuration, and run the Application class.
+- Copy the template.yaml file as application.ymal, modify the configuration, and run the com.github.hambuger.memory.chat.wechat.Application class.
 - After waiting for the project to start, scan the WeChat login QR code, add the logged-in WeChat account as a friend, and then chat.
     ### Required
     - Redis is needed to store data such as conversation status and conversation cache.

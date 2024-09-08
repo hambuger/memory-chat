@@ -109,12 +109,12 @@ public class DayPlanGenerate {
 
     @Scheduled(cron = "0 0 1 * * *")
     public void processPlanTasks() {
-        Set<Object> allMembers = redisUtil.getAllMembers();
+        List<Object> allMembers = redisUtil.getAllMembers();
         if (CollectionUtils.isEmpty(allMembers)) {
             return;
         }
         for (Object member : allMembers) {
-            ChatMember chatMember = (ChatMember) member;
+            ChatMember chatMember = JSON.parseObject(member.toString(), ChatMember.class);
             String name = chatMember.getName();
             if (StringUtil.isBlank(name)) {
                 continue;
@@ -127,6 +127,7 @@ public class DayPlanGenerate {
             OpenAiApi.ChatCompletion chatCompletion = springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.PLAN, 1.0f);
             if (chatCompletion != null && chatCompletion.choices() != null) {
                 OneDayActivity plan = JSON.parseObject(chatCompletion.choices().get(0).message().toolCalls().get(0).function().arguments(), OneDayActivity.class);
+                plan.setUserName(name);
                 generateDayActivity(plan);
             }
         }

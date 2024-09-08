@@ -33,6 +33,7 @@ import com.github.hambuger.memory.chat.wechat.entity.Contacts;
 import com.github.hambuger.memory.chat.wechat.exception.WebWXException;
 import com.github.hambuger.memory.chat.wechat.utils.MD5Util;
 
+import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
@@ -876,7 +877,6 @@ public class LoginServiceImpl implements LoginService {
         }
         HttpUtil.setCookieStore(basicCookieStore);
     }
-
 
     @Override
     public void login() {

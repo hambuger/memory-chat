@@ -3,8 +3,8 @@ package com.github.hambuger.memory.chat.memory.image;
 import com.google.common.collect.Lists;
 
 import com.github.hambuger.memory.chat.memory.learn.LearnProceduralMemory;
-import com.github.hambuger.memory.chat.wechat.configuration.WechatConfiguration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -24,12 +24,12 @@ public class CapturePhoto {
     @Resource
     private LearnProceduralMemory learnProceduralMemory;
 
-    @Resource
-    private WechatConfiguration config;
+    @Value("${temp.path}")
+    private String tempPath;
 
 
     public void capture() {
-        String photoPath = config.getBasePath() + File.separator + UUID.randomUUID() + "_SHOT.png";
+        String photoPath = tempPath + File.separator + UUID.randomUUID() + "_SHOT.png";
         learnProceduralMemory.invokeSinglePythonFunction(Lists.newArrayList("/capture/capture_photo.py"), "capture_photo", new HashMap<>() {
             {
                 put("filename", photoPath);

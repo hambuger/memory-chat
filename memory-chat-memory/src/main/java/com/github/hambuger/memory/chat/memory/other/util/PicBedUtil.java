@@ -2,7 +2,6 @@ package com.github.hambuger.memory.chat.memory.other.util;
 
 
 import com.alibaba.fastjson.JSONObject;
-import com.github.hambuger.memory.chat.wechat.configuration.WechatConfiguration;
 
 import net.coobird.thumbnailator.Thumbnails;
 
@@ -37,8 +36,8 @@ public class PicBedUtil {
     @Value("${image.upload.telegraph_url}")
     private String uploadUrl;
 
-    @Resource
-    private WechatConfiguration config;
+    @Value("${temp.path}")
+    private String tempPath;
 
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -100,7 +99,7 @@ public class PicBedUtil {
 
 
     private File compressImage(File inputFile) throws IOException {
-        String newFileName = config.getBasePath() + File.separator + "compressed_" + inputFile.getName();
+        String newFileName = tempPath + File.separator + "compressed_" + inputFile.getName();
         File outputFile = new File(newFileName);
         double quality = 1.0;
         while (outputFile.length() == 0 || outputFile.length() > MAX_FILE_SIZE) {

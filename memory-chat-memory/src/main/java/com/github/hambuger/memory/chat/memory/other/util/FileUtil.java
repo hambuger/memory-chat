@@ -1,8 +1,8 @@
 package com.github.hambuger.memory.chat.memory.other.util;
 
-import com.github.hambuger.memory.chat.wechat.api.DownloadTools;
-import com.github.hambuger.memory.chat.wechat.configuration.WechatConfiguration;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,9 +23,13 @@ import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatC
  * @since 2024/6/21
  */
 @Slf4j
+@Component
 public class FileUtil {
 
-    public static String downloadImage(String imageUrl) {
+    @Value("${temp.path}")
+    private String tempPath;
+
+    public String downloadImage(String imageUrl) {
         InputStream inputStream = null;
         FileOutputStream outputStream = null;
         String imagePath;
@@ -45,7 +49,7 @@ public class FileUtil {
             inputStream = connection.getInputStream();
 
             // 定义文件路径
-            File imageFile = new File(WechatConfiguration.getInstance().getBasePath() + File.separator + SEND_IMAGE_PATH);
+            File imageFile = new File(tempPath + File.separator + SEND_IMAGE_PATH);
             outputStream = new FileOutputStream(imageFile);
 
             // 写入文件
@@ -71,7 +75,7 @@ public class FileUtil {
             }
         }
 
-        return WechatConfiguration.getInstance().getBasePath() + File.separator + SEND_IMAGE_PATH;
+        return tempPath + File.separator + SEND_IMAGE_PATH;
     }
 
 
@@ -87,7 +91,7 @@ public class FileUtil {
     public static String getFileBase64Data(String filePath, boolean await) {
         try {
             if (await) {
-                DownloadTools.awaitDownload(filePath);
+//                DownloadTools.awaitDownload(filePath);
             }
             // 读取文件内容到字节数组
             byte[] fileContent = Files.readAllBytes(Paths.get(filePath));

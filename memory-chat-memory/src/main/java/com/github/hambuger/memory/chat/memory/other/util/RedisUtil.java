@@ -2,8 +2,10 @@ package com.github.hambuger.memory.chat.memory.other.util;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
+import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.hambuger.memory.chat.memory.chat.model.ChatMember;
 import com.github.hambuger.memory.chat.memory.memory.model.MemoryDTO;
 import com.github.hambuger.memory.chat.memory.portrait.model.FriendPortrait;
 import com.github.hambuger.memory.chat.memory.portrait.model.GroupPortrait;
@@ -53,13 +55,17 @@ public class RedisUtil {
     }
 
     // 添加成员到集合
-    public void addMember(Object member) {
-        commonRedisTemplate.opsForSet().add(CHAT_FRIEND_LIST_KEY, member);
+    public void addMember(ChatMember member) {
+        putKeyValue(CHAT_FRIEND_LIST_KEY, member.getName(), JSON.toJSONString(member));
     }
 
     // 获取集合中的所有成员
-    public Set<Object> getAllMembers() {
-        return commonRedisTemplate.opsForSet().members(CHAT_FRIEND_LIST_KEY);
+    public List<Object> getAllMembers() {
+        return getMap(CHAT_FRIEND_LIST_KEY).values().stream().toList();
+    }
+
+    public ChatMember getMember(String memberName) {
+        return JSON.parseObject(getMap(CHAT_FRIEND_LIST_KEY).get(memberName).toString(), ChatMember.class);
     }
 
 

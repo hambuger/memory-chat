@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.plan;
 
+import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatMember;
 import com.github.hambuger.memory.chat.memory.tools.websearch.HotNews;
@@ -11,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.Set;
+import java.util.List;
 
 @Component
 public class DelayedTaskScheduler {
@@ -28,7 +29,7 @@ public class DelayedTaskScheduler {
 
     @Scheduled(fixedRate = 1000 * 60 * 30)
     public void processTasks() {
-        Set<Object> allMembers = redisUtil.getAllMembers();
+        List<Object> allMembers = redisUtil.getAllMembers();
         if (CollectionUtils.isEmpty(allMembers)) {
             return;
         }
@@ -36,7 +37,7 @@ public class DelayedTaskScheduler {
     }
 
     private void executeSchedulerTask(Object member) {
-        ChatMember chatMember = (ChatMember) member;
+        ChatMember chatMember = JSON.parseObject(member.toString(), ChatMember.class);
         String news = getRecentNews();
         if (StringUtils.isBlank(news)) {
             return;
