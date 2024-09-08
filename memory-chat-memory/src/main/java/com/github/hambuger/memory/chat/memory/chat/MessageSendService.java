@@ -1,6 +1,8 @@
-package com.github.hambuger.memory.chat.memory.wechat;
+package com.github.hambuger.memory.chat.memory.chat;
 
 import com.github.hambuger.memory.chat.memory.chat.CommonMessageHandler;
+import com.github.hambuger.memory.chat.memory.chat.message.SendMessageRequest;
+import com.github.hambuger.memory.chat.memory.chat.message.SendOthersMessageRequest;
 import com.github.hambuger.memory.chat.memory.chat.model.*;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.memory.create.MemoryInsert;

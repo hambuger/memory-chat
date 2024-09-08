@@ -7,10 +7,20 @@
 ## A chat bot named Andrew with the ability to remember, plan, and learn.
 ### Special thanks to [Generative Agents](https://github.com/joonspk-research/generative_agents), without which this project would not have happened.
 - Implementing AI Chat Using OpenAI API,Using SpringAi as the java framework.
-- Using itchat4j code to implement WeChat as chat interface.
+- The memory-chat-memory module is the entire logic content, and memory-chat-wechat is an example of the use of this module
 <p align="center">
     <img src="Memory-chat.png" width="400"/>
 <p>
+
+## Access method
+
+### Method 1
+
+- If you use Java to write, introduce CommonMessageHandler in the code and call receiveNewMsg to send a message to get the return, registerSendTool to register the method to receive messages (optional)
+
+### Method 2
+
+- Provide the http method of the above steps at the same time, send a message through /chat/message to get the return, /chat/send/register to register the method to receive messages (optional)
 
 ## Startup
 - If a proxy is required, JVM startup parameters: -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890

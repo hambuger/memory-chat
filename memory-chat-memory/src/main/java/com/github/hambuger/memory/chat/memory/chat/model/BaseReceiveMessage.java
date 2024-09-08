@@ -9,5 +9,5 @@ public class BaseReceiveMessage extends BaseMemoryDTO {
 
     private String receiveMessageUserId;
 
-    private MessageChannelEnum channelEnum;
+    private String channelEnum;
 }

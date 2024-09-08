@@ -13,6 +13,23 @@ public class MyHttpUtils {
 
     private static final int MAX_RETRIES = 3;
 
+    public static String post(String url, String json) {
+        int attempt = 0;
+        while (attempt < MAX_RETRIES) {
+            try {
+                HttpResponse<String> response = Unirest.post(url).body(json).asString();
+                return response.getBody();
+            } catch (Exception e) {
+                attempt++;
+                if (attempt >= MAX_RETRIES) {
+                    log.error("post error", e);
+                }
+            }
+        }
+        return null;
+    }
+
+
     public static String put(String urlString, Map<String, Object> paramMap, Map<String, String> headers) throws UnirestException {
         JSONObject jsonObject = new JSONObject(paramMap);
         int attempt = 0;

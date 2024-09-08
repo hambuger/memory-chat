@@ -1,6 +1,6 @@
 package com.github.hambuger.memory.chat.memory.chat.model;
 
-import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
+import com.github.hambuger.memory.chat.memory.chat.message.SendMessage;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

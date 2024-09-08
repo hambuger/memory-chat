@@ -1,4 +1,4 @@
-package com.github.hambuger.memory.chat.memory.wechat;
+package com.github.hambuger.memory.chat.memory.chat.message;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;

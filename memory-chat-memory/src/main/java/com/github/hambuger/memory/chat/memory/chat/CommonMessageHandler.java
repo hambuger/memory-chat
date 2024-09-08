@@ -4,7 +4,7 @@ import com.github.hambuger.memory.chat.memory.chat.model.*;
 import com.github.hambuger.memory.chat.memory.emoji.SogouEmoji;
 import com.github.hambuger.memory.chat.memory.other.util.FileUtil;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
-import com.github.hambuger.memory.chat.memory.wechat.SendMessage;
+import com.github.hambuger.memory.chat.memory.chat.message.SendMessage;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -33,17 +33,20 @@ public class CommonMessageHandler implements MessageHandler {
 
     private static final Map<String, Consumer<SendChannelMessageRequest>> SEND_TOOL_MAP = new ConcurrentHashMap<>();
 
-    public void registerSendTool(MessageChannelEnum channelEnum, Consumer<SendChannelMessageRequest> consumer) {
-        SEND_TOOL_MAP.put(channelEnum.name(), consumer);
+    public void registerSendTool(String channelEnum, Consumer<SendChannelMessageRequest> consumer) {
+        SEND_TOOL_MAP.put(channelEnum, consumer);
     }
 
 
     @Override
-    public void receiveNewMsg(BaseReceiveMessage msg) {
+    public ChatResponse receiveNewMsg(BaseReceiveMessage msg) {
         long receiveMsgTime = System.currentTimeMillis();
         ChatResponse response = chatCompletionsApi.chat(msg);
         if (response == null || CollectionUtils.isEmpty(response.getSendMessageList())) {
-            return;
+            return null;
+        }
+        if (SEND_TOOL_MAP.get(msg.getChannelEnum()) == null) {
+            return response;
         }
         for (SendMessage sendMessage : response.getSendMessageList()) {
             SendChannelMessageRequest message = new SendChannelMessageRequest();
@@ -55,18 +58,18 @@ public class CommonMessageHandler implements MessageHandler {
                 String filePath = fileUtil.downloadImage(sendMessage.getMessageContent());
                 message.setFilePath(filePath);
                 message.setMessageContent(null);
-            } else if (contentTypeEnum == ContentTypeEnum.EMOJI) {
+            }else if (contentTypeEnum == ContentTypeEnum.EMOJI) {
                 String emojiPath = sogouEmoji.downloadImage(sendMessage.getMessageContent());
                 if (StringUtils.isBlank(emojiPath)) {
                     message.setMessageContentType(ContentTypeEnum.TEXT.getType());
-                } else {
+                }else {
                     message.setFilePath(emojiPath);
                     if (!emojiPath.endsWith("gif")) {
                         message.setMessageContentType(ContentTypeEnum.PICTURE.getType());
                     }
                 }
                 message.setMessageContent(null);
-            } else if (contentTypeEnum == ContentTypeEnum.TEXT) {
+            }else if (contentTypeEnum == ContentTypeEnum.TEXT) {
                 int waste = message.getMessageContent().length() * 1000 / 4;
                 if (System.currentTimeMillis() < receiveMsgTime + waste) {
                     try {
@@ -80,10 +83,11 @@ public class CommonMessageHandler implements MessageHandler {
             this.sendMessage(message);
             receiveMsgTime = System.currentTimeMillis();
         }
+        return response;
     }
 
     @Override
     public void sendMessage(SendChannelMessageRequest request) {
-        SEND_TOOL_MAP.get(request.getChannelEnum().name()).accept(request);
+        SEND_TOOL_MAP.get(request.getChannelEnum()).accept(request);
     }
 }

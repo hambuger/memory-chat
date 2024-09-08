@@ -45,7 +45,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
 
     @PostConstruct
     public void init(){
-        commonMessageHandler.registerSendTool(MessageChannelEnum.WECHAT, this::sendMessage);
+        commonMessageHandler.registerSendTool(MessageChannelEnum.WECHAT.name(), this::sendMessage);
     }
 
 
@@ -77,7 +77,7 @@ public class IMsgHandlerFaceImpl implements IMsgHandlerFace {
         baseMemoryDTO.setGroupMsgFlag(msg.isGroup() ? CommonConstants.YES_STR : CommonConstants.NO_STR);
         baseMemoryDTO.setRealCreatorId(StringUtils.isNoneBlank(msg.getFromMemberOfGroupNickname()) ? msg.getFromMemberOfGroupNickname() : msg.getFromMemberOfGroupDisplayname());
         baseMemoryDTO.setRealCreatorName(baseMemoryDTO.getRealCreatorId());
-        baseMemoryDTO.setChannelEnum(MessageChannelEnum.WECHAT);
+        baseMemoryDTO.setChannelEnum(MessageChannelEnum.WECHAT.name());
         baseMemoryDTO.setReceiveMessageUserId(msg.getFromUsername());
         commonMessageHandler.receiveNewMsg(baseMemoryDTO);
         return null;

@@ -7,10 +7,20 @@
 ## 一个名叫 Andrew 的聊天机器人，具备记忆、计划和学习的能力。
 ### 特别感谢 [Generative Agents](https://github.com/joonspk-research/generative_agents)，没有他们的帮助，这个项目就不会发生。
 - 使用 OpenAI API 实现人工智能聊天，使用 SpringAi 作为 java 框架。
-- 使用 itchat4j 代码实现微信作为聊天接口。
+- memory-chat-memory模块是全部的逻辑内容，memory-chat-wechat是一个该模块的使用实例
 <p align="center">
     <img src="Memory-chat.png" width="400"/>
 <p>
+
+## 接入方式
+
+### 方式一
+
+- 如果你使用Java编写，代码中引入CommonMessageHandler并调用receiveNewMsg发送消息获取返回，registerSendTool注册接收消息方法(非必须)
+
+### 方式二
+
+- 同时提供上述步骤的http方式，通过/chat/message来发送消息获取返回，/chat/send/register注册接收消息方法(非必须)
 
 ## 启动
 - 如果需要代理，JVM 启动参数：-Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
