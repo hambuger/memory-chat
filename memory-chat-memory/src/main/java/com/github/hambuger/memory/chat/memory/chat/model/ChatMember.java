@@ -18,4 +18,6 @@ public class ChatMember implements Serializable {
     private boolean groupFlag;
 
     private String sendUserId;
+
+    private String channelScene;
 }

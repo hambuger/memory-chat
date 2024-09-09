@@ -5,6 +5,7 @@ import com.github.hambuger.memory.chat.memory.emoji.SogouEmoji;
 import com.github.hambuger.memory.chat.memory.other.util.FileUtil;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 import com.github.hambuger.memory.chat.memory.chat.message.SendMessage;
+import com.github.hambuger.memory.chat.memory.other.util.UserInfoUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -88,6 +89,18 @@ public class CommonMessageHandler implements MessageHandler {
 
     @Override
     public void sendMessage(SendChannelMessageRequest request) {
-        SEND_TOOL_MAP.get(request.getChannelEnum()).accept(request);
+        String channelName = null;
+        if (StringUtils.isNotBlank(request.getChannelEnum())) {
+            channelName = request.getChannelEnum();
+        } else if (UserInfoUtil.getUser() != null) {
+            ChatMember member = redisUtil.getMember(UserInfoUtil.getUser());
+            if (member != null) {
+                channelName = member.getChannelScene();
+            }
+        }
+        if (StringUtils.isBlank(channelName)) {
+            channelName = MessageChannelEnum.WECHAT.name();
+        }
+        SEND_TOOL_MAP.get(channelName).accept(request);
     }
 }

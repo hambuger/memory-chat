@@ -207,6 +207,7 @@ public class ChatCompletionsApi {
                 chatMember.setName(memoryDTO.getMessageCreatorName());
                 chatMember.setGroupFlag(memoryDTO.groupFlag());
                 chatMember.setSendUserId(baseMemoryDTO.getReceiveMessageUserId());
+                chatMember.setChannelScene(baseMemoryDTO.getChannelEnum());
                 redisUtil.addMember(chatMember);
             });
             // 转换成发送消息
@@ -305,10 +306,18 @@ public class ChatCompletionsApi {
     }
 
 
-    public void sendWxChatMessageList(String toUserId, List<SendMessage> sendMessageList, long receiveMsgTime) {
+    public void sendWxChatMessageList(String toUserId, String toUserName, List<SendMessage> sendMessageList, long receiveMsgTime) {
+        String channelName = MessageChannelEnum.WECHAT.name();
+        if (StringUtils.isBlank(toUserId)) {
+            String userName = Optional.ofNullable(toUserName).orElse(UserInfoUtil.getUser());
+            ChatMember member = redisUtil.getMember(userName);
+            toUserId = member.getSendUserId();
+            channelName = member.getName();
+        }
         for (SendMessage sendMessage : sendMessageList) {
             SendChannelMessageRequest message = new SendChannelMessageRequest();
             message.setToUserId(toUserId);
+            message.setChannelEnum(channelName);
             message.setMessageContent(sendMessage.getMessageContent());
             ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(sendMessage.getMessageContentType());
             message.setMessageContentType(sendMessage.getMessageContentType());
@@ -381,7 +390,7 @@ public class ChatCompletionsApi {
                 if (CollectionUtils.isEmpty(sendMessageList)) {
                     return false;
                 }else {
-                    sendWxChatMessageList(memoryDTO.getMessageCreatorName(), sendMessageList, System.currentTimeMillis());
+                    sendWxChatMessageList(null, memoryDTO.getMessageCreatorName(), sendMessageList, System.currentTimeMillis());
                 }
                 return true;
             } catch (Exception e) {
@@ -827,7 +836,7 @@ public class ChatCompletionsApi {
             // 转换成发送消息
             List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
             if (CollectionUtils.isNotEmpty(sendMessageList)) {
-                sendWxChatMessageList(memberName, sendMessageList, System.currentTimeMillis());
+                sendWxChatMessageList(null, memberName, sendMessageList, System.currentTimeMillis());
             }
         } catch (Exception e) {
             log.error("executeSchedulerTask error", e);

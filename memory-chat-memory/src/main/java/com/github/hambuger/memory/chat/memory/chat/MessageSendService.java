@@ -52,6 +52,7 @@ public class MessageSendService {
         message.setToUserId(member.getSendUserId());
         message.setMessageContent(dto.getMessageContent());
         message.setMessageContentType(ContentTypeEnum.TEXT.getType());
+        message.setChannelEnum(member.getChannelScene());
         commonMessageHandler.sendMessage(message);
         return true;
     }
