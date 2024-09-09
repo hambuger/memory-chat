@@ -33,11 +33,17 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class PicBedUtil {
 
-    @Value("${image.upload.telegraph_url}")
+    @Value("${image.upload.telegraph_url:xxx}")
     private String uploadUrl;
 
     @Value("${temp.path}")
     private String tempPath;
+
+    @Resource
+    private ImageUploadUtils imageUploadUtils;
+
+    @Value("${image.upload.use_github:true}")
+    private boolean useGithub;
 
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -45,6 +51,13 @@ public class PicBedUtil {
     private static final RestTemplate restTemplate = new RestTemplate();
 
     public String uploadImage(String file) {
+        if (useGithub) {
+            try {
+                return imageUploadUtils.uploadImg(file);
+            } catch (Exception e) {
+                return null;
+            }
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -60,6 +73,13 @@ public class PicBedUtil {
 
     public List<String> uploadImages(List<String> files) {
         List<String> result = new ArrayList<>();
+        if (useGithub) {
+            try {
+                return imageUploadUtils.uploadImageList(files);
+            } catch (Exception e) {
+                return result;
+            }
+        }
         Map<String, String> imageUrlMap = new ConcurrentHashMap<>();
         files.parallelStream().forEach(file -> {
             HttpHeaders headers = new HttpHeaders();

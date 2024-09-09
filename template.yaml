@@ -74,6 +74,7 @@ python:
 image:
   upload:
     telegraph_url:
+    use_github: true
 
 logging:
   file:
