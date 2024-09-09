@@ -4,7 +4,7 @@ import java.util.*;
 
 
 /**
- * @author hanjiabao
+ * @author hamburger
  * @since 2024/9/2
  */
 public class UserInfoUtil {

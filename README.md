@@ -22,6 +22,17 @@
 
 - 同时提供上述步骤的http方式，通过/chat/message来发送消息获取返回，/chat/send/register注册接收消息方法(非必须)
 
+## 场景
+1. 模仿存在过的某人和你聊天或者自己的聊天分身
+   代码中有getCustomChatModel可以通过微调文件生成符合某人风格的微调模型
+
+2. 自定义聊天伴侣
+输入/change ...可以生成特定角色设定的聊天模型
+
+3. 个人的日常助手
+可以通过语音或者微信或者其他聊天方式接入
+
+
 ## 启动
 - 如果需要代理，JVM 启动参数：-Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
 - 将 template.yaml 文件复制为 application.ymal，修改配置，运行 com.github.hambuger.memory.chat.wechat.Application 类。

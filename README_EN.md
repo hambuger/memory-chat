@@ -22,6 +22,17 @@
 
 - Provide the http method of the above steps at the same time, send a message through /chat/message to get the return, /chat/send/register to register the method to receive messages (optional)
 
+## Scene
+
+1. Imitate someone who has existed and chat with you or your own chat avatar
+   There is getCustomChatModel in the code, which can generate a fine-tuning model that matches someone's style through a fine-tuning file
+
+2. Custom chat partner
+   Input /change ... can generate a chat model with specific role settings
+
+3. Personal daily assistant
+   Access through voice, WeChat or other chat methods
+
 ## Startup
 - If a proxy is required, JVM startup parameters: -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
 - Copy the template.yaml file as application.ymal, modify the configuration, and run the com.github.hambuger.memory.chat.wechat.Application class.
