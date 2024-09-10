@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SendOthersMessageRequest extends SendMessageRequest{
 
-    @JsonPropertyDescription("消息接收人")
+    @JsonPropertyDescription("The recipient of the message")
     @JsonProperty(required = true)
     private String receiveName;
 }

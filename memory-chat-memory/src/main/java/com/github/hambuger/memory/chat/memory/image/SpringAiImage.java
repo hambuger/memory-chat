@@ -36,13 +36,13 @@ public class SpringAiImage {
     @AllArgsConstructor
     public static class ImageGenerateParam {
 
-        @JsonPropertyDescription("生成图片提示词")
+        @JsonPropertyDescription("Generate picture prompt words")
         @JsonProperty(required = true)
         private String generateText;
     }
 
 
-    @FunctionCallRegistry(functionDesc = "生成图片", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
+    @FunctionCallRegistry(functionDesc = "Generate pictures", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
     public String generateImage(ImageGenerateParam generateParam) {
         ImagePrompt imagePrompt = new ImagePrompt(generateParam.generateText);
         ImageResponse imageResponse = imageModel.call(imagePrompt);

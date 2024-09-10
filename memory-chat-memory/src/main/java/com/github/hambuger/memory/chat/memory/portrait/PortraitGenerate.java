@@ -76,18 +76,18 @@ public class PortraitGenerate {
     @Data
     public static class ConversationExampleResult {
 
-        @JsonPropertyDescription("生成的对话示例集合")
+        @JsonPropertyDescription("A collection of dialog sample results generated")
         @JsonProperty(required = true)
         private List<ConversationExample> exampleList;
 
         @Data
         public static class ConversationExample {
 
-            @JsonPropertyDescription("对话的前一句，不包含说话人名")
+            @JsonPropertyDescription("The first sentence of the conversation does not contain the name of the speaker")
             @JsonProperty(required = true)
             private String previousConversation;
 
-            @JsonPropertyDescription("角色的回复，不包含说话人名")
+            @JsonPropertyDescription("The character's reply, which does not contain the name of the speaker")
             @JsonProperty(required = true)
             private String replyContent;
 

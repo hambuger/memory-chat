@@ -40,10 +40,10 @@ public class AnnotationProcessor implements BeanPostProcessor {
         for (Method method : methods) {
             if (method.isAnnotationPresent(FunctionCallRegistry.class)) {
                 FunctionCallRegistry functionCallRegistry = method.getAnnotation(FunctionCallRegistry.class);
-                // 获取方法的第一个参数类型
+                // Get the first parameter type of the method
                 Class<?> argClass = method.getParameterTypes()[0];
 
-                // 封装成函数式方法
+                // Encapsulated into a functional method
                 Function<Object, Object> function = arg -> {
                     try {
                         return method.invoke(bean, arg);

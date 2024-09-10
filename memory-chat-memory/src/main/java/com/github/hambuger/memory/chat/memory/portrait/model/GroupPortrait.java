@@ -21,11 +21,11 @@ import java.util.List;
 @NoArgsConstructor
 public class GroupPortrait {
 
-    @JsonPropertyDescription("群名称")
+    @JsonPropertyDescription("The name of the group")
     @JsonProperty(required = true, defaultValue = "Unknown")
     public String name;
 
-    @JsonPropertyDescription("群的其他重要补充信息")
+    @JsonPropertyDescription("Other important supplementary information for the group")
     @JsonProperty(required = false)
     public List<ImportantInfo> otherImportantInfo = new ArrayList<>();
 

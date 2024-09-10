@@ -68,14 +68,14 @@ public class MemorySearch {
     public List<MemoryDTO> searchRelationMemory(String ownerId, String creatorId, String content, Integer depth) {
         List<Double> contentVector = springAiEmbeddings.generateTextEmbeddings(content);
         BoolQueryBuilder mustQuery = QueryBuilders.boolQuery();
-        // 排除图片和系统消息
+        // exclude pictures and system messages
         mustQuery.must(new TermQueryBuilder("messageContentType", ContentTypeEnum.TEXT.getType()));
         mustQuery.must(new TermQueryBuilder("isDeleted", NO_STR));
         if (depth != null && depth > 0) {
             mustQuery.mustNot(new TermQueryBuilder("memoryLeafDepth", 0));
         }
         if (StringUtils.isNotBlank(ownerId)) {
-            // 数据隔离
+            // data isolation
             mustQuery.must(new TermQueryBuilder("messageOwnerId", ownerId));
         }
         creatorId = Optional.ofNullable(creatorId).orElse(UserInfoUtil.getUser());
@@ -86,10 +86,10 @@ public class MemorySearch {
             builder.minimumShouldMatch(1);
             mustQuery.must(builder);
         }else {
-            // 排除AI回复
+            // Exclude AI replies
             mustQuery.mustNot(new TermQueryBuilder("messageCreatorId", CreatorEnum.Andrew.getUserId()));
         }
-        // 构建查询体
+        // Build query body
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.size(7);
         FriendPortrait friendPortraitInfo = redisUtil.getFriendPortraitInfo(creatorId);
@@ -104,7 +104,7 @@ public class MemorySearch {
                 //1
                 new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchAllQuery(), new GaussDecayFunctionBuilder("messageLastAccessTime", "now", "24h", "1h", 0.5)),
                 //2
-                new FunctionScoreQueryBuilder.FilterFunctionBuilder(new FieldValueFactorFunctionBuilder("messageImportanceScore").modifier(FieldValueFactorFunction.Modifier.NONE)  // 不修改原始值
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(new FieldValueFactorFunctionBuilder("messageImportanceScore").modifier(FieldValueFactorFunction.Modifier.NONE)
                         .factor(2)),
                 //3
                 new FunctionScoreQueryBuilder.FilterFunctionBuilder(new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "1 / (1 + Math.exp(-1.0 * " + "doc" + "['memoryLeafDepth"
@@ -114,17 +114,17 @@ public class MemorySearch {
                         "cosineSimilarity(params.query_vector, 'messageContentVector'); " + "return Math.abs" + "(score) * 3;", new HashMap<>() {{
                     put("query_vector", contentVector);
                 }}))),
-                // 精确匹配 emotion 字段,1
+                // Exact match emotion field,1
                 new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.termQuery("emotion", emotion), new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless", "return 1;"
                         , Collections.emptyMap()))),
-                // 对数函数归一化 summaryWords 字段的匹配分数,1
+                // Match score of summaryWords field normalized by logarithmic function,1
                 new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.matchQuery("summaryWords", content), new ScriptScoreFunctionBuilder(new Script(ScriptType.INLINE, "painless",
                         "double rawScore = _score; double normalizedScore = Math.log1p(rawScore) / Math.log1p(1.0); return normalizedScore;", Collections.emptyMap())))}).scoreMode(FunctionScoreQuery.ScoreMode.SUM).boostMode(CombineFunction.REPLACE).setMinScore(4));
 
         SearchRequest searchRequest = new SearchRequest(chatMemoryIndex);
         searchRequest.source(searchSourceBuilder);
         try {
-            // 执行查询
+            // Execute query
             SearchResponse searchResponse = esClient.search(searchRequest);
 
             return Arrays.stream(searchResponse.getHits().getHits()).map(hit -> JSON.parseObject(hit.getSourceAsString(), MemoryDTO.class)).collect(Collectors.toList());

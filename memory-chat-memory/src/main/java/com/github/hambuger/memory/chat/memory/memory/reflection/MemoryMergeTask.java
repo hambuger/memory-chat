@@ -67,7 +67,7 @@ public class MemoryMergeTask {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "新增一个记忆", scene = {ChatSceneEnum.MEMORY_MERGE})
+    @FunctionCallRegistry(functionDesc = "Add a new memory", scene = {ChatSceneEnum.MEMORY_MERGE})
     public Boolean insertNewMemory(String content) {
         MemoryDTO memoryDTO = memoryContentMap.get(content);
         if (memoryDTO == null) {
@@ -79,7 +79,7 @@ public class MemoryMergeTask {
         return true;
     }
 
-    @FunctionCallRegistry(functionDesc = "更新原有的记忆内容", scene = {ChatSceneEnum.MEMORY_MERGE})
+    @FunctionCallRegistry(functionDesc = "Update the original memory content", scene = {ChatSceneEnum.MEMORY_MERGE})
     public Boolean updateOldMemory(String messageId, String content) {
         try {
             if (StringUtils.isAnyBlank(messageId, content)) {
@@ -98,7 +98,7 @@ public class MemoryMergeTask {
         return true;
     }
 
-    @FunctionCallRegistry(functionDesc = "删除原有的记忆", scene = {ChatSceneEnum.MEMORY_MERGE})
+    @FunctionCallRegistry(functionDesc = "delete original memory", scene = {ChatSceneEnum.MEMORY_MERGE})
     public Boolean deleteOldMemory(String messageId) {
         MemoryDTO memoryDTO = new MemoryDTO();
         memoryDTO.setIsDeleted(YES_STR);

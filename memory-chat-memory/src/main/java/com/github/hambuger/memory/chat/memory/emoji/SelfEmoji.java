@@ -56,27 +56,27 @@ public class SelfEmoji {
     @NoArgsConstructor
     public static class EmojiExtraWord {
 
-        @JsonPropertyDescription("表情风格")
+        @JsonPropertyDescription("emoji style")
         @JsonProperty(required = true)
         private String emojiStyle;
 
-        @JsonPropertyDescription("表情类别")
+        @JsonPropertyDescription("emoji category")
         @JsonProperty(required = true)
         private String emojiCategory;
 
-        @JsonPropertyDescription("表情标题")
+        @JsonPropertyDescription("emoji title")
         @JsonProperty(required = true)
         private String emojiTitle;
 
-        @JsonPropertyDescription("情感标签")
+        @JsonPropertyDescription("emoji emotion tag")
         @JsonProperty(required = true)
         private String emojiEmotionTag;
 
-        @JsonPropertyDescription("视觉特征描述")
+        @JsonPropertyDescription("emoji visual feature description")
         @JsonProperty(required = true)
         private String emojiVisualFeatureDescription;
 
-        @JsonPropertyDescription("使用场景或语境")
+        @JsonPropertyDescription("emoji usage context")
         @JsonProperty(required = true)
         private String emojiUsageContext;
     }

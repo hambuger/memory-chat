@@ -42,13 +42,13 @@ public class SogouEmoji {
 
     @Data
     public static class EmoticonPictureQuery {
-        @JsonPropertyDescription("表情图片搜索文本")
+        @JsonPropertyDescription("Emoticon image search text")
         @JsonProperty(required = true)
         private String emoticonPictureQueryWord;
 
     }
 
-    @FunctionCallRegistry(functionDesc = "搜索表情图片，返回图片url", scene = {ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NORMAL_USER})
+    @FunctionCallRegistry(functionDesc = "Search for emoticon pictures and return the picture URL", scene = {ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NORMAL_USER})
     public String searchEmoticonPhoto(EmoticonPictureQuery query) {
         try {
             log.info("emoji query:{}", query.getEmoticonPictureQueryWord());
@@ -63,11 +63,6 @@ public class SogouEmoji {
             Random random = new Random();
             int randomNumber = random.nextInt(5);
             String regex;
-//            if (randomNumber > 0) {
-//                regex = "\"thumbSrc\":\"(https:[^\"]+)\",\"idx\":" + randomNumber;
-//            } else {
-//                regex = "\"emoGroupList\":\\[\\[\\{\"groupName\":\"[^\"]+\",\"groupId\":[0-9]+,\"picUrl\":\"(https:[^\"]+)\",\"pic";
-//            }
             regex = "\"thumbSrc\":\"(https:[^\"]+)\",\"idx\":" + randomNumber;
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(response);
@@ -132,12 +127,10 @@ public class SogouEmoji {
         return null;
     }
 
-    // 从URL中提取文件名
     public static String getFileNameFromUrl(String url) {
         return url.substring(url.lastIndexOf('/') + 1);
     }
 
-    // 检测图片格式
     public static String detectImageFormat(String imageUrl) throws IOException {
         URL url = new URL(imageUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -154,28 +147,27 @@ public class SogouEmoji {
                 } else if (isGIF(header)) {
                     return "gif";
                 }
-                // 扩展其他图片类型时可在此添加判断
             }
         }
         return "png";
     }
 
-    // 判断是否为PNG格式
+    // Determine whether it is in PNG format
     private static boolean isPNG(byte[] header) {
         return (header[0] == (byte) 0x89 && header[1] == (byte) 0x50 && header[2] == (byte) 0x4E && header[3] == (byte) 0x47);
     }
 
-    // 判断是否为JPEG格式
+    // Determine whether it is in JPEG format
     private static boolean isJPEG(byte[] header) {
         return (header[0] == (byte) 0xFF && header[1] == (byte) 0xD8);
     }
 
-    // 判断是否为GIF格式
+    // Determine whether it is in GIF format
     private static boolean isGIF(byte[] header) {
         return (header[0] == (byte) 0x47 && header[1] == (byte) 0x49 && header[2] == (byte) 0x46);
     }
 
-    // 下载并保存图片
+    // Download and save images
     public static void downloadImageFromUrl(String imageUrl, String destinationFile) throws IOException {
         URL url = new URL(imageUrl);
         try (InputStream in = url.openStream()) {
@@ -186,13 +178,13 @@ public class SogouEmoji {
 
 
     /**
-     * 下载图片到本地
+     * Download pictures to local
      */
     private static String downloadImage(String imageUrl, String destinationFilePath) throws Exception {
         HttpResponse<InputStream> response = Unirest.get(imageUrl).asBinary();
         try (InputStream in = response.getBody()) {
 
-            // 获取内容类型并根据此信息设置文件扩展名
+            // Get the content type and set the file extension based on this information
             List<String> contentTypes = response.getHeaders().get("Content-Type");
             if (contentTypes != null && contentTypes.size() > 0) {
                 destinationFilePath = destinationFilePath + UUID.randomUUID() +contentTypes.get(0).replace("image/", ".");
@@ -200,15 +192,13 @@ public class SogouEmoji {
                 destinationFilePath = destinationFilePath  + UUID.randomUUID() + ".png";
             }
 
-            // 确保目录存在
             File file = new File(destinationFilePath);
             File parentDir = file.getParentFile();
             if (!parentDir.exists()) {
-                parentDir.mkdirs();  // 创建所有必要的父目录
+                parentDir.mkdirs();
             }
 
             try (FileOutputStream out = new FileOutputStream(file)) {
-                // 写入文件
                 byte[] buffer = new byte[4096];
                 int bytesRead;
                 while ((bytesRead = in.read(buffer)) != -1) {
@@ -220,7 +210,7 @@ public class SogouEmoji {
 
         } catch (Exception e) {
             log.error("downloadImage error", e);
-            return null;  // 返回null表示下载失败
+            return null;
         }
     }
 

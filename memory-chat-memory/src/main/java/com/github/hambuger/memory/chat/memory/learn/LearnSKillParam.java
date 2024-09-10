@@ -13,7 +13,7 @@ import lombok.Data;
 @Data
 public class LearnSKillParam {
 
-    @JsonPropertyDescription("学习方法的描述")
+    @JsonPropertyDescription("Description of learning skill")
     @JsonProperty(required = true)
     private String skillDescription;
 

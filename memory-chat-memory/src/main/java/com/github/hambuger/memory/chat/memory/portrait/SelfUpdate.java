@@ -49,13 +49,13 @@ public class SelfUpdate {
         return String.format(CUSTOM_SELF_PORTRAIT, UserInfoUtil.getUser());
     }
 
-    @FunctionCallRegistry(functionDesc = "更新画像数据", scene = {ChatSceneEnum.UPDATE_SELF_PORTRAIT})
+    @FunctionCallRegistry(functionDesc = "Update profile data", scene = {ChatSceneEnum.UPDATE_SELF_PORTRAIT})
     public Boolean updatePortraitInfo(SelfPortrait param) {
         redisUtil.setString(getCustomSelfPortraitKey(), JSON.toJSONString(param));
         return true;
     }
 
-    @FunctionCallRegistry(functionDesc = "新增角色的画像数据", scene = {ChatSceneEnum.ROLE_CHANGE})
+    @FunctionCallRegistry(functionDesc = "Added character portrait data", scene = {ChatSceneEnum.ROLE_CHANGE})
     public Boolean addRole(SelfPortrait selfPortrait) {
         updateSelfPortrait(selfPortrait);
         redisUtil.reset(DayPlanGenerate.getCustomDayPlanKey());
@@ -63,7 +63,7 @@ public class SelfUpdate {
         return true;
     }
 
-    @FunctionCallRegistry(functionDesc = "更新Andrew的自我画像，可与回复消息并行执行", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
+    @FunctionCallRegistry(functionDesc = "Updated Andrew's self-portrait to be performed in parallel with the reply message", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
     public Boolean updateSelfPortrait(SelfPortrait param) {
         String selfPortrait = redisUtil.getString(getCustomSelfPortraitKey());
         if (StringUtils.isNotBlank(selfPortrait)) {
@@ -92,12 +92,12 @@ public class SelfUpdate {
             }
             StringBuilder info = new StringBuilder(object.toString());
             info.append("(");
-            info.append("已进行了");
+            info.append("has passed ");
             int minute = DateUtil.minute(new Date());
             info.append(minute);
-            info.append("分钟, 还剩下");
+            info.append("minutes,");
             info.append(60 - minute);
-            info.append("分钟)");
+            info.append("minutes left)");
             return info.toString();
         }).orElse("Unknown");
         if (StringUtils.isBlank(portraitStr)) {

@@ -1,5 +1,6 @@
 package com.github.hambuger.memory.chat.memory.audio;
 
+import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.util.VideoUtil;
 
 import org.springframework.ai.openai.OpenAiAudioTranscriptionModel;
@@ -36,10 +37,13 @@ public class SpringAiAudio {
     @Value("${spring.ai.openai.temperature}")
     private Float temperature;
 
+    @jakarta.annotation.Resource
+    private PromptFactory promptFactory;
+
 
     public String generateTextWithAudio(Resource audioFile) {
         OpenAiAudioTranscriptionOptions transcriptionOptions =
-                OpenAiAudioTranscriptionOptions.builder().withResponseFormat(OpenAiAudioApi.TranscriptResponseFormat.TEXT).withTemperature(temperature).withPrompt("如果是汉语，返回简体字").build();
+                OpenAiAudioTranscriptionOptions.builder().withResponseFormat(OpenAiAudioApi.TranscriptResponseFormat.TEXT).withTemperature(temperature).withPrompt(promptFactory.getAudioPrompt()).build();
         AudioTranscriptionPrompt transcriptionRequest = new AudioTranscriptionPrompt(audioFile, transcriptionOptions);
         AudioTranscriptionResponse response = openAiAudioTranscriptionModel.call(transcriptionRequest);
         return Optional.ofNullable(response).map(AudioTranscriptionResponse::getResult).map(AudioTranscription::getOutput).orElse(null);

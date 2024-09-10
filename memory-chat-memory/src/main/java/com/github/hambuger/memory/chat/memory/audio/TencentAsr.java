@@ -22,19 +22,17 @@ import javax.sound.sampled.TargetDataLine;
 
 
 /**
- * 实时识别麦克风输入示例
+ * Examples of real-time recognition of microphone input
  */
 public class TencentAsr {
 
     static Logger logger = LoggerFactory.getLogger(TencentAsr.class);
 
-    //SpeechClient应用全局创建一个即可,生命周期可和整个应用保持一致
     static SpeechClient proxy = new SpeechClient(AsrConstant.DEFAULT_RT_REQ_URL);
 
 
     public static void main(String[] args) {
-        //在腾讯云控制台[账号信息](https://console.cloud.tencent.com/developer)页面查看账号APPID，[访问管理](https://console.cloud.tencent.com/cam/capi)页面获取 SecretID 和 SecretKey 。
-        //todo 在使用该接口前，需要开通该服务，并请将下面appId、secretId、secretKey替换为自己账号信息。
+        //todo Before using this API, you need to activate the service and replace the following appId, secretId, and secretKey with your account information.
         String appId = "xxx";
         String secretId = "xxx";
         String secretKey = "xxx";
@@ -48,7 +46,7 @@ public class TencentAsr {
         SpeechRecognizerRequest request = SpeechRecognizerRequest.init();
         request.setEngineModelType("8k_zh");
         request.setVoiceFormat(1);
-        request.setVoiceId(UUID.randomUUID().toString()); // voice_id为请求标识，需要保持全局唯一（推荐使用 uuid），遇到问题需要提供该值方便服务端排查
+        request.setVoiceId(UUID.randomUUID().toString());
         logger.debug("voice_id:{}", request.getVoiceId());
 
         SpeechRecognizerListener listener = new SpeechRecognizerListener() {
@@ -97,37 +95,36 @@ public class TencentAsr {
         SpeechRecognizer speechRecognizer = null;
         TargetDataLine targetDataLine = null;
         try {
-            // 配置麦克风输入格式
+            // Configure the microphone input format
             AudioFormat format = new AudioFormat(8000.0f, 16, 1, true, false);
             DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
             if (!AudioSystem.isLineSupported(info)) {
-                logger.error("麦克风不支持该格式");
+                logger.error("The microphone does not support this format");
                 return;
             }
 
-            // 打开麦克风并开始捕获音频
+            // Turn on the microphone and start capturing audio
             targetDataLine = (TargetDataLine) AudioSystem.getLine(info);
             targetDataLine.open(format);
             targetDataLine.start();
 
             speechRecognizer = new SpeechRecognizer(proxy, credential, request, listener);
             speechRecognizer.start();
-            logger.info("speechRecognizer 已启动");
+            logger.info("speechRecognizer Started");
 
             byte[] buffer = new byte[640];
-            while (true) { // 可根据需求控制循环条件
+            while (true) {
                 int bytesRead = targetDataLine.read(buffer, 0, buffer.length);
                 if (bytesRead > 0) {
                     speechRecognizer.write(buffer);
                 }
-                // 可根据需求调整线程休眠时间来模拟实时传输的速度
                 Thread.sleep(20);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
         } finally {
             if (speechRecognizer != null) {
-                speechRecognizer.close(); //关闭连接
+                speechRecognizer.close();
             }
             if (targetDataLine != null) {
                 targetDataLine.stop();

@@ -98,7 +98,7 @@ def get_audio(audio_active=False, file_path='tmp/audio.wav', last_time=0):
             num_unvoiced = len([chunk for chunk, active in ring_buffer if not active])
             # print("2 num_unvoiced: ", num_unvoiced)
             # print("2 len(ring_buffer): ", len(ring_buffer))
-            if num_unvoiced > 0.9 * len(ring_buffer):  # 减小这个值
+            if num_unvoiced > 0.9 * len(ring_buffer):
                 # print('Voice end detected')
                 got_a_sentence = True
                 triggered = False

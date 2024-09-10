@@ -72,12 +72,12 @@ public class SpringAiChat {
     @Data
     public static class FinishParam {
 
-        @JsonPropertyDescription("完成状态")
+        @JsonPropertyDescription("completion status")
         @JsonProperty(required = true)
         boolean finishStatus;
     }
 
-    @FunctionCallRegistry(functionDesc = "完成所有操作并获取到操作结果后，更新完成状态", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.MEMORY_MERGE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_JUDGE, ChatSceneEnum.ROLE_CHANGE,ChatSceneEnum.UPDATE_FRIEND_PORTRAIT, ChatSceneEnum.UPDATE_SELF_PORTRAIT, ChatSceneEnum.RULE_CHANGE})
+    @FunctionCallRegistry(functionDesc = "After completing all operations and obtaining the operation results, update the completion status", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.MEMORY_MERGE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_JUDGE, ChatSceneEnum.ROLE_CHANGE,ChatSceneEnum.UPDATE_FRIEND_PORTRAIT, ChatSceneEnum.UPDATE_SELF_PORTRAIT, ChatSceneEnum.RULE_CHANGE})
     public Boolean updateFinishFlag(FinishParam success) {
         return true;
     }

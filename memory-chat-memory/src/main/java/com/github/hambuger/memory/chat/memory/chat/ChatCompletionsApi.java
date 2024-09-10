@@ -161,16 +161,16 @@ public class ChatCompletionsApi {
             redisUtil.addMsg(msgListKey,
                     MemoryDTO.builder().messageId(memoryDTO.getMessageId()).messageCreateAt(memoryDTO.getMessageCreateAt()).realCreatorId(memoryDTO.getRealCreatorId()).messageCreatorId(memoryDTO.getMessageCreatorId()).groupMsgFlag(memoryDTO.getGroupMsgFlag()).messageContentType(memoryDTO.getMessageContentType()).aiResponseFlag(memoryDTO.getAiResponseFlag()).messageContent(memoryDTO.getMessageContent()).build());
             if (!memoryDTO.isDealFileFlag()) {
-                // 异步插入用户消息
+                // Asynchronously insert user messages
                 CHAT_POOL.execute(() -> memoryInsert.insertNewMemory(memoryDTO, false));
             }
-            // 更新最后一条消息id
+            // Update the last message id
             LAST_MESSAGE_ID_MAP.get().put(memoryDTO.lastMsgIdMapKey(), memoryDTO.getMessageId());
-            // 检查是否是最后一条消息
+            // Check if this is the last message
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
-            // 查询相关性最高的历史消息
+            // Query the most relevant historical news
             List<MemoryDTO> searchMemoryList = StringUtils.equals(memoryDTO.getMessageContentType(), ContentTypeEnum.TEXT.getType()) ?
                     memorySearch.searchRelationMemory(memoryDTO.getMessageOwnerId(), memoryDTO.getMessageCreatorId(), memoryDTO.getMessageContent(), 0) : new ArrayList<>();
 
@@ -178,7 +178,7 @@ public class ChatCompletionsApi {
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
-            // 获取最近时间的聊天记录
+            // Get recent chat history
             Pair<List<String>, LinkedList<OpenAiApi.ChatCompletionMessage>> listPair = getMinMemoryContext(msgListKey, memoryDTOS);
             List<String> existMsgIds = listPair.getKey();
             LinkedList<OpenAiApi.ChatCompletionMessage> messageList = listPair.getValue();
@@ -190,7 +190,7 @@ public class ChatCompletionsApi {
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
-            // 获取AI回复
+            // Get AI reply
             OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, memoryDTO.groupFlag(), ChatSceneEnum.NORMAL_USER);
             if (aiMessageResponse == null || CollectionUtils.isEmpty(aiMessageResponse.choices())) {
                 return null;
@@ -210,7 +210,7 @@ public class ChatCompletionsApi {
                 chatMember.setChannelScene(baseMemoryDTO.getChannelEnum());
                 redisUtil.addMember(chatMember);
             });
-            // 转换成发送消息
+            // Convert to send message
             List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
             if (CollectionUtils.isEmpty(sendMessageList)) {
                 return null;
@@ -236,13 +236,13 @@ public class ChatCompletionsApi {
         sendMessage.setMessageContentType(ContentTypeEnum.TEXT.getType());
         String replyContent;
         if (StringUtils.isBlank(messageContent)) {
-            replyContent = "你提供的内容为空，重新输入！";
+            replyContent = promptFactory.getEmptySettingPrompt();
         }else {
             if (checkRoleContent(messageContent)) {
-                replyContent = "修改设定如下:\n" + getRoleDetail(messageContent);
+                replyContent = promptFactory.getResultSettingPrompt() + getRoleDetail(messageContent);
                 CHAT_POOL.execute(() -> portraitGenerate.generateCustomChatModel(baseMemoryDTO.getMessageCreatorName(), messageContent));
             }else {
-                replyContent = "你提供的内容和设定无关！";
+                replyContent = promptFactory.getErrorSettingPrompt();
             }
         }
         sendMessage.setMessageContent(replyContent);
@@ -256,11 +256,11 @@ public class ChatCompletionsApi {
         @Serial
         private static final long serialVersionUID = -3058233413971990660L;
 
-        @JsonPropertyDescription("内容是否和角色设定相关")
+        @JsonPropertyDescription("is the content related to the character setting")
         @JsonProperty(required = true)
         private boolean relatedToRoleSetting;
 
-        @JsonPropertyDescription("理由")
+        @JsonPropertyDescription("reason")
         @JsonProperty(required = true)
         private String reason;
 
@@ -368,9 +368,9 @@ public class ChatCompletionsApi {
                 List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
                 messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
                 String history = StringUtils.join(memoryDTOS.stream().map(msg -> Optional.ofNullable(msg.getRealCreatorName()).orElse(msg.getMessageCreatorName()) + ": " + msg.getMessageContent() + "(" + msg.getMessageCreateAt() + ")").collect(Collectors.toList()), "\n");
-                history = history + String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复", memoryDTO.getMessageCreatorName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND)));
+                history = history + promptFactory.getTimePrompt(memoryDTO.getMessageCreatorName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND)));
                 String mindFlowStr = mindFlow.getMindFlowFromMsg(history);
-                messages.add(new OpenAiApi.ChatCompletionMessage(String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复。【你的内心活动：%s】", memoryDTO.getMessageCreatorName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND)), mindFlowStr), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+                messages.add(new OpenAiApi.ChatCompletionMessage(promptFactory.getTimePromptV2(memoryDTO.getMessageCreatorName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND)), mindFlowStr), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
                 addPerceptionMessage(memoryDTO.getMessageCreatorName(), messages);
                 OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, ChatSceneEnum.SCHEDULE);
                 if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
@@ -385,7 +385,7 @@ public class ChatCompletionsApi {
                     List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiResponse.usage().completionTokens());
                     aiMsgDTOList.forEach(dto -> memoryInsert.insertNewMemory(dto, true));
                 });
-                // 转换成发送消息
+                // Convert to send message
                 List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
                 if (CollectionUtils.isEmpty(sendMessageList)) {
                     return false;
@@ -420,7 +420,7 @@ public class ChatCompletionsApi {
         }
         String beforeWeather = WeatherQuery.getBeforeWeather();
         if (StringUtils.isNotBlank(beforeWeather) && !StringUtils.equals(beforeWeather, weatherStr)) {
-            OpenAiApi.ChatCompletionMessage newMsg = new OpenAiApi.ChatCompletionMessage(String.format("%s的天气由%s变成了%s", portraitInfo.getCity(), beforeWeather, weatherStr),
+            OpenAiApi.ChatCompletionMessage newMsg = new OpenAiApi.ChatCompletionMessage(promptFactory.getWeatherChangePrompt(portraitInfo.getCity(), beforeWeather, weatherStr),
                     OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
             messages.add(newMsg);
             WeatherQuery.setBeforeWeather(weatherStr);
@@ -490,7 +490,7 @@ public class ChatCompletionsApi {
     private @NotNull OpenAiApi.ChatCompletionMessage getSystemMessage(MemoryDTO memoryDTO, List<MemoryDTO> searchMemoryList, List<String> existMsgIds) {
         OpenAiApi.ChatCompletionMessage systemMessage;
         boolean groupFlag = memoryDTO.groupFlag();
-        // 选择prompt
+        // Select prompt
         if (CollectionUtils.isEmpty(searchMemoryList)) {
             systemMessage = new OpenAiApi.ChatCompletionMessage(promptFactory.getChatPrompt(memoryDTO.getMessageCreatorName(), null, null, groupFlag, ChatSceneEnum.NORMAL_USER), OpenAiApi.ChatCompletionMessage.Role.SYSTEM);
         }else {
@@ -519,12 +519,12 @@ public class ChatCompletionsApi {
             memoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(new FileSystemResource(baseMemoryDTO.getMessageContent())));
         }else if (StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.VIDEO.getType())) {
             memoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
-            memoryDTO.setMessageContent(String.format("%s给你发过来一个视频，正在查看中", Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName())));
+            memoryDTO.setMessageContent(String.format("%s sent you a video, currently viewing it", Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName())));
         }else if(StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.PICTURE.getType()) || StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.EMOJI.getType())){
             memoryDTO.setMessageContent(picBedUtil.uploadImage(baseMemoryDTO.getMessageContent()));
         }else if(StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.APP.getType())) {
             memoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
-            memoryDTO.setMessageContent(String.format("%s给你发过来一个文件,文件路径：%s，正在查看中", Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName()), baseMemoryDTO.getMessageContent()));
+            memoryDTO.setMessageContent(String.format("%s sent you a file, file path: %s, currently viewing", Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName()), baseMemoryDTO.getMessageContent()));
         }
         memoryDTO.setMessageCreatorId(memoryDTO.getMessageCreatorName());
         memoryDTO.setMessageCreatorType(baseMemoryDTO.groupFlag() ? CreatorEnum.GROUP.getType() : CreatorEnum.USER.getType());
@@ -558,9 +558,9 @@ public class ChatCompletionsApi {
     private String getFileInfo(BaseMemoryDTO baseMemoryDTO) {
         StringBuilder info = new StringBuilder();
         info.append(Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName()));
-        info.append("发送过来一个文件，文件地址：");
+        info.append(promptFactory.getFileSendPrompt());
         info.append(baseMemoryDTO.getMessageContent()).append("\n");
-        info.append("文件的内容大致总结如下：\n");
+        info.append(promptFactory.getFileSendPromptV2());
         String filePath = baseMemoryDTO.getMessageContent();
         if (!StringUtils.startsWith(filePath, FILE_URL_PREFIX) && !StringUtils.startsWith(filePath, HTTP)) {
             filePath = FILE_URL_PREFIX + filePath;
@@ -693,13 +693,13 @@ public class ChatCompletionsApi {
     private String getVideInfoText(String creatorName, List<String> imageList, String audioText) {
         List<OpenAiApi.ChatCompletionMessage.MediaContent> contentList = new ArrayList<>();
         List<OpenAiApi.ChatCompletionMessage> messageList = new ArrayList<>();
-        messageList.add(new OpenAiApi.ChatCompletionMessage("现在有一个视频的字幕信息和视频中的截图的图片集。你需要给出这个视频的详细描述，以便让他人能够通过这个描述理解视频的内容。回复只需要给出描述，不要有其他的多余信息.\n", OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+        messageList.add(new OpenAiApi.ChatCompletionMessage("Now there is a video subtitle information and a collection of screenshots from the video. You need to give a detailed description of the video so that others can understand the content of the video through this description. The reply only needs to give a description, without other redundant information.\n", OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
         StringBuilder prompt = new StringBuilder();
         if (StringUtils.isNotBlank(audioText)) {
-            prompt.append(String.format("视频的字幕信息如下：%s", audioText));
+            prompt.append(String.format("The subtitle information of the video is as follows：%s", audioText));
         }
         if (CollectionUtils.isNotEmpty(imageList)) {
-            prompt.append("视频的截图集合是下面这些图片");
+            prompt.append("The screenshots of the video are as follows");
         }
         contentList.add(new OpenAiApi.ChatCompletionMessage.MediaContent(prompt.toString()));
         if (CollectionUtils.isNotEmpty(imageList)) {
@@ -711,7 +711,7 @@ public class ChatCompletionsApi {
         messageList.add(new OpenAiApi.ChatCompletionMessage(contentList, OpenAiApi.ChatCompletionMessage.Role.USER));
         OpenAiApi.ChatCompletion response = springAiChat.generateMsgWithMsgList(messageList, false);
         String videoInfo = response.choices().get(0).message().content();
-        return String.format("%s发送了一个视频。这个视频的信息如下：%s", creatorName, videoInfo);
+        return promptFactory.getVideoInfoPrompt(creatorName, videoInfo);
     }
 
     public List<OpenAiApi.ChatCompletionMessage> getAllHistoryMessageList(String msgListKey) {
@@ -752,7 +752,7 @@ public class ChatCompletionsApi {
                 String mind = mindFlow.getMindFlowByMsgId(memoryDTO.getMessageId());
                 String content = memoryDTO.getMessageContent();
                 if (StringUtils.isNotBlank(mind)) {
-                    content = content + "[内心活动：" + mind + "]";
+                    content = content + promptFactory.getThoughtPrompt(mind);
                 }
                 chatMessage = new OpenAiApi.ChatCompletionMessage(content, OpenAiApi.ChatCompletionMessage.Role.ASSISTANT);
                 sumMsgToken = sumMsgToken + tokenCalculation.getUserMessageToken(chatMessage);
@@ -780,16 +780,16 @@ public class ChatCompletionsApi {
 
     public static String formatDuration(long seconds) {
         if (seconds < 60) {
-            return seconds + "秒";
+            return seconds + "Seconds";
         } else if (seconds < 3600) {
             long minutes = seconds / 60;
-            return minutes + "分钟";
-        } else if (seconds < 86400) { // 一天有 86400 秒
+            return minutes + "Minutes";
+        } else if (seconds < 86400) {
             long hours = seconds / 3600;
-            return hours + "小时";
+            return hours + "Hours";
         } else {
             long days = seconds / 86400;
-            return days + "天";
+            return days + "Days";
         }
     }
 
@@ -810,7 +810,7 @@ public class ChatCompletionsApi {
             }
             List<OpenAiApi.ChatCompletionMessage> messages = new ArrayList<>();
             messages.add(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-            messages.add(new OpenAiApi.ChatCompletionMessage(String.format("距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复", chatMember.getName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND))), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
+            messages.add(new OpenAiApi.ChatCompletionMessage(promptFactory.getTimePrompt(chatMember.getName(), formatDuration(DateUtil.between(DateUtil.parseDateTime(memoryDTOS.get(memoryDTOS.size() - 1).getMessageCreateAt()), new Date(), DateUnit.SECOND))), OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
             addPerceptionMessage(chatMember.getName(), messages);
             OpenAiApi.ChatCompletion aiResponse = springAiChat.generateMsgWithMsgListAndFunctions(messages, groupFlag, ChatSceneEnum.NEWS_SCHEDULE);
             if (aiResponse == null || CollectionUtils.isEmpty(aiResponse.choices())) {
@@ -833,7 +833,7 @@ public class ChatCompletionsApi {
                 List<MemoryDTO> aiMsgDTOList = convertSpringMsg2AiMSg(responseMessage, memoryDTO, aiResponse.usage().completionTokens());
                 aiMsgDTOList.forEach(dto -> memoryInsert.insertNewMemory(dto, true));
             });
-            // 转换成发送消息
+            // Convert to send message
             List<SendMessage> sendMessageList = convertSendMessageList(responseMessage);
             if (CollectionUtils.isNotEmpty(sendMessageList)) {
                 sendWxChatMessageList(null, memberName, sendMessageList, System.currentTimeMillis());
@@ -850,11 +850,11 @@ public class ChatCompletionsApi {
         @Serial
         private static final long serialVersionUID = 543081299572723565L;
 
-        @JsonPropertyDescription("是否需要发送")
+        @JsonPropertyDescription("Do you need to send")
         @JsonProperty(required = true)
         private boolean needSend;
 
-        @JsonPropertyDescription("理由")
+        @JsonPropertyDescription("reason")
         @JsonProperty(required = true)
         private String reason;
 
@@ -887,14 +887,9 @@ public class ChatCompletionsApi {
     @NotNull
     private static StringBuilder getMemoryStrFromMemoryList(List<MemoryDTO> memoryDTOS) {
         StringBuilder memoryStr = new StringBuilder();
-//        Set<String> existSet = new HashSet<>();
         int index = 1;
         for (int i = 0; i < memoryDTOS.size(); i++) {
             MemoryDTO memorySingle = memoryDTOS.get(i);
-//            if (existSet.contains(memorySingle.getMessageContent())) {
-//                continue;
-//            }
-//            existSet.add(memorySingle.getMessageContent());
             memoryStr.append(index).append(". (").append(memorySingle.getMessageCreateAt()).append(")").append(Optional.ofNullable(memorySingle.getRealCreatorId()).orElse(Optional.ofNullable(memorySingle.getMessageCreatorId()).orElse(CreatorEnum.Andrew.getUserName()))).append(": ").append(memorySingle.getMessageContent()).append("\n");
             index++;
         }

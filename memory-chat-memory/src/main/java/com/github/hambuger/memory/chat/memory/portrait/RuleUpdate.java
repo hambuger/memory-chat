@@ -54,15 +54,15 @@ public class RuleUpdate {
     @Data
     public static class ChatRuleUpdate {
 
-        @JsonPropertyDescription("Andrew的聊天是否合理")
+        @JsonPropertyDescription("Andrew's chat is reasonable")
         @JsonProperty(required = true)
         private Boolean chatContentReasonable;
 
-        @JsonPropertyDescription("原因")
+        @JsonPropertyDescription("reason")
         @JsonProperty(required = true)
         private String reason;
 
-        @JsonPropertyDescription("新加规则")
+        @JsonPropertyDescription("New rules")
         @JsonProperty(required = true)
         private List<String> improvedRules;
 
@@ -76,7 +76,7 @@ public class RuleUpdate {
             for (int i = 0; i < ruleList.size(); i++) {
                 sb.append(i + 1).append(". ").append(ruleList.get(i));
                 if (i < ruleList.size() - 1) {
-                    sb.append("\n"); // 如果不是最后一个元素，添加逗号和空格
+                    sb.append("\n");
                 }
             }
             return sb.toString();
@@ -125,7 +125,7 @@ public class RuleUpdate {
         @JsonProperty(required = true)
         private List<String> mergeRuleList;
 
-        @JsonPropertyDescription("理由")
+        @JsonPropertyDescription("reason")
         @JsonProperty(required = true)
         private String reason;
 

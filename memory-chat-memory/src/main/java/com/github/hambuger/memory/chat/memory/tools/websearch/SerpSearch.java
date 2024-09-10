@@ -30,13 +30,13 @@ public class SerpSearch {
     @Data
     public static class SerpQuery {
 
-        @JsonPropertyDescription("搜索关键词")
+        @JsonPropertyDescription("Search for keywords")
         @JsonProperty(required = true)
         private String queryWord;
     }
 
 
-//    @FunctionCallRegistry(functionDesc = "去谷歌搜索相关信息")
+//    @FunctionCallRegistry(functionDesc = "Go Google and search for relevant information")
     public String getSerpSearchResult(SerpQuery query) {
         try {
             Map<String, Object> queryParam = new HashMap<>();

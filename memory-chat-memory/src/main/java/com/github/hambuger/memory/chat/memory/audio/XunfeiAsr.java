@@ -21,12 +21,12 @@ import okio.ByteString;
 
 
 /**
- * 实时麦克风语音转写
+ * Real-time microphone voice transcription
  */
 @Slf4j
 public class XunfeiAsr {
 
-    // 音频格式配置
+    // Audio format configuration
     private static final AudioFormat AUDIO_FORMAT = new AudioFormat(16000, 16, 1, true, false);
 
 
@@ -36,7 +36,7 @@ public class XunfeiAsr {
 
 
     public static void send() throws InterruptedException {
-        // 初始化讯飞RTASR客户端
+        // Initialize the client
         RtasrClient rtasrClient = new RtasrClient.Builder().signature("xxx", "xxx").build();
         CountDownLatch latch = new CountDownLatch(1);
         WebSocket webSocket = rtasrClient.newWebSocket(new AbstractRtasrWebSocketListener() {
@@ -69,7 +69,7 @@ public class XunfeiAsr {
             }
         });
 
-        // 捕获麦克风音频数据并发送
+        // Capture microphone audio data and send it
         try (TargetDataLine microphone = AudioSystem.getTargetDataLine(AUDIO_FORMAT)) {
             microphone.open(AUDIO_FORMAT);
             microphone.start();
@@ -95,7 +95,6 @@ public class XunfeiAsr {
                     Thread.sleep(40);
                 }
             }
-            // 发送结束标识
             rtasrClient.sendEnd();
         } catch (Exception e) {
             log.error("error", e);
@@ -105,7 +104,6 @@ public class XunfeiAsr {
     }
 
 
-    // 把转写结果解析为句子
     public static String getContent(String message) {
         try {
             JSONObject data = JSON.parseObject(message);
@@ -127,11 +125,11 @@ public class XunfeiAsr {
                     }
 
                     if (wb == 0) {
-                        // 中间结果
-                        return "中间结果: " + resultText;
+                        // INTERMEDIATE RESULTS
+                        return "INTERMEDIATE RESULTS: " + resultText;
                     }else {
-                        // 最终结果
-                        return "最终结果: " + resultText;
+                        // END RESULT
+                        return "END RESULT: " + resultText;
                     }
                 }
             }

@@ -1,6 +1,5 @@
 package com.github.hambuger.memory.chat.memory.memory.reflection;
 
-import com.drew.lang.StringUtil;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;

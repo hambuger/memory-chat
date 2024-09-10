@@ -56,7 +56,7 @@ public class LearnDeclarativeMemory {
     @Data
     public static class LearnSkillQuery {
 
-        @JsonPropertyDescription("技能名")
+        @JsonPropertyDescription("Skill name")
         @JsonProperty(required = true)
         private String skillName;
 
@@ -65,15 +65,15 @@ public class LearnDeclarativeMemory {
     @Data
     public static class LearnSkillParam {
 
-        @JsonPropertyDescription("是否需要沉淀新技能")
+        @JsonPropertyDescription("Do you need to acquire new skills?")
         @JsonProperty(required = true)
         private boolean needLearnSkill;
 
-        @JsonPropertyDescription("技能的英文名")
+        @JsonPropertyDescription("English name of skill")
         @JsonProperty(required = false)
         private String skillEnName;
 
-        @JsonPropertyDescription("技能详情")
+        @JsonPropertyDescription("Skill details")
         @JsonProperty(required = false)
         private String skillDetail;
 
@@ -109,11 +109,11 @@ public class LearnDeclarativeMemory {
         String methodDesc = String.format(template, JSON.toJSONString(allLearnSkill));
         FunctionTool functionTool = new FunctionTool();
         functionTool.setScene(new ChatSceneEnum[]{ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NORMAL_USER, ChatSceneEnum.LEARN_SKILL});
-        functionTool.setFunctionTool(new OpenAiApi.FunctionTool(new OpenAiApi.FunctionTool.Function("获取学习过的技能说明", "getLearnSkill", methodDesc)));
+        functionTool.setFunctionTool(new OpenAiApi.FunctionTool(new OpenAiApi.FunctionTool.Function("Get descriptions of learned skills", "getLearnSkill", methodDesc)));
         CallFunctionRegistryFactory.registryFunction(functionTool, LearnSkillQuery.class, function);
     }
 
-    @FunctionCallRegistry(functionDesc = "处理技能学习", scene = {ChatSceneEnum.LEARN_SKILL})
+    @FunctionCallRegistry(functionDesc = "processing skill learning", scene = {ChatSceneEnum.LEARN_SKILL})
     public Boolean learnSkillProcess(LearnSkillParam param) {
         if (param.needLearnSkill) {
             redisUtil.putLearnSkill(param.getSkillEnName(), param.getSkillDetail());

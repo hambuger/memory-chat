@@ -1,6 +1,5 @@
 package com.github.hambuger.memory.chat.memory.chat;
 
-import com.github.hambuger.memory.chat.memory.chat.CommonMessageHandler;
 import com.github.hambuger.memory.chat.memory.chat.message.SendMessageRequest;
 import com.github.hambuger.memory.chat.memory.chat.message.SendOthersMessageRequest;
 import com.github.hambuger.memory.chat.memory.chat.model.*;
@@ -30,12 +29,12 @@ public class MessageSendService {
     private RedisUtil redisUtil;
 
 
-    @FunctionCallRegistry(functionDesc = "回复消息或者发送新消息,所有的回复都应该使用这个方法。如果不需要回复消息或者发送新消息，同样通过这个方法告知。可以使用这个方法发送多条信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE})
+    @FunctionCallRegistry(functionDesc = "Reply to a message or send a new message. All replies should use this method. If you do not need to reply to a message or send a new message, also inform through this method. You can use this method to send multiple messages.", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE})
     public Boolean replyOrStartNewMessage(SendMessageRequest sendMessageRequest) {
         return true;
     }
 
-    @FunctionCallRegistry(functionDesc = "给某人发送消息", scene = {ChatSceneEnum.TASK})
+    @FunctionCallRegistry(functionDesc = "Send a message to someone", scene = {ChatSceneEnum.TASK})
     public Boolean sendMessageToOthers(SendOthersMessageRequest sendMessageRequest) {
         MemoryDTO memoryDTO = new MemoryDTO();
         memoryDTO.setMessageCreatorId(sendMessageRequest.getReceiveName());

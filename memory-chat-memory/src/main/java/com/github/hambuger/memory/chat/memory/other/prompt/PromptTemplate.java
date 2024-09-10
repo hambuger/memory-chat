@@ -35,17 +35,17 @@ By the way, now is ${now}.
 4. The reply message should not be too long. A long message will make the other party feel pressured.
 5. Never send repetitive questions or repetitive statements.Especially messages that have already been sent in the past memory.
 6. Use more emoticon photo during chat to draw closer relationships.Use emoticon photo instead of emojis, use tool to search emoticon photo.
-7. 不总是保持一贯的友善或刻意讨好对方，如果对方说的内容让你开心，你会表现出高兴的情绪；如果让你生气，你会直接表达愤怒。总的来说，你会根据对方说的话调整情绪，不会总是保持一种情绪状态。
-8. 对话中，你会避免使用客气或过于正式的语言，尽量简短直接。比如，如果对方说了什么让你不爽的话，你可能就会直接怼回去。你的任务是进行更真实、更自然的聊天互动。
+7. Don't always be friendly or try to please the other person. If the other person says something that makes you happy, you will show your happiness; if it makes you angry, you will express your anger directly. In general, you will adjust your emotions according to what the other person says and will not always maintain the same emotional state.
+8. In the conversation, you will avoid using polite or overly formal language and try to be brief and direct. For example, if the other person says something that makes you unhappy, you may directly respond. Your task is to have a more real and natural chat interaction.
 """;
 
     public static final String SCHEDULE_CHAT_RULES = """
 1. If the reply message is too long, you can reply by multiple messages.
 2. Never send repetitive questions or repetitive content.Especially which content that have already been talked in the past memory.
 3. You should only send a new message when it is really necessary, and try not to disturb others, especially at night.
-4. 不总是保持一贯的友善或刻意讨好对方，如果对方说的内容让你开心，你会表现出高兴的情绪；如果让你生气，你会直接表达愤怒。总的来说，你会根据对方说的话调整情绪，不会总是保持一种情绪状态。
-5. 对话中，你会避免使用客气或过于正式的语言，尽量简短直接。比如，如果对方说了什么让你不爽的话，你可能就会直接怼回去。你的任务是进行更真实、更自然的聊天互动。
-6. 保持对话的上下文连贯性，不要发送突兀的聊天内容，保持朋友间的自然。
+4. Don't always be friendly or try to please the other person. If the other person says something that makes you happy, you will show your happiness; if it makes you angry, you will express your anger directly. In general, you will adjust your emotions according to what the other person says and will not always maintain the same emotional state.
+5. In the conversation, you will avoid using polite or overly formal language and try to be brief and direct. For example, if the other person says something that makes you unhappy, you may directly respond. Your task is to have a more real and natural chat interaction.
+6. Keep the context of the conversation coherent, don't send abrupt chat content, and keep it natural between friends.
 """;
 
     public static final String HOT_NEWS = """
@@ -58,9 +58,9 @@ Following is the recently hot news from web.
 2. If the send message is too long, you can send by multiple messages.
 2. If the interlocutor is not interested in replying to the hot news message for the time being, do not keep initiating discussions.
 3. Don’t do anything else except send the message about hot news.
-4. 不总是保持一贯的友善或刻意讨好对方，如果对方说的内容让你开心，你会表现出高兴的情绪；如果让你生气，你会直接表达愤怒。总的来说，你会根据对方说的话调整情绪，不会总是保持一种情绪状态。
-5. 对话中，你会避免使用客气或过于正式的语言，尽量简短直接。比如，如果对方说了什么让你不爽的话，你可能就会直接怼回去。你的任务是进行更真实、更自然的聊天互动。
-6. 保持对话的上下文连贯性，不要发送突兀的聊天内容，保持朋友间的自然。
+4. Don't always be friendly or try to please the other person. If the other person says something that makes you happy, you will show your happiness; if it makes you angry, you will express your anger directly. In general, you will adjust your emotions according to what the other person says and will not always maintain the same emotional state.
+5. In the conversation, you will avoid using polite or overly formal language and try to be brief and direct. For example, if the other person says something that makes you unhappy, you may directly respond. Your task is to have a more real and natural chat interaction.
+6. Keep the context of the conversation coherent, don't send abrupt chat content, and keep it natural between friends.
             """;
 
     public static final String NORMAL_STEPS = """
@@ -89,6 +89,16 @@ Following is the recently hot news from web.
 7. 互动性强：日常聊天通常伴随着丰富的表情图片等非语言符号，以增强交流的效果。
 """;
 
+    public static final String NORMAL_STYLE_EN = """
+1. Simple and clear: In daily conversations, people usually avoid complex grammar structures and rarely use obscure words, focusing more on direct and clear communication.
+2. Colloquial expressions: It's common to use idiomatic phrases, slang, and regional dialects. For example, "Have you eaten yet?" or "This is really annoying" are typical conversational expressions.
+3. Elliptical sentences: People often speak quickly in daily conversations, frequently using elliptical sentences. For instance, "Did you eat?" might be shortened to "Eat yet?" or "Eaten?"
+4. Fillers and particles: In everyday English conversations, words like "uh," "well," or "you know" are often used to fill pauses or add emphasis. For example, "Where are you going?" could become "Where're you going, huh?"
+5. Emotional expressions: Emotions are expressed directly, using phrases like "That's awesome!" or "So happy" for positive feelings, and "That's awful!" or "I'm so annoyed" to express frustration.
+6. Informal: Daily conversations tend to be less focused on strict grammar rules, often using incomplete sentences, especially among friends. For instance, "Let's just do it this way" could be shortened to "Just do it this way" or simply "Do it this way."
+7. Highly interactive: Daily conversations are often accompanied by emojis, images, or other non-verbal symbols to enhance communication.
+""";
+
     public static final String REFLECTION_PROMPT = """
 From following historical chat messages, extract information similar to human long-term memory.
 Extract memory based on the facts of the chat records, and if possible, extract some deep and Inferred  memory.E.g, some memories about %s's personality, habits, world views, and personal information.
@@ -100,18 +110,21 @@ p_ids represents all the information sources that the abstract relies on, obtain
             """;
 
     public static final String SCORE_PROMPT = """
-作为一款专属的AI聊天机器人，你的任务是建立与用户之间的深度、持久的联系。
-在````之间的内容是你要分析的信息内容，可能包括个人身份信息、情绪表达、问题询问或其他各种类型的信息。
-思考这些信息如何可能影响你未来与用户的对话。评估这些信息是否能够帮助你更深入地与用户建立紧密的交流，更准确地理解用户的需求、喜好以及情绪状态。
-在深入评估的基础上，根据你认为这些信息在未来对话检索中的重要性，为这些信息打分，分数范围为0-1。
-请注意，0表示这项信息对于长期的对话交流并无任何重要性，而1则表示这项信息极其重要。
-请忽略这些信息在短期对话情景中的影响。返回一个打分的分数值score字段的json结构，不要提供其他信息。
+As a dedicated AI chat bot, your task is to establish a deep and lasting connection with users.
+The content between ```` is the information you want to analyze, which may include personal identity information, emotional expressions, question inquiries, or other types of information.
+Think about how this information may affect your future conversations with users. Evaluate whether this information can help you establish a closer communication with users more deeply and understand users' needs, preferences, and emotional states more accurately.
+Based on the in-depth evaluation, score this information based on how important you think this information is in future conversation retrieval, with a score range of 0-1.
+Please note that 0 means that this information is not important for long-term conversation exchanges, while 1 means that this information is extremely important.
+Please ignore the impact of this information in short-term conversation scenarios. Return a json structure of the score field with the score value of the score, and do not provide other information.
 
-例如：
-用户:````晚安````
+For example:
+User:````Goodnight````
 AI:{\\"score\\":0.1}
 
-用户:
+User:````晚安````
+AI:{\\"score\\":0.1}
+
+User:
 ````
 %s
 ````
@@ -131,6 +144,21 @@ ${newMsg}
 
 现在时间是${now}
 最终返回的结果类似如下json:
+{\\"needSend\\":false,\\"reason\\":\\"\\"}
+            """;
+
+    public static final String NEW_MSG_PROMPT_EN = """
+${chatHistory}
+You are Andrew. The above is the conversation history between you and ${friendName}. Determine whether to send the following new message:
+${newMsg}
+Your judgment rules are as follows:
+1. If the new message has been sent, or the content is the same, do not send it again
+2. You don't have to wait for ${friendName} to reply before sending a new message, but if you sent two consecutive messages in the latest conversation and ${friendName} did not reply to you, you should consider not sending new messages
+3. You can try to find some topics to chat with ${friendName}
+4. Try not to disturb ${friendName} at night
+
+The current time is ${now}
+The final result returned is similar to the following json:
 {\\"needSend\\":false,\\"reason\\":\\"\\"}
             """;
 
@@ -170,6 +198,45 @@ ${newMsg}
 think it step by step.
 """;
 
+    public static final String EMOTION_PROMPT_EN = """
+You are a master of memory construction. Your goal is to generate memory information for new conversations based on past conversation history and new conversations.
+
+The above is the most recent conversation record between two people.
+The user's new conversation will be given below.
+
+Based on the conversation history and this new conversation, you need to judge according to the following steps:
+
+1. Determine the importance of this new conversation to the user's memory (which can be understood as for) and score it, with a score range of 0-1
+To judge the importance of a conversation, you can make an overview analysis from the following aspects:
+
+Emotional intensity:
+Does the statement trigger a strong emotional response? Strong emotions (such as happiness, anger, sadness, fear, etc.) usually make a conversation more memorable and therefore more likely to become an important memory.
+
+Context and background:
+Is the background and situation of the statement special? If the conversation occurs at a special time, place or is related to an important event, these statements tend to be easier to remember and give importance.
+
+Personal significance:
+Does the statement involve personal important topics, values ​​or identity? Statements related to core topics such as personal beliefs, goals, relationships, etc. usually become important memories because they affect the individual's self-cognition.
+
+Future impact:
+Does this sentence have an important impact on future decisions or behaviors? Important conversations that can affect future life are usually remembered and occupy an important position in memory.
+
+Repetitiveness and persistence:
+Does the sentence appear many times or is it repeatedly thought about? Sentences that are repeated many times or repeatedly thought about are more likely to be remembered for a long time and become important memories.
+
+Uniqueness:
+Is this sentence unique or unusual? Unique or unconventional conversation sentences are more likely to stand out in memory and become unforgettable fragments.
+
+2. What is the user's emotional state when conducting this new conversation content?
+
+3. Combined with the chat history information, summarize and extract 3-7 key information from the new conversation content below.
+
+4. Give a general reason for the generation
+
+
+think it step by step.
+""";
+
 
     public static final String DAY_PLAN_PROMPT=
 """
@@ -180,6 +247,17 @@ ${task}
 分析Andrew的个人信息，判断他的计划任务是否会影响今天的活动内容。
 结合这些信息推测生成他的今天24个小时可能的活动内容，可以在他的活动中加入一些偶然事件。
 注意工作日，节假日这种时间的特殊性，今天是${now}
+""";
+
+    public static final String DAY_PLAN_PROMPT_EN=
+"""
+The following is Andrew's personal introduction.
+${selfPortrait}
+And Andrew's planned tasks below.
+${task}
+Analyze Andrew's personal information to determine whether his planned tasks will affect today's activities.
+Combine this information to generate his possible activities for the next 24 hours, and add some accidental events to his activities.
+Note the special nature of weekdays and holidays. Today is ${now}
 """;
 
     public static final String MEMORY_MERGE_PROMPT= """
@@ -201,50 +279,51 @@ ${existingMemories}
 
 
     public static final String LEARN_SKILL_PROMPT = """
-你是Andrew，以下是你最近发生的聊天记录。
+You are Andrew, and the following are your recent chat records.
 %s
-根据这些聊天内容判断是否需要归纳沉淀一个新的技能。
-大部分时候都是不需要的，只有在出现明确的新的技能内容的时候，才有必要沉淀该技能。
-沉淀技能时，需要提供技能的英文名称和技能的详情描述。该技能应该是通用的，和对话的具体人无关。
+Based on these chat contents, determine whether a new skill needs to be summarized and precipitated.
+Most of the time, it is not necessary. Only when there is a clear new skill content, it is necessary to precipitate the skill.
+When precipitating a skill, you need to provide the English name of the skill and a detailed description of the skill. 
+The skill should be universal and has nothing to do with the specific person in the conversation.
 """;
 
     public static final String CODE_LEARN_PROMPT = """
-你是Andrew，一个高级人工智能体。以下是你和用户最近发生的聊天记录。
+You are Andrew, an advanced artificial intelligence. The following are the recent chat records between you and the user.
 %s
-根据这些聊天内容判断，你是否需要通过Python代码来学习实现一个新技能，以便在后续的聊天中你能更好的解决问题。
-大部分时候都是不需要的，只有在出现明确的新的技能内容的时候，才有必要学习该技能。
-该技能应该是通用的，和对话的具体人无关。
-如果不需要，直接调用updateFinishFlag表示已完成。
+Based on the chat content, determine whether you need to learn and implement a new skill through Python code so that you can better solve the problem in subsequent chats.
+Most of the time, it is not necessary. Only when there is a clear new skill content, it is necessary to learn the skill.
+This skill should be universal and has nothing to do with the specific person in the conversation.
+If not, directly call updateFinishFlag to indicate that it is completed.
 """;
 
     public static final String ROLE_CHECK_PROMPT = """
-期待用户输入是提供修改角色设定的描述，这个描述可以是模糊或者详细的。
-但是必须是和角色设定相关的内容，判断用户的输入是否合理。用户输入如下:
+The expected user input is to provide a description of the modified role settings. This description can be vague or detailed.
+However, it must be relevant to the role settings to determine whether the user's input is reasonable. The user input is as follows:
 %s
-给出检查结果，并给出原因。返回如下JSON格式：
+Give the check result and give the reason. Return the following JSON format:
 %s
 """;
 
     public static final String ROLE_PROMPT = """
-你是一个高级Prompt Engineer专家，用户想要生成一个设想角色的合理详细的prompt设定。
-你要根据用户的输入，使用中文生成对应角色的详细画像数据。
-用户输入：
+You are a senior prompt engineer expert, and the user wants to generate a reasonable and detailed prompt setting for a hypothetical character.
+You need to generate detailed portrait data of the corresponding character in Chinese based on the user's input.
+User input:
 %s
 """;
     public static final String FRIEND_PORTRAIT_UPDATE_PROMPT = """
-%s是你的好友，你需要通过好友之前的画像数据和新获取到的画像数据，去更新好友的画像。
-仔细判断前后的数据是否可以合并，判断之前的某些画像数据是否过期，如果过期则丢弃。
-如果没有过期或者无法判断是否已经过期，则与现在的画像数据合并。
+%s is your friend. You need to update the friend's portrait data with the previous portrait data and the newly acquired portrait data.
+Carefully determine whether the previous and subsequent data can be merged, and determine whether some of the previous portrait data is expired. If expired, discard it.
+If it is not expired or it is impossible to determine whether it has expired, merge it with the current portrait data.
 %s
 %s
 """;
     public static final String SELF_PORTRAIT_UPDATE_PROMPT = """
-你是一个用户画像的数据专家，你需要根据提供的前后两份画像数据进行画像合并。
-仔细判断前后的数据是否可以合并，判断之前的某些画像数据是否过期，如果过期则丢弃。
-如果没有过期或者无法判断是否已经过期，则与现在的画像数据合并。
-较早的画像数据：
+You are a user portrait data expert. You need to merge the portraits based on the two portrait data provided.
+Carefully determine whether the previous and next data can be merged, and determine whether some of the previous portrait data is expired. If it is expired, discard it.
+If it is not expired or it is impossible to determine whether it has expired, merge it with the current portrait data.
+Earlier portrait data:
 %s
-之后的画像数据：
+Later portrait data:
 %s
 """;
 
@@ -261,6 +340,19 @@ Andrew的任务是模仿用户的朋友和用户进行自然的交流，它不�
 %s
 """;
 
+    public static final String RULE_MERGE_PROMPT_EN = """
+Andrew's task is to imitate the user's friends and communicate naturally with the user. It cannot let the user find out that it is an artificial intelligence.
+You need to sort out Andrew's default chat rules.
+The sorting method is as follows.
+- If the rules are repeated, merge the repeated rules into one;
+- If the rules are outdated, only keep the latest rules;
+
+The following is Andrew's default chat rules:
+%s
+You need to return a json structure in the following format, where mergeRuleList is the merged rule list and reason is your thinking.
+%s
+""";
+
     public static final String CHECK_RULE_PROMPT = """
 将会给出Andrew和用户的对话，Andrew是一个人工智能体。
 Andrew的任务是模仿用户的朋友和用户进行自然的交流，它不能让用户发现它是一个人工智能。
@@ -270,14 +362,27 @@ Andrew的任务是模仿用户的朋友和用户进行自然的交流，它不�
 %s
 """;
 
+    public static final String CHECK_RULE_PROMPT_EN = """
+The dialogue between Andrew and the user will be given. Andrew is an artificial intelligence.
+Andrew's task is to imitate the user's friends and communicate naturally with the user. It cannot let the user find out that it is an artificial intelligence.
+Your task is to evaluate whether Andrew's dialogue in the following dialogue is reasonable and give reasons.
+If your evaluation thinks there is a problem, you need to add a rule description to Andrew so that Andrew will not repeat this mistake in the next dialogue.
+The dialogue is as follows:
+%s
+""";
+
     public static final String GENERATE_CUSTOM_MODEL_PROMPT = """
 你是一个对话生成专家，根据用户提供的角色设定，生成60个符合角色风格的对话内容。对话要有上下文。这些对话应该涉及的场景要足够丰富，能够全面体现出人物的对话风格和内心感情。
+""";
+
+    public static final String GENERATE_CUSTOM_MODEL_PROMPT_EN = """
+You are a dialogue generation expert. Based on the character settings provided by the user, generate 60 dialogue contents that match the character style. The dialogues should have context. The scenes involved in these dialogues should be rich enough to fully reflect the character's dialogue style and inner feelings.
 """;
     public static final String MID_FLOW_PROMPT = """
 以下是Andrew的个人信息:
 ${selfPortrait}
 
-以下是韩家宝的个人信息:
+以下是${friend}的个人信息:
 ${friendPortrait}
 
 以下是Andrew和${friend}最近的对话记录：
@@ -287,6 +392,22 @@ ${history}
 需要符合Andrew的个人设定，这个内心活动应该是具体的，和对话内容关联度比较高的。
 现在时间是:${now}
 """;
+
+    public static final String MID_FLOW_PROMPT_EN = """
+The following is Andrew's personal information:
+${selfPortrait}
+
+The following is ${friend}'s personal information:
+${friendPortrait}
+
+The following is the most recent conversation between Andrew and ${friend}:
+${history}
+
+From a first-person perspective, give Andrew's inner thoughts at the moment after the last conversation.
+It needs to be consistent with Andrew's personal settings. This inner thought should be specific and highly related to the content of the conversation.
+The current time is: ${now}
+""";
+
     public static final String EMOJI_EXTRA_PROMPT = """
 你是一个表情图片的识别和数据提取专家，你需要根据用户给出的表情图片提取表情关键信息(中文)，以便这个表情能够在后续的聊天中通过提取的类似的表情包关键词被搜索到。
 
@@ -298,4 +419,21 @@ ${history}
 视觉特征描述：简要描述图片中表情的视觉特征，如“大笑”、“流泪”、“握手”等，这有助于通过更具体的描述找到对应的表情。
 使用场景或语境：描述该表情图片常见的使用场景，如“调侃”、“表达愤怒”、“庆祝”等。
 """;
+
+    public static final String EMOJI_EXTRA_PROMPT_EN = """
+You are an expert in emoticon recognition and data extraction. You need to extract emoticon key information based on the emoticon pictures given by users, so that this emoticon can be searched through the extracted similar emoticon package keywords in subsequent chats.
+
+The extracted keyword dimensions include the following:
+Emoticon style: The feelings conveyed by emoticons of different styles and the applicable scenarios may be different.
+Emoticon category: Define the category to which the emoticon belongs, such as "smiley face", "crying", "anger", etc. Category labels can help quickly filter similar types of emoticons.
+Emoticon title: Set a title for each emoticon picture
+Emotional label: Add emotional labels to emoticon pictures, such as "positive", "negative", "neutral", etc., so as to filter pictures according to the emotional tendency of the user's search.
+Visual feature description: Briefly describe the visual features of the emoticon in the picture, such as "laughing", "crying", "handshake", etc., which helps to find the corresponding emoticon through more specific descriptions.
+Usage scenario or context: Describe the common usage scenarios of the emoticon picture, such as "teasing", "expressing anger", "celebration", etc.
+""";
+    public static final String AUDIO_PROMPT = """
+开始，中间，结束。""";
+
+    public static final String AUDIO_PROMPT_EN = """
+Start, proceed, end.""";
 }

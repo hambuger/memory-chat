@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
+import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
 import com.github.hambuger.memory.chat.memory.other.util.UserInfoUtil;
 import com.google.common.collect.Lists;
 import jakarta.annotation.PostConstruct;
@@ -43,6 +44,9 @@ public class DelayedTask {
     @Autowired
     private RedisTemplate<String, Object> commonRedisTemplate;
 
+    @Resource
+    private PromptFactory promptFactory;
+
     private static final String DELAYED_TASK_KEY = "delayedTasks";
 
     @Data
@@ -50,15 +54,15 @@ public class DelayedTask {
     @NoArgsConstructor
     public static class TaskInfo {
 
-        @JsonPropertyDescription("延迟任务的详细内容描述")
+        @JsonPropertyDescription("Detailed description of delayed tasks")
         @JsonProperty(required = true)
         private String taskMessage;
 
-        @JsonPropertyDescription("延迟时间")
+        @JsonPropertyDescription("Delay time")
         @JsonProperty(required = true)
         private long delayTime;
 
-        @JsonPropertyDescription("延迟时间单位")
+        @JsonPropertyDescription("Delay time unit")
         @JsonProperty(required = true)
         private TimeUnit timeUnit;
 
@@ -69,17 +73,17 @@ public class DelayedTask {
     }
 
 
-    // 添加延迟任务
-    @FunctionCallRegistry(functionDesc = "添加一个任务，以便在未来时间处理", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.TASK})
+    // Add a deferral task
+    @FunctionCallRegistry(functionDesc = "Add a task to work on at a future time", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.TASK})
     public Boolean addTask(TaskInfo taskInfo) {
-        // 将自定义时间单位转换为秒
+        // Convert custom time unit to seconds
         long delayInSeconds = taskInfo.getTimeUnit().toSeconds(taskInfo.getDelayTime());
         long executionTime = Instant.now().getEpochSecond() + delayInSeconds;
-        // 序列化 TaskInfo 对象为 JSON 字符串
+        // Serialize TaskInfo object to JSON string
         taskInfo.setOwnerName(UserInfoUtil.getUser());
         String jsonString = JSON.toJSONString(taskInfo);
 
-        // 将序列化后的 JSON 字符串存储到 Redis 中
+        // Store the serialized JSON string in Redis
         commonRedisTemplate.opsForZSet().add(DELAYED_TASK_KEY, jsonString, executionTime);
         return true;
 
@@ -110,7 +114,7 @@ public class DelayedTask {
         return builder.toString();
     }
 
-    // 执行到期任务
+    // Execute due tasks
     public void executeTasks() {
         while (true) {
             long now = Instant.now().getEpochSecond();
@@ -138,24 +142,15 @@ public class DelayedTask {
 
     private String getDelayedTaskPrompt(TaskInfo taskInfo) {
         Map<TimeUnit, String> timeUnitToChineseMap = new HashMap<>();
-        // 填充 Map
-        timeUnitToChineseMap.put(TimeUnit.SECONDS, "秒");
-        timeUnitToChineseMap.put(TimeUnit.MINUTES, "分钟");
-        timeUnitToChineseMap.put(TimeUnit.HOURS, "小时");
-        timeUnitToChineseMap.put(TimeUnit.DAYS, "天");
-            return String.format("""
-你是Andrew,一个30岁的中国年轻人。
-你在%s之前给自己写了一个便签，以便提醒自己要做的事情。
-以下是便签的内容:
-%s
-
-按照便签的指引完成要做的事。
-现在时间点是：%s
- """, taskInfo.getDelayTime() + timeUnitToChineseMap.get(taskInfo.getTimeUnit()), taskInfo.getTaskMessage(), DateUtil.now());
+        timeUnitToChineseMap.put(TimeUnit.SECONDS, "Seconds");
+        timeUnitToChineseMap.put(TimeUnit.MINUTES, "Minutes");
+        timeUnitToChineseMap.put(TimeUnit.HOURS, "Hours");
+        timeUnitToChineseMap.put(TimeUnit.DAYS, "Days");
+            return promptFactory.getDelayTaskPrompt(taskInfo.getDelayTime() + timeUnitToChineseMap.get(taskInfo.getTimeUnit()), taskInfo.getTaskMessage(), DateUtil.now());
 
     }
 
-    // 在项目启动时启动延迟任务监听
+    // Start delayed task monitoring when the project starts
     @PostConstruct
     public void init() {
         new Thread(this::executeTasks).start();

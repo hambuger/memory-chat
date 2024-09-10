@@ -40,13 +40,13 @@ public class PortraitUpdate {
 
 
 
-    @FunctionCallRegistry(functionDesc = "更新微信群的画像，可与回复消息并行执行", scene = {ChatSceneEnum.NORMAL_GROUP})
+    @FunctionCallRegistry(functionDesc = "Updating the profile of the WeChat group can be performed in parallel with the reply message", scene = {ChatSceneEnum.NORMAL_GROUP})
     public Boolean updateGroupPortrait(GroupPortrait portrait) {
         redisUtil.updateGroupPortrait(portrait.getName(), JSON.toJSONString(portrait));
         return true;
     }
 
-    @FunctionCallRegistry(functionDesc = "更新好友的画像", scene = {ChatSceneEnum.UPDATE_FRIEND_PORTRAIT})
+    @FunctionCallRegistry(functionDesc = "Update your friend's profile", scene = {ChatSceneEnum.UPDATE_FRIEND_PORTRAIT})
     public Boolean updateFriendPortraitInfo(FriendPortrait portrait) {
         if (StringUtils.isBlank(portrait.getName())) {
             return true;
@@ -56,7 +56,7 @@ public class PortraitUpdate {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "更新微信好友的画像，可与回复消息并行执行", scene = {ChatSceneEnum.NORMAL_USER})
+    @FunctionCallRegistry(functionDesc = "Update the profile of your WeChat friends to be performed in parallel with the reply message", scene = {ChatSceneEnum.NORMAL_USER})
     public Boolean updateFriendPortrait(FriendPortrait portrait) {
         if (StringUtils.isNotBlank(portrait.getDoing()) && !StringUtils.equals(portrait.getDoing(), "Unknown") && !portrait.getDoing().contains("(")) {
             portrait.setDoing(portrait.getDoing() + "(" + DateUtil.now() + ")");

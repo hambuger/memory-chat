@@ -52,7 +52,7 @@ public class PageDetailGet {
     @AllArgsConstructor
     public static class WebPageUrl {
 
-        @JsonPropertyDescription("网页url")
+        @JsonPropertyDescription("Web page URL")
         @JsonProperty(required = true)
         private String webPageUrl;
     }
@@ -60,7 +60,7 @@ public class PageDetailGet {
 
     @PostConstruct
     public void init() {
-        // 初始化 Playwright 和 Browser 实例
+
         Playwright playwright = Playwright.create();
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
     }
@@ -77,7 +77,7 @@ public class PageDetailGet {
                 FETCH_URL_POOL.execute(() -> {
                     try {
 //                        String content = getWebPageDetail(new WebPageUrl(url));
-                        String content = docParse.summaryUrl(url, String.format("这是一个关于搜索关键词：“%s”的搜索页面结果页的内容文本：\\n{context_str}\\n总结这个网页的主要内容，主要关注关键词的内容，对于关键词问题可能用到的代码，你要在总结中保留。直接给出总结内容\\nSummary:"
+                        String content = docParse.summaryUrl(url, String.format("This is the content text of the search result page for the search keyword: \"%s\":\\n{context_str}\\nSummarize the main content of this webpage, focusing on the content of the keywords. You should keep the code that may be used for the keyword problem in the summary. Give the summary content directly\\nSummary:"
                                 , query));
                         if (StringUtils.isNotBlank(content) && content.length() > 10) {
                             urlAndContent.put(url, content);
@@ -109,7 +109,7 @@ public class PageDetailGet {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "获取网页内容", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK})
+    @FunctionCallRegistry(functionDesc = "Get web content", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK})
     public String getWebPageDetail(WebPageUrl url) {
         try {
             Page page = browser.newPage();

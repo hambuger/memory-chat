@@ -60,23 +60,23 @@ public class LearnProceduralMemory {
     @Data
     public static class FunctionDefinitionAndCode {
 
-        @JsonPropertyDescription("方法名，英文命名")
+        @JsonPropertyDescription("Method name, English naming")
         @JsonProperty(required = true)
         private String name;
 
-        @JsonPropertyDescription("方法功能描述")
+        @JsonPropertyDescription("Method function description")
         @JsonProperty(required = true)
         private String description;
 
-        @JsonPropertyDescription("方法参数的jsonSchema定义")
+        @JsonPropertyDescription("jsonSchema definition of method parameters")
         @JsonProperty(required = true)
         private Map<String, Object> parameters;
 
-        @JsonPropertyDescription("方法代码执行需要安装的包")
+        @JsonPropertyDescription("Packages that need to be installed for method code execution")
         @JsonProperty(required = true)
         private List<String> packages;
 
-        @JsonPropertyDescription("方法的全部代码,不包含测试代码")
+        @JsonPropertyDescription("All code of the method, excluding test code")
         @JsonProperty(required = true)
         private String functionCode;
 
@@ -116,7 +116,7 @@ public class LearnProceduralMemory {
         springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.LEARN_JUDGE);
     }
 
-    @FunctionCallRegistry(functionDesc = "新增一个程序方法", scene = {ChatSceneEnum.LEARN_FUNCTION})
+    @FunctionCallRegistry(functionDesc = "Add a new program method", scene = {ChatSceneEnum.LEARN_FUNCTION})
     public Boolean addNewFunction(FunctionDefinitionAndCode param) {
         String filePath = writePythonCodeToFile(param.getName(), param.getFunctionCode());
         param.setFilepath(filePath);
@@ -127,9 +127,9 @@ public class LearnProceduralMemory {
 
 
     public static String writePythonCodeToFile(String methodName, String pythonCode) {
-        // 生成文件名：方法名.py
+        // Generate file name: method name.py
         String fileName = methodName + ".py";
-        // 拼接文件路径
+        // Splicing file path
         String filePath = Paths.get(PYTHON_PATH, fileName).toString();
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             writer.write(pythonCode);
@@ -142,15 +142,15 @@ public class LearnProceduralMemory {
     @Data
     public static class FunctionCodeTest {
 
-        @JsonPropertyDescription("方法名，英文命名")
+        @JsonPropertyDescription("Method name, English naming")
         @JsonProperty(required = true)
         private String methodName;
 
-        @JsonPropertyDescription("方法的全部代码")
+        @JsonPropertyDescription("All code of the method")
         @JsonProperty(required = true)
         private String functionCode;
 
-        @JsonPropertyDescription("方法的测试输入参数")
+        @JsonPropertyDescription("Test input parameters for the method")
         @JsonProperty(required = true)
         private Map<String, Object> functionArgs;
 
@@ -158,7 +158,7 @@ public class LearnProceduralMemory {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "学习并持久化一个技能，通过代码的方式", scene = {ChatSceneEnum.LEARN_JUDGE})
+    @FunctionCallRegistry(functionDesc = "Learn and persist a skill through code", scene = {ChatSceneEnum.LEARN_JUDGE})
     public Boolean learnAndSaveAsSkill(LearnSKillParam param){
         String prompt = """
 Generate python code for the skill: %s.
@@ -177,8 +177,8 @@ Do it and think step by step.
         return true;
     }
 
-    // 执行Python代码块并返回结果
-    @FunctionCallRegistry(functionDesc = "测试代码是否正确", scene = {ChatSceneEnum.LEARN_FUNCTION})
+    // Execute a block of Python code and return the result
+    @FunctionCallRegistry(functionDesc = "Test whether the code is correct", scene = {ChatSceneEnum.LEARN_FUNCTION})
     public String executePythonCode(FunctionCodeTest test) {
         String filePath = writePythonCodeToFile(test.getMethodName(), test.getFunctionCode());
         try (SharedInterpreter interp = new SharedInterpreter()) {
@@ -194,14 +194,14 @@ Do it and think step by step.
     @Data
     public static class InstallPackagesParam {
 
-        @JsonPropertyDescription("方法代码执行需要安装的包")
+        @JsonPropertyDescription("Packages that need to be installed for method code execution")
         @JsonProperty(required = true)
         private List<String> packageNames;
 
     }
 
 
-    @FunctionCallRegistry(functionDesc = "执行代码前，安装需要的包", scene = {ChatSceneEnum.LEARN_FUNCTION})
+    @FunctionCallRegistry(functionDesc = "Before executing the code, install the required packages", scene = {ChatSceneEnum.LEARN_FUNCTION})
     public String installPackages(InstallPackagesParam param) {
         try (SharedInterpreter interp = new SharedInterpreter()) {
             interp.exec("import subprocess");

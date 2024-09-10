@@ -110,7 +110,6 @@ public class TokenCalculation {
             tokenCount += countImageToken((OpenAiApi.ChatCompletionMessage.MediaContent) msgObj);
             return tokenCount;
         }
-        //数组判空
         if (msgObj.getClass().isArray()) {
             int len = Array.getLength(msgObj);
             Object[] obj = new Object[len];

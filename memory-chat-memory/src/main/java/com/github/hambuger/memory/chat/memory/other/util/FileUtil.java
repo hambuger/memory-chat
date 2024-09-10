@@ -40,19 +40,19 @@ public class FileUtil {
             connection.setRequestMethod(GET);
             connection.connect();
 
-            // 检查连接是否成功
+
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 return null;
             }
 
-            // 获取输入流
+
             inputStream = connection.getInputStream();
 
-            // 定义文件路径
+
             File imageFile = new File(tempPath + File.separator + SEND_IMAGE_PATH);
             outputStream = new FileOutputStream(imageFile);
 
-            // 写入文件
+
             byte[] buffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
@@ -93,13 +93,13 @@ public class FileUtil {
             if (await) {
 //                DownloadTools.awaitDownload(filePath);
             }
-            // 读取文件内容到字节数组
+
             byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
 
-            // 将字节数组编码为 Base64 字符串
+
             String base64String = Base64.getEncoder().encodeToString(fileContent);
 
-            // 输出 Base64 字符串
+
             return base64String;
         } catch (IOException e) {
             log.error("downloadImage error", e);

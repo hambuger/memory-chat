@@ -13,41 +13,41 @@ messages = []
 
 class ChatClass:
     def __init__(self):
-        url = "http://localhost:8080/chat/send/register"  # 替换为实际的服务器地址
+        url = "http://localhost:8080/chat/send/register"
         params = {
-            "channelEnum": "AUDIO",  # 替换为实际的channelEnum值
-            "registerUrl": "http://localhost:5000/tts"  # 替换为实际的registerUrl值
+            "channelEnum": "AUDIO",
+            "registerUrl": "http://localhost:5000/tts"
         }
         requests.get(url, params=params)
 
     def tts_pyttsx3(text, rate=150, volume=1.0, voice_index=0):
         """
-        使用pyttsx3将文本转为语音并播放
-        :param text: 要朗读的文本
-        :param rate: 语速，默认150
-        :param volume: 音量，范围为0.0到1.0，默认1.0
-        :param voice_index: 选择语音索引，默认0为男性，1为女性
+        Use pyttsx3 to convert text to speech and play it
+        :param text: The text to be read aloud
+        :param rate: Speech rate, default 150
+        :param volume: Volume, ranging from 0.0 to 1.0, default 1.0
+        :param voice_index: Select Phonetic Index, and by default, 0 is male and 1 is female
         """
-        # 初始化TTS引擎
+        # Initialize the TTS engine
         engine = pyttsx3.init()
 
-        # 设置语速
+        # Set the speaking rate
         engine.setProperty('rate', rate)
 
-        # 设置音量
+        # Set the volume
         engine.setProperty('volume', volume)
 
-        # 设置语音
+        # Set up your voice
         voices = engine.getProperty('voices')
         if voice_index < len(voices):
             engine.setProperty('voice', voices[voice_index].id)
         else:
-            print(f"指定的语音索引 {voice_index} 超出范围，使用默认语音。")
+            print(f"Specified speech index {voice_index} Out of range, use the default voice。")
 
-        # 朗读文本
+        # Read the text aloud
         engine.say(text)
 
-        # 等待朗读完成
+        # Wait for the reading to complete
         engine.runAndWait()
 
     def audio_to_text(file):
@@ -80,9 +80,9 @@ class ChatClass:
         # answer = completion.choices[0].message.content
         # messages.append({"role": "assistant", "content": answer})
 
-        url = 'http://127.0.0.1:8080/chat/message'  # 将此 URL 替换为实际的 API 端点
+        url = 'http://127.0.0.1:8080/chat/message'  # Replace this URL with the actual API endpoint
 
-        # 定义请求的参数
+        # Define the parameters of the request
         data = {
             'messageContent': prompt,
             'messageContentType': 'TEXT',
@@ -101,13 +101,13 @@ class ChatClass:
             answer = answer + msg.get('messageContent')
         return answer
 
-    # 定义一个函数来检测文本是否具有中文语言意义
+    # Define a function to detect whether text has Chinese linguistic meaning
     def has_chinese_meaning(text):
-        # 检测文本是否包含中文句子模式
+        # Detects whether the text contains Chinese sentence patterns
         if re.search(hanzi.sentence, text):
             return True
         lang, confidence = langid.classify(text)
         if lang == 'zh':
             return True
-        # 如果都没有，则返回False
+        # If there are none, False is returned
         return False

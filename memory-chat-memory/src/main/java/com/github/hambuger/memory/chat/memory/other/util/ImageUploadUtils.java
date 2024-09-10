@@ -1,7 +1,7 @@
 package com.github.hambuger.memory.chat.memory.other.util;
 
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import jakarta.annotation.Resource;
@@ -27,7 +27,7 @@ public class ImageUploadUtils {
 
     public String uploadImg(String originalFilename) throws UnirestException {
         if (originalFilename == null) {
-            log.error("图片不存在");
+            log.error("Picture does not exist");
         }
         String targetURL = uploadGitHubImgBed.createUploadFileUrl(originalFilename);
         Map<String, Object> uploadBodyMap = uploadGitHubImgBed.getUploadBodyMap(FileUtil.getFileBase64Data(originalFilename, false));
@@ -39,24 +39,22 @@ public class ImageUploadUtils {
         int tryCount = 6;
         for(int i= 0; i< tryCount; i++){
             String JSONResult = MyHttpUtils.put(targetURL, uploadBodyMap, header);
-            JSONObject jsonObj = JSONUtil.parseObj(JSONResult);
-            //请求失败
-            if (jsonObj == null || jsonObj.getObj("commit") == null) {
+            JSONObject jsonObj = JSON.parseObject(JSONResult);
+            if (jsonObj == null || jsonObj.get("commit") == null) {
                 String regex = "expected\\s+([a-fA-F0-9]{40})";
                 Pattern pattern = Pattern.compile(regex);
                 Matcher matcher = pattern.matcher(jsonObj.get("message").toString());
                 if (matcher.find()) {
-                    // 获取匹配的哈希值
                     String expectedHash = matcher.group(1);
                     header.put("sha", expectedHash);
                 }
                 continue;
             }
-            JSONObject content = JSONUtil.parseObj(jsonObj.getObj("content"));
-            String downloadUrl = (String) content.getObj("download_url");
+            JSONObject content = jsonObj.getJSONObject("content");
+            String downloadUrl = content.getString("download_url");
             return downloadUrl;
         }
-        log.error("图片上传失败");
+        log.error("Image upload failed");
         return null;
     }
 

@@ -17,26 +17,26 @@ import lombok.Data;
 @Data
 public class MemoryDimensionInfo {
 
-    @JsonPropertyDescription("对话的重要性分数，0.0-1")
+    @JsonPropertyDescription("conversation importance score，0.0-1")
     @JsonProperty(required = true)
     private Double score;
 
     /**
-     * 情感
+     * Emotion
      */
-    @JsonPropertyDescription("对话内容识别出来的情感")
+    @JsonPropertyDescription("emotions recognized from conversation content")
     @JsonProperty(required = true)
     @JSONField(deserializeUsing = CustomEnumDeserializer.class)
     private EmotionEnum emotion;
 
     /**
-     * 总结词语
+     * SUMMARY WORDS
      */
-    @JsonPropertyDescription("对话内容的总结提炼词语")
+    @JsonPropertyDescription("summarize and extract words from the conversation")
     @JsonProperty(required = true)
     private List<String> summaryWords;
 
-    @JsonPropertyDescription("大概理由")
+    @JsonPropertyDescription("reason")
     @JsonProperty(required = true)
     private String reason;
 

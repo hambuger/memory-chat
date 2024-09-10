@@ -32,7 +32,7 @@ public class VideoUtil {
     public List<String> getVideoImg(String filePath) {
         File folder = new File(filePath);
         if (!folder.exists()) {
-            folder.mkdirs(); // 如果文件夹不存在则创建
+            folder.mkdirs();
         }
         try {
             FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(filePath);
@@ -42,11 +42,11 @@ public class VideoUtil {
             double videoLengthInSeconds = grabber.getLengthInTime() / 1000000.0;
             int totalFrames = (int) (videoLengthInSeconds * frameRate);
 
-            double interval = videoLengthInSeconds / 100; // 计算间隔，保证最多100帧
+            double interval = videoLengthInSeconds / 100;
             if (interval < 0.5) {
-                interval = 0.5; // 保证最小间隔0.5秒
+                interval = 0.5;
             }
-            int frameInterval = (int) (interval * frameRate); // 根据间隔计算帧数间隔
+            int frameInterval = (int) (interval * frameRate);
 
             int frameNumber = 0;
             int count = 0;
@@ -74,7 +74,7 @@ public class VideoUtil {
             grabber.stop();
             return imageFilePathList;
         } catch (Exception e) {
-            log.info("获取视频图片失败", e);
+            log.info("Failed to obtain video pictures", e);
         }
         return null;
     }
@@ -119,7 +119,7 @@ public class VideoUtil {
 
     public  String extractVideoAudio(String videoFilePath) {
         File file = new File(videoFilePath);
-        // 抓取资源
+
         FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(videoFilePath);
         Frame frame;
         FFmpegFrameRecorder recorder;
@@ -129,7 +129,7 @@ public class VideoUtil {
 
         try {
             frameGrabber.start();
-            // 输出位置
+
             fileName = file.getAbsolutePath() + "_audio.mp3";
             outputFile = new File(fileName);
             fos = new FileOutputStream(outputFile);
@@ -147,7 +147,7 @@ public class VideoUtil {
                 if (frame.samples != null) {
                     recorder.recordSamples(frame.sampleRate, frame.audioChannels, frame.samples);
                 }
-                if (outputFile.length() > 25 * 1024 * 1024) { // 检查文件大小是否超过25M
+                if (outputFile.length() > 25 * 1024 * 1024) {
                     break;
                 }
             }

@@ -13,11 +13,11 @@ import lombok.Data;
 @Data
 public class ImportantInfo {
 
-    @JsonPropertyDescription("描述内容的名称")
+    @JsonPropertyDescription("The name of the description content")
     @JsonProperty(required = true)
     public String descriptionName;
 
-    @JsonPropertyDescription("描述具体内容")
+    @JsonPropertyDescription("Describe the specifics")
     @JsonProperty(required = true)
     public String descriptionDetail;
 }

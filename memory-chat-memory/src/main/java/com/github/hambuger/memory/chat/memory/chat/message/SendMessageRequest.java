@@ -13,19 +13,19 @@ import java.util.List;
 @NoArgsConstructor
 public class SendMessageRequest {
 
-    @JsonPropertyDescription("是否需要发送消息")
+    @JsonPropertyDescription("Whether you need to send a message")
     @JsonProperty(required = true)
     private boolean needsSending;
 
-    @JsonPropertyDescription("发送的文本消息列表,郭德纲语言风格")
+    @JsonPropertyDescription("A list of text messages sent")
     @JsonProperty(required = false)
     private List<String> sendTextMessageList;
 
-    @JsonPropertyDescription("发送的图片消息列表，图片url")
+    @JsonPropertyDescription("List of image messages sent, image URL")
     @JsonProperty(required = false)
     private List<String> sendPictureMessageList;
 
-    @JsonPropertyDescription("发送的表情图片url,必须通过searchEmoticonPhoto工具搜索获得")
+    @JsonPropertyDescription("The URL of the sent emoji image must be obtained by searching for it through the searchEmoticonPhoto tool")
     @JsonProperty(required = false)
     private List<String> emoticonPhotoUrlList;
 

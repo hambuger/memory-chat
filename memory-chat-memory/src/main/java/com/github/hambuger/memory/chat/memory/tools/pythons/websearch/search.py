@@ -7,7 +7,7 @@ import os
 
 from websearch.base_search import DDGS
 
-# 设置日志
+
 logging.basicConfig(level=logging.ERROR)
 log = logging.getLogger(__name__)
 
@@ -26,30 +26,30 @@ logger = logging.getLogger(__name__)
 def get_google_news(query_word):
     base_url = "https://www.google.com.hk/search"
 
-    # 构建查询参数
+
     query_params = {
         "q": query_word.replace(" ", "+"),
         "tbm": "nws",
         "tbs": "sbd:1"
     }
     resp = DDGS(proxy="127.0.0.1:7890").get_google_url("GET", base_url, params=query_params)
-    # 解析HTML内容
+
     soup = BeautifulSoup(resp, "html.parser")
-    # 初始化结果字典
+
     results = {}
     news_divs = soup.find_all('div', class_='SoaBEf')
     result = []
-    # 遍历每个div块并提取信息
+
     for div in news_divs:
-        # 提取新闻标题
+
         title = div.find('div', class_='n0jPhd').text.strip()
-        # 提取新闻URL
+
         url = div.find('a', class_='WlydOe')['href']
-        # 提取新闻描述
+
         description = div.find('div', class_='GI74Re').text.strip()
-        # 提取新闻来源网站名
+
         source = div.find('div', class_='MgUUmf').text.strip()
-        # 提取新闻时间
+
         time = div.find('div', class_='OSrXXb').text.strip()
         news_info = {
             "新闻标题": title,
@@ -59,7 +59,6 @@ def get_google_news(query_word):
             "新闻时间": time
         }
         print(news_info)
-        # 将字典添加到result列表中
         result.append(news_info)
     return result
 
@@ -67,18 +66,17 @@ def get_google_news(query_word):
 def get_baidu_news(word):
     payload = {
         "word": word,
-        # "rtt": "1",#焦点排序
-        "rtt": "4",#时间排序
+        "rtt": "4",
         "tn": "news",
         "pn": "0",
     }
     resp_content = DDGS(proxy="127.0.0.1:7890").get_baidu_url("GET", "http://www.baidu.com/s", params=payload)
     soup = BeautifulSoup(resp_content, 'html.parser')
 
-    # 查找所有包含新闻信息的div块
+
     news_divs = soup.find_all('div', class_='result-op c-container xpath-log new-pmd')
     result = []
-    # 遍历每个div块并提取信息
+
     for div in news_divs:
         title = div.find('h3', class_='news-title_1YtI1').get_text(strip=True)
         url = div.find('h3', class_='news-title_1YtI1').a['href']
@@ -89,7 +87,7 @@ def get_baidu_news(word):
         except Exception:
             time = None
 
-        # 将信息组合成一个字典
+
         news_info = {
             "新闻标题": title,
             "新闻URL": url,
@@ -98,7 +96,7 @@ def get_baidu_news(word):
             "新闻时间": time
         }
         print(news_info)
-        # 将字典添加到result列表中
+
         result.append(news_info)
     return result
 
@@ -115,7 +113,6 @@ def get_baidu(word):
         div_elements = soup2.find_all('div', class_='result c-container xpath-log new-pmd')
 
         for div_element in div_elements:
-            # 获取 "mu" 属性值
             mu_link = div_element.get('mu')
             span_element = div_element.find('span', class_='content-right_1THTn')
             if not span_element:
@@ -146,37 +143,36 @@ def get_duckduckgo(word):
 
 
 def get_google(query_word, search_country="cn", search_language="zh-cn"):
-    base_url = "https://www.google.com.hk/search"
+    base_url = "https://www.google.com/search"
 
-    # 构建查询参数
+
     query_params = {"q": query_word.replace(" ", "+")}
     if search_country:
         query_params["gl"] = search_country
     if search_language:
         query_params["hl"] = search_language
     resp = DDGS(proxy="127.0.0.1:7890").get_google_url("GET", base_url, params=query_params)
-    # 解析HTML内容
+
     soup = BeautifulSoup(resp, "html.parser")
-    # 初始化结果字典
+
     results = {}
     for item in soup.select('div.MjjYud'):
-        # 提取每个包含链接的div
+
         itemUrl = item.select_one('div.yuRUbf')
-        # 获取href链接
+
         if not itemUrl:
             continue
         link_element = itemUrl.select_one('a[jsname="UWckNb"]')
         if link_element and link_element.has_attr('href'):
             href = link_element['href']
 
-            # 获取文本内容
+
             text_element = item.select_one('div[style="-webkit-line-clamp:2"]')
             if text_element:
                 text = text_element.get_text(strip=True)
             else:
                 text = ""
 
-            # 将链接和文本添加到结果字典
             results[href] = text
     return results
 
@@ -188,7 +184,6 @@ def get_pages_content(url_list):
 async def url_list_text(url_list):
     tasks = [fetch_content(url) for url in url_list]
     results = await asyncio.gather(*tasks)
-    # print(results)
     return results
 
 
@@ -196,7 +191,7 @@ from playwright.async_api import async_playwright
 
 file_path = os.path.join(scriptPath, 'websearch', 'stealth.min.js')
 
-# 使用绝对路径打开文件
+
 with open(file_path, 'r') as f:
     js = f.read()
 userAgent = [

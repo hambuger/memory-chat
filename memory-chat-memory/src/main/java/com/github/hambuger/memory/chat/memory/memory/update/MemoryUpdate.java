@@ -35,14 +35,14 @@ public class MemoryUpdate {
 
     public boolean updateMemoryAccessTime(String messageId) {
 
-        // 创建要更新的字段和值
+        // Create fields and values to update
         MemoryDTO memoryDTO = new MemoryDTO();
         memoryDTO.setMessageLastAccessTime(DateUtil.format(new Date(), DatePattern.NORM_DATETIME_FORMAT));
 
-        // 创建UpdateRequest
+        // UpdateRequest
         UpdateRequest updateRequest = new UpdateRequest(chatMemoryIndex, messageId).doc(JSON.toJSONString(memoryDTO), XContentType.JSON);
 
-        // 执行更新操作
+        // Perform update operation
         try {
             esClient.update(updateRequest);
         } catch (IOException e) {

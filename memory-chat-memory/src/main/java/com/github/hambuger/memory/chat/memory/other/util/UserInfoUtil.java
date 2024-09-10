@@ -18,7 +18,7 @@ public class UserInfoUtil {
 
         @Override
         protected Map<String, String> childValue(Map<String, String> parentValue) {
-            // 子线程会接收父线程的副本，可以选择对其进行深拷贝
+            // The child thread will receive a copy of the parent thread and can optionally make a deep copy of it.
             return new HashMap<>(parentValue);
         }
     };

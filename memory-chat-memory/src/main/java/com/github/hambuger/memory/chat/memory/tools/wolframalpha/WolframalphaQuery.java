@@ -34,14 +34,14 @@ public class WolframalphaQuery {
     @Data
     public static class WolframalphaParam {
 
-        @JsonPropertyDescription("查询描述,只能使用英文")
+        @JsonPropertyDescription("Query description, only in English")
         @JsonProperty(required = true)
         private String queryUseEnglishLanguage;
 
     }
 
 
-    @FunctionCallRegistry(functionDesc = "通过wolframalpha查询结果，适合数学计算或者偏数学相关的问题", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE,
+    @FunctionCallRegistry(functionDesc = "Query results with wolframalpha for mathematical calculations or partial mathematically related problems", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE,
             ChatSceneEnum.TASK, ChatSceneEnum.PLAN})
     public String searchByWolframalpha(WolframalphaParam query) throws Exception {
         String wolframalphaUrl = String.format(WOLFRAMALPHA_URL, wolframalphaKey, URLEncoder.encode(query.getQueryUseEnglishLanguage(), StandardCharsets.UTF_8));

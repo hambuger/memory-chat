@@ -8,6 +8,7 @@ import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -38,6 +39,13 @@ public class PromptFactory {
     @Resource
     private RuleUpdate ruleUpdate;
 
+    @Value("${env.language:zh}")
+    private String language;
+
+    public boolean isZh(){
+        return StringUtils.equals(language, "zh");
+    }
+
     Map<ChatSceneEnum, String> chatRuleMap = new HashMap<>() {
         {
             put(ChatSceneEnum.SCHEDULE, PromptTemplate.SCHEDULE_CHAT_RULES);
@@ -58,10 +66,11 @@ public class PromptFactory {
 
     Map<ChatSceneEnum, String> chatStyleMap = new HashMap<>() {
         {
-            put(ChatSceneEnum.NORMAL_USER, PromptTemplate.NORMAL_STYLE);
-            put(ChatSceneEnum.NORMAL_GROUP, PromptTemplate.NORMAL_STYLE);
-            put(ChatSceneEnum.SCHEDULE, PromptTemplate.NORMAL_STYLE);
-            put(ChatSceneEnum.NEWS_SCHEDULE, PromptTemplate.NORMAL_STYLE);
+            String template = isZh() ? PromptTemplate.NORMAL_STYLE : PromptTemplate.NORMAL_STYLE_EN;
+            put(ChatSceneEnum.NORMAL_USER, template);
+            put(ChatSceneEnum.NORMAL_GROUP, template);
+            put(ChatSceneEnum.SCHEDULE, template);
+            put(ChatSceneEnum.NEWS_SCHEDULE, template);
         }
     };
 
@@ -104,12 +113,12 @@ public class PromptFactory {
 
 
     public String getCheckChatRulesPrompt(String chatHistory) {
-        return String.format(PromptTemplate.CHECK_RULE_PROMPT, chatHistory);
+        return String.format(isZh() ? PromptTemplate.CHECK_RULE_PROMPT : PromptTemplate.CHECK_RULE_PROMPT_EN, chatHistory);
     }
 
 
     public String getGenerateCustomChatModelPrompt() {
-        return PromptTemplate.GENERATE_CUSTOM_MODEL_PROMPT;
+        return isZh() ? PromptTemplate.GENERATE_CUSTOM_MODEL_PROMPT : PromptTemplate.GENERATE_CUSTOM_MODEL_PROMPT_EN;
     }
 
     public String getLearnCodeSkillPrompt(String memory) {
@@ -132,19 +141,19 @@ public class PromptFactory {
         templateValueMap.put("friendName", friendName);
         templateValueMap.put("newMsg", newMsg);
         templateValueMap.put("now", DateUtil.now());
-        return formatPrompt(PromptTemplate.NEW_MSG_PROMPT, templateValueMap);
+        return formatPrompt(isZh() ? PromptTemplate.NEW_MSG_PROMPT : PromptTemplate.NEW_MSG_PROMPT_EN, templateValueMap);
     }
 
     public String getEmotionPrompt() {
-        return PromptTemplate.EMOTION_PROMPT;
+        return isZh() ? PromptTemplate.EMOTION_PROMPT : PromptTemplate.EMOTION_PROMPT_EN;
     }
 
     public String getDayPlanPrompt(String task, String selfPortrait) {
         Map<String, String> templateValueMap = new HashMap<>();
         templateValueMap.put("now", DateUtil.format(new Date(), DatePattern.CHINESE_DATE_PATTERN) + "(" + DateUtil.dayOfWeekEnum(new Date()).toString() + ")");
-        templateValueMap.put("task", StringUtils.isBlank(task) ? "无任务" : task);
+        templateValueMap.put("task", StringUtils.isBlank(task) ? "None" : task);
         templateValueMap.put("selfPortrait", selfPortrait);
-        return formatPrompt(PromptTemplate.DAY_PLAN_PROMPT, templateValueMap);
+        return formatPrompt(isZh() ? PromptTemplate.DAY_PLAN_PROMPT : PromptTemplate.DAY_PLAN_PROMPT_EN, templateValueMap);
     }
 
 
@@ -165,7 +174,7 @@ public class PromptFactory {
     }
 
     public String getRuleMergePrompt(String messageContent, String json) {
-        return String.format(PromptTemplate.RULE_MERGE_PROMPT, messageContent, json);
+        return String.format(isZh() ? PromptTemplate.RULE_MERGE_PROMPT : PromptTemplate.RULE_MERGE_PROMPT_EN, messageContent, json);
     }
 
 
@@ -188,10 +197,73 @@ public class PromptFactory {
         templateValueMap.put("friend", UserInfoUtil.getUser());
         templateValueMap.put("history", history);
         templateValueMap.put("now", DateUtil.now());
-        return formatPrompt(PromptTemplate.MID_FLOW_PROMPT, templateValueMap);
+        return formatPrompt(isZh() ? PromptTemplate.MID_FLOW_PROMPT : PromptTemplate.MID_FLOW_PROMPT_EN, templateValueMap);
     }
 
     public String getEmojiExtraPrompt() {
-        return PromptTemplate.EMOJI_EXTRA_PROMPT;
+        return isZh() ? PromptTemplate.EMOJI_EXTRA_PROMPT : PromptTemplate.EMOJI_EXTRA_PROMPT_EN;
+    }
+
+    public String getAudioPrompt() {
+        return isZh() ? PromptTemplate.AUDIO_PROMPT : PromptTemplate.AUDIO_PROMPT_EN;
+    }
+
+    public String getEmptySettingPrompt() {
+        return isZh() ? "你提供的内容为空，重新输入！" : "The content you provided is empty, please re-enter!";
+    }
+
+    public String getResultSettingPrompt() {
+        return isZh() ? "修改设定如下:\n" : "Modify the settings as follows:\n";
+    }
+
+    public String getErrorSettingPrompt() {
+        return isZh() ? "你提供的内容和设定无关！" : "The content you provided has nothing to do with the setting!";
+    }
+
+    public String getTimePrompt(String messageCreatorName, String time) {
+        return String.format(isZh() ? "距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复" : "Since the last message was sent to %s，%s have passed , and the other party has not responded in the meantime", messageCreatorName, time);
+    }
+
+    public Object getTimePromptV2(String messageCreatorName, String time, String mindFlowStr) {
+        return String.format(isZh() ? "距离上一次发送消息给%s已经过去了%s,中间对方没有任何回复。【你的内心活动：%s】" : "Since the last message was sent to %s，%s have passed , and the other party has not responded in the meantime.[Your inner thoughts: %s]", messageCreatorName, time, mindFlowStr);
+    }
+
+    public String getWeatherChangePrompt(String city, String beforeWeather, String weatherStr) {
+        return String.format(isZh() ? "%s的天气由%s变成了%s" : "The weather of %s changed from %s to %s", city, beforeWeather, weatherStr);
+    }
+
+    public String getFileSendPrompt() {
+        return isZh() ? "发送过来一个文件，文件地址：" : "Send a file, file url:";
+    }
+
+    public String getFileSendPromptV2() {
+        return isZh() ? "文件的内容大致总结如下：\n" : "The contents of the document are roughly summarized as follows:\n";
+    }
+
+    public String getVideoInfoPrompt(String creatorName, String videoInfo) {
+        return String.format(isZh() ? "%s发送了一个视频。这个视频的信息如下：%s" : "%s sent a video. The information of this video is as follows: %s", creatorName, videoInfo);
+    }
+
+    public String getThoughtPrompt(String mind) {
+        return String.format(isZh() ? "[内心活动：%s]" : "[Inner thoughts: %s]", mind);
+    }
+
+    public String getDelayTaskPrompt(String time, String taskMessage, String now) {
+        return String.format(isZh() ? """
+你是Andrew,一个30岁的中国年轻人。
+你在%s之前给自己写了一个便签，以便提醒自己要做的事情。
+以下是便签的内容:
+%s
+
+按照便签的指引完成要做的事。
+现在时间点是：%s
+ """ : """
+You are Andrew, a 30-year-old Chinese young man.
+You wrote a note to yourself %s ago to remind yourself what to do.
+The following is the content of the note:
+%s
+
+Follow the instructions of the note to complete what you need to do.
+The current time is: %s""", time, taskMessage, now);
     }
 }

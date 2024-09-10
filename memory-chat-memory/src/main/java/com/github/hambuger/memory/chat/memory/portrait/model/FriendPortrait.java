@@ -17,23 +17,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class FriendPortrait extends BasePortrait{
 
-    @JsonPropertyDescription("名称")
+    @JsonPropertyDescription("name")
     @JsonProperty(required = true, defaultValue = "Unknown")
     public String name;
 
-    @JsonPropertyDescription("昵称")
+    @JsonPropertyDescription("nickName")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String nickName = "Unknown";
 
-    @JsonPropertyDescription("和Andrew的关系")
+    @JsonPropertyDescription("Relationship with Andrew")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String relationship = "Unknown";
 
-    @JsonPropertyDescription("正在做")
+    @JsonPropertyDescription("doing")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String doing = "Unknown";
 
-    @JsonPropertyDescription("和Andrew的熟悉程度")
+    @JsonPropertyDescription("and Andrew's familiarity")
     @JsonProperty(required = true)
     private String familiarityDegree;
 

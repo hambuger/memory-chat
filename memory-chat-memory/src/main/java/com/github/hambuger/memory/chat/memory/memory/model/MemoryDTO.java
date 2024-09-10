@@ -26,56 +26,56 @@ import static com.github.hambuger.memory.chat.memory.other.constants.CommonConst
 public class MemoryDTO extends BaseMemoryDTO {
 
     /**
-     * 消息ID
+     * message id
      */
     private String messageId;
 
 
     /**
-     * 信息深度
+     * information depth
      */
     private Integer memoryLeafDepth;
 
 
     /**
-     * 消息重要分
+     * The importance of the news
      */
     private Double messageImportanceScore;
 
     /**
-     * 消息最后读取时间
+     * Message last read time
      */
     private String messageLastAccessTime;
 
 
     /**
-     * 消息向量
+     * message vector
      */
     private List<Double> messageContentVector;
 
     /**
-     * 情感
+     * Emotion
      */
     private String emotion;
 
     /**
-     * 总结词语
+     * summary words
      */
     private List<String> summaryWords;
 
 
     /**
-     * 消耗token数
+     * Number of tokens consumed
      */
     private Integer useToken;
 
     /**
-     * 消息父id
+     * message parent id
      */
     private List<String> messageParentIds;
 
     /**
-     * 是否AI回复，1:是 0:否
+     * WHETHER AI REPLIES 1 YES 0 NO
      */
     private String aiResponseFlag;
 

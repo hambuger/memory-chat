@@ -35,7 +35,7 @@ public class MemoryImportantScore {
         @Serial
         private static final long serialVersionUID = -1242490779818522911L;
 
-        @JsonPropertyDescription("重要性分数，0.0-1.0")
+        @JsonPropertyDescription("importance score，0.0-1.0")
         @JsonProperty(required = true)
         private double score;
     }

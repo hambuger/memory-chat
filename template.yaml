@@ -87,3 +87,6 @@ logging:
 
 temp:
   path: ${user.dir}${file.separator}temp
+
+env:
+  language: zh

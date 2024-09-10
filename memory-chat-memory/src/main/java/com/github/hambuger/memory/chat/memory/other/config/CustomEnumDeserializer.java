@@ -13,7 +13,6 @@ public class CustomEnumDeserializer implements ObjectDeserializer {
         try {
             return (T) Enum.valueOf((Class<Enum>) type, value);
         } catch (IllegalArgumentException e) {
-            // 返回一个默认值或其他处理方式
             return (T) getDefaultEnumValue((Class<Enum>) type);
         }
     }
@@ -24,8 +23,8 @@ public class CustomEnumDeserializer implements ObjectDeserializer {
     }
 
     private <T extends Enum<T>> T getDefaultEnumValue(Class<T> enumClass) {
-        // 根据需求返回默认值
-        return enumClass.getEnumConstants()[0]; // 返回第一个枚举值作为默认值
+        // Return default value if required
+        return enumClass.getEnumConstants()[0];
     }
 }
 

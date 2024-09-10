@@ -12,7 +12,6 @@
         <module>memory-chat-wechat</module>
         <module>memory-chat-memory</module>
     </modules>
-    <!--    为支持spring boot ai需要高版本，需要Java 17-->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -22,7 +21,7 @@
     <properties>
         <java.version>17</java.version>
     </properties>
-    <!--    spring AI导入-->
+    <!--    spring AI-->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -32,7 +31,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!--        JSON schema生成工具-->
+            <!--        JSON schema-->
             <dependency>
                 <groupId>com.kjetland</groupId>
                 <artifactId>mbknor-jackson-jsonschema_2.13</artifactId>
@@ -43,38 +42,6 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>27.1-jre</version>
-            </dependency>
-            <!--        github上openai的可用sdk-->
-            <dependency>
-                <groupId>com.github.plexpt</groupId>
-                <artifactId>chatgpt</artifactId>
-                <version>4.4.0</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>jtokkit</artifactId>
-                        <groupId>com.knuddels</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>jackson-databind</artifactId>
-                        <groupId>com.fasterxml.jackson.core</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>logback-classic</artifactId>
-                        <groupId>ch.qos.logback</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>logback-core</artifactId>
-                        <groupId>ch.qos.logback</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>okhttp-sse</artifactId>
-                        <groupId>com.squareup.okhttp3</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>logging-interceptor</artifactId>
-                        <groupId>com.squareup.okhttp3</groupId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
         <dependency>
@@ -125,10 +92,6 @@
                 <artifactId>elasticsearch</artifactId>
                 <version>7.12.0</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>org.springframework.boot</groupId>-->
-<!--                <artifactId>spring-boot-starter-jdbc</artifactId>-->
-<!--            </dependency>-->
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
@@ -159,13 +122,11 @@
                 <artifactId>emoji-java</artifactId>
                 <version>4.0.0</version>
             </dependency>
-            <!--视频压缩工具-->
             <dependency>
                 <groupId>ws.schild</groupId>
                 <artifactId>jave-core</artifactId>
                 <version>3.0.0</version>
             </dependency>
-            <!--图片压缩工具-->
             <dependency>
                 <groupId>net.coobird</groupId>
                 <artifactId>thumbnailator</artifactId>
@@ -187,7 +148,6 @@
                 <artifactId>commons-text</artifactId>
                 <version>1.9</version>
             </dependency>
-            <!--视频工具-->
             <dependency>
                 <groupId>org.bytedeco</groupId>
                 <artifactId>javacv</artifactId>
@@ -223,11 +183,6 @@
                 <artifactId>javapoet</artifactId>
                 <version>1.13.0</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>org.apache.maven.shared</groupId>-->
-<!--                <artifactId>maven-invoker</artifactId>-->
-<!--                <version>3.0.1</version>-->
-<!--            </dependency>-->
 
         </dependencies>
     </dependencyManagement>

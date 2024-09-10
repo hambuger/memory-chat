@@ -37,7 +37,7 @@ public class MemoryReflection {
     @NoArgsConstructor
     public static class ReflectionResult {
 
-        @JsonPropertyDescription("reflection内容列表")
+        @JsonPropertyDescription("reflection content list")
         @JsonProperty(required = true)
         public List<Reflection> reflectionList = new ArrayList<>();
 
@@ -45,11 +45,11 @@ public class MemoryReflection {
         @NoArgsConstructor
         public static class Reflection {
 
-            @JsonPropertyDescription("reflection内容")
+            @JsonPropertyDescription("reflection content")
             @JsonProperty(required = true)
             private String text = "";
 
-            @JsonPropertyDescription("来源")
+            @JsonPropertyDescription("Source")
             @JsonProperty(required = true)
             private List<String> p_ids = new ArrayList<>();
 

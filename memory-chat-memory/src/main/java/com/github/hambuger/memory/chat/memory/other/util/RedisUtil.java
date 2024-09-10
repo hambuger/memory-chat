@@ -54,12 +54,12 @@ public class RedisUtil {
         return redisTemplate.opsForHash().entries(key);
     }
 
-    // 添加成员到集合
+    // Add members to the collection
     public void addMember(ChatMember member) {
         putKeyValue(CHAT_FRIEND_LIST_KEY, member.getName(), JSON.toJSONString(member));
     }
 
-    // 获取集合中的所有成员
+    // Get all members in the collection
     public List<Object> getAllMembers() {
         return getMap(CHAT_FRIEND_LIST_KEY).values().stream().toList();
     }
@@ -141,15 +141,15 @@ public class RedisUtil {
     }
 
     public void addElement(String key, String element, int maxSize) {
-        // 添加元素到List末尾
+
         redisTemplate.opsForList().rightPush(key, element);
 
-        // 获取当前List的长度
+
         Long size = redisTemplate.opsForList().size(key);
 
-        // 如果List长度超过最大尺寸，进行修剪
+
         if (size != null && size > maxSize) {
-            // 保留List的最后 maxSize 个元素
+
             redisTemplate.opsForList().trim(key, size - maxSize, size - 1);
         }
     }

@@ -34,7 +34,7 @@ public class GoogleSearch {
     private final static String searchUrl = "https://www.google.com/search?q=%s";
 
 
-    @FunctionCallRegistry(functionDesc = "去谷歌搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.TASK})
+    @FunctionCallRegistry(functionDesc = "Go Google and search for relevant information", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.TASK})
     public String getGoogleSearchResult(SerpSearch.SerpQuery query) {
         try {
             String googleUrl = String.format(searchUrl, query.getQueryWord().replace(" ", "%20"));

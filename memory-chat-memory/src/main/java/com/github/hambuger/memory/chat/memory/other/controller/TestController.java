@@ -38,30 +38,30 @@ public class TestController {
 
 
     /**
-     * 路径为serviceImpl类名称和方法名
-     * 入参为方法入参
+     * The path is the serviceImpl class name and method name
+     * The input parameters are method input parameters
      */
     @PostMapping("/invoke/{serviceImplClassName}/{methodName}")
     public Object invokeServiceMethod(@PathVariable String serviceImplClassName, @PathVariable String methodName, @RequestBody(required = false) Object... params) {
         try {
-            // 获取服务bean
+
             Object serviceBean = applicationContext.getBean(WordUtils.uncapitalize(serviceImplClassName));
 
-            // 获取方法
+
             Method method =
                     Arrays.stream(serviceBean.getClass().getMethods()).filter(m -> m.getName().equals(methodName)).findFirst().orElseThrow(() -> new NoSuchMethodException("Method " + methodName +
                             " not found"));
-            // 调用方法
+
             Object result;
             if (method.getParameterCount() == 0) {
-                // 无参数方法
+
                 result = method.invoke(serviceBean);
             }else {
-                // 获取方法参数类型
+
                 Class<?>[] parameterTypes = method.getParameterTypes();
                 Object[] castedParams = new Object[params.length];
 
-                // 参数类型转换
+
                 for (int i = 0; i < params.length; i++) {
                     castedParams[i] = convertType(params[i], parameterTypes[i]);
                 }
@@ -76,7 +76,7 @@ public class TestController {
     }
 
 
-    // 类型转换方法
+
     private Object convertType(Object param, Class<?> targetType) {
         if (targetType.isInstance(param)) {
             return param;
@@ -99,7 +99,7 @@ public class TestController {
         if (targetType == String.class) {
             return String.valueOf(param);
         }
-        // 可以根据需要添加更多类型转换
+
         return JSON.parseObject(JSON.toJSONString(param), targetType);
     }
 }

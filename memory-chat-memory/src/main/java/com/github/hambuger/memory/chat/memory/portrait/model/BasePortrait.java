@@ -29,112 +29,112 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BasePortrait {
 
-    @JsonPropertyDescription("年龄")
+    @JsonPropertyDescription("age")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String age = "Unknown";
 
-    @JsonPropertyDescription("母语")
+    @JsonPropertyDescription("native language")
     @JsonProperty(required = true, defaultValue = "Chinese")
     private String language = "Chinese";
 
-    @JsonPropertyDescription("居住城市")
+    @JsonPropertyDescription("City of residence")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String city = "Unknown";
 
-    @JsonPropertyDescription("性别")
+    @JsonPropertyDescription("gender")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String gender = "Unknown";
 
-    @JsonPropertyDescription("性格描述")
+    @JsonPropertyDescription("Personality description")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String personality = "Unknown";
 
-    @JsonPropertyDescription("职业")
+    @JsonPropertyDescription("profession")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String profession = "Unknown";
 
-    @JsonPropertyDescription("教育背景")
+    @JsonPropertyDescription("education")
     @JsonProperty(required = false, defaultValue = "Unknown")
     private String education = "Unknown";
 
-    @JsonPropertyDescription("长期计划")
+    @JsonPropertyDescription("long term planning")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String longPlan = "Unknown";
 
-    @JsonPropertyDescription("短期计划")
+    @JsonPropertyDescription("short term plans")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String shortTermPlan = "Unknown";
 
-    @JsonPropertyDescription("情绪")
+    @JsonPropertyDescription("emotion")
     @JsonProperty(required = true)
     @JSONField(deserializeUsing = CustomEnumDeserializer.class)
     private MemoryDimensionInfo.EmotionEnum emotion;
 
-    @JsonPropertyDescription("喜好")
+    @JsonPropertyDescription("hobby")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String hobby = "Unknown";
 
-    @JsonPropertyDescription("厌恶")
+    @JsonPropertyDescription("disgust")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String disgust = "Unknown";
 
-    @JsonPropertyDescription("社交圈")
+    @JsonPropertyDescription("social circles")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String socialCircle = "Unknown";
 
-    @JsonPropertyDescription("参与的兴趣群体")
+    @JsonPropertyDescription("Participating interest groups")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String interestGroups = "Unknown";
 
-    @JsonPropertyDescription("日常作息")
+    @JsonPropertyDescription("Daily routine")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String dailyRoutine = "Unknown";
 
-    @JsonPropertyDescription("饮食习惯")
+    @JsonPropertyDescription("Eating habits")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String diet = "Unknown";
 
-    @JsonPropertyDescription("状态")
+    @JsonPropertyDescription("state")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String state = "Unknown";
 
-    @JsonPropertyDescription("价值观")
+    @JsonPropertyDescription("values")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String values = "Unknown";
 
-    @JsonPropertyDescription("宗教信仰")
+    @JsonPropertyDescription("Religious beliefs")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String religion = "Unknown";
 
-    @JsonPropertyDescription("交谈时一些规则")
+    @JsonPropertyDescription("Some rules when talking")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String chatRules = "Unknown";
 
-    @JsonPropertyDescription("交友态度")
+    @JsonPropertyDescription("Attitude towards making friends")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String friendshipAttitude = "Unknown";
 
-    @JsonPropertyDescription("沟通风格")
+    @JsonPropertyDescription("Communication style")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String communicationStyle = "Unknown";
 
-    @JsonPropertyDescription("过去经历")
+    @JsonPropertyDescription("Past experiences")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String pastExperiences = "Unknown";
 
-    @JsonPropertyDescription("重要事件")
+    @JsonPropertyDescription("Important Events")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String significantEvents = "Unknown";
 
-    @JsonPropertyDescription("个人目标")
+    @JsonPropertyDescription("Personal goals")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String personalGoals = "Unknown";
 
-    @JsonPropertyDescription("当前面临的挑战")
+    @JsonPropertyDescription("Current challenges")
     @JsonProperty(required = true, defaultValue = "Unknown")
     private String challenges = "Unknown";
 
-    @JsonPropertyDescription("其他重要补充信息")
+    @JsonPropertyDescription("Other important additional information")
     @JsonProperty(required = false)
     public List<ImportantInfo> otherImportantInfo = new ArrayList<>();
 

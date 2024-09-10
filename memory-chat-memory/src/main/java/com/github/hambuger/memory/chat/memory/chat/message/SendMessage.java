@@ -17,11 +17,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SendMessage {
 
-    @JsonPropertyDescription("消息内容，如果是图片消息，为图片url")
+    @JsonPropertyDescription("The content of the message, if it is an image message, is the image URL")
     @JsonProperty(required = true)
     private String messageContent;
 
-    @JsonPropertyDescription("消息类型，支持 [TEXT, PICTURE]")
+    @JsonPropertyDescription("Message type, supports [TEXT, PICTURE]")
     @JsonProperty(required = true)
     private String messageContentType;
 }

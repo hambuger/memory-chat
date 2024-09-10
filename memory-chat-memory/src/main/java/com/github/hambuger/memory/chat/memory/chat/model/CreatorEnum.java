@@ -6,19 +6,17 @@ package com.github.hambuger.memory.chat.memory.chat.model;
  */
 public enum CreatorEnum {
 
-    USER("USER", "单用户", "", ""),
+    USER("USER", "", ""),
 
-    GROUP("GROUP", "群聊", "", ""),
+    GROUP("GROUP", "", ""),
 
-    Andrew("Andrew", "AI", "000001", "Andrew"),
+    Andrew("Andrew", "000001", "Andrew"),
 
-    REFLECTION("REFLECTION", "反思归纳", "000002", "REFLECTION"),
+    REFLECTION("REFLECTION", "000002", "REFLECTION"),
     ;
 
 
     private String type;
-
-    private String desc;
 
     private String userId;
 
@@ -40,9 +38,8 @@ public enum CreatorEnum {
     }
 
 
-    CreatorEnum(String type, String desc, String userId, String userName) {
+    CreatorEnum(String type, String userId, String userName) {
         this.type = type;
-        this.desc = desc;
         this.userId = userId;
         this.userName = userName;
     }

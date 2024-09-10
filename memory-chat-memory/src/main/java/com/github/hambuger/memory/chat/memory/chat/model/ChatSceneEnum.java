@@ -9,32 +9,32 @@ import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatC
  */
 public enum ChatSceneEnum {
 
-    NORMAL_USER("正常好友沟通", REPLY_MESSAGE_FUNCTION_NAME),
-    NORMAL_GROUP("正常群沟通", REPLY_MESSAGE_FUNCTION_NAME),
-    SCHEDULE("退避尝试发起对话", REPLY_MESSAGE_FUNCTION_NAME),
-    NEWS_SCHEDULE("定时根据热点尝试发起对话", REPLY_MESSAGE_FUNCTION_NAME),
-    TASK("延迟任务","updateFinishFlag"),
+    NORMAL_USER("Normal friend communication", REPLY_MESSAGE_FUNCTION_NAME),
 
-    MEMORY_DIMENSION("补全记忆维度","addNewMemory"),
+    NORMAL_GROUP("Normal group communication", REPLY_MESSAGE_FUNCTION_NAME),
+    SCHEDULE("Avoid trying to initiate a conversation", REPLY_MESSAGE_FUNCTION_NAME),
+    NEWS_SCHEDULE("Timed attempts to initiate a conversation based on hot spots", REPLY_MESSAGE_FUNCTION_NAME),
+    TASK("Delayed tasks","updateFinishFlag"),
 
-    PLAN("计划生成","generateDayActivity"),
+    MEMORY_DIMENSION("Complete memory dimensions","addNewMemory"),
 
-    MEMORY_MERGE("记忆整理", "updateFinishFlag"),
+    PLAN("Plan generation","generateDayActivity"),
 
-    LEARN_SKILL("技能学习", "learnSkillProcess"),
+    MEMORY_MERGE("Memory organization","updateFinishFlag"),
 
-    LEARN_JUDGE("是否要学习", "updateFinishFlag"),
+    LEARN_SKILL("Skill learning","learnSkillProcess"),
 
-    LEARN_FUNCTION("代码学习", "addNewFunction"),
+    LEARN_JUDGE("Do you want to learn","updateFinishFlag"),
 
-    ROLE_CHANGE("角色变更","updateFinishFlag"),
+    LEARN_FUNCTION("Code learning", "addNewFunction"),
 
-    UPDATE_FRIEND_PORTRAIT("好友画像变更","updateFinishFlag"),
+    ROLE_CHANGE("Role change", "updateFinishFlag"),
 
-    UPDATE_SELF_PORTRAIT("Andrew画像变更","updateFinishFlag"),
+    UPDATE_FRIEND_PORTRAIT("Friend portrait change", "updateFinishFlag"),
 
-    RULE_CHANGE("规则变更", "updateFinishFlag"),
+    UPDATE_SELF_PORTRAIT("Andrew portrait change", "updateFinishFlag"),
 
+    RULE_CHANGE("Rule change", "updateFinishFlag"),
     ;
 
     private String desc;

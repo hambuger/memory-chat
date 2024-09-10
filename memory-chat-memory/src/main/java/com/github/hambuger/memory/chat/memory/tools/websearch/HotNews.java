@@ -26,9 +26,9 @@ public class HotNews {
                 break;
             }
             newsBuilder.append(index).append(". ");
-            newsBuilder.append("热点标题：" + news.get("word")).append("; ");
+            newsBuilder.append("Hot News Titles：" + news.get("word")).append("; ");
             if (StringUtils.isNotBlank(news.get("category"))) {
-                newsBuilder.append("热点分类：" + news.get("category"));
+                newsBuilder.append("Hot News category：" + news.get("category"));
             }
             newsBuilder.append("\n");
             index++;

@@ -53,27 +53,27 @@ public class DocParse {
     private TokenCalculation tokenCalculation;
 
     private static final String PROMPT = """
-            用户发起了一个问题：%s
-            以下是从相关的文档中查询的到可能相关的内容：
-            %s
-            根据问题和查询内容回答问题。
+The user asked a question: %s
+The following are the possible related contents found from the related documents:
+%s
+Answer the question based on the question and the query content.
             """;
 
 
     @Data
     public static class FileParam {
 
-        @JsonPropertyDescription("文件本地路径或者外部url，如果是本地应该以file:开头，如果是外部url应该是http开头")
+        @JsonPropertyDescription("The local path of the file or the external URL, if it is local, it should start with file:, if it is an external URL, it should start with http")
         @JsonProperty(required = true)
         private String fileUrl;
 
-        @JsonPropertyDescription("问题")
+        @JsonPropertyDescription("question")
         @JsonProperty(required = true)
         private String question;
     }
 
 
-    @FunctionCallRegistry(functionDesc = "根据传入的文件回答问题", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
+    @FunctionCallRegistry(functionDesc = "Answer questions based on incoming documents", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
     public String queryContentFromDocument(FileParam param) {
         String fileUrl = param.getFileUrl();
         if (!StringUtils.startsWith(fileUrl, FILE_URL_PREFIX) && !StringUtils.startsWith(fileUrl, HTTP)) {

@@ -42,14 +42,14 @@ public class BaiduSearch {
     @Data
     public static class BaiduQuery {
 
-        @JsonPropertyDescription("搜索文本")
+        @JsonPropertyDescription("Search for text")
         @JsonProperty(required = true)
         private String queryText;
 
     }
 
 
-    @FunctionCallRegistry(functionDesc = "去百度搜索相关信息", scene = {ChatSceneEnum.LEARN_FUNCTION})
+    @FunctionCallRegistry(functionDesc = "Go to Baidu to search for relevant information", scene = {ChatSceneEnum.LEARN_FUNCTION})
     public String getSearchResultFromBaidu(BaiduQuery query) {
         try {
             String basePath = Paths.get("memory-chat-memory/src/main/java/com/github/hambuger/memory/chat/memory/tools/pythons").toAbsolutePath() + "/websearch";
@@ -60,12 +60,12 @@ public class BaiduSearch {
             Map<String, String> urlMap = JSON.parseObject(result, Map.class);
             return pageDetailGet.fetchUrlListContent(query.getQueryText(), urlMap.keySet().stream().toList());
         } catch (Exception ex) {
-            log.error("搜索出错", ex);
+            log.error("There was an error in the search", ex);
         }
-        return "搜索结果：空";
+        return "Search Results: Empty";
     }
 
-    @FunctionCallRegistry(functionDesc = "去百度搜索相关信息", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_SKILL})
+    @FunctionCallRegistry(functionDesc = "Go to Baidu to search for relevant information", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.LEARN_SKILL})
     public String getBaiduSearchResult(BaiduQuery query) {
         try {
             String basePath = Paths.get("memory-chat-memory/src/main/java/com/github/hambuger/memory/chat/memory/tools/pythons").toAbsolutePath() + "/websearch";
@@ -75,9 +75,9 @@ public class BaiduSearch {
             }});
             return result;
         } catch (Exception ex) {
-            log.error("搜索出错", ex);
+            log.error("There was an error in the search", ex);
         }
-        return "搜索结果：空";
+        return "Search Results: Empty";
     }
 
 }

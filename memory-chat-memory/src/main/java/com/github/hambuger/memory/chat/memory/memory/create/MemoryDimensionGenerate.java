@@ -33,7 +33,7 @@ public class MemoryDimensionGenerate {
     @Resource
     private PromptFactory promptFactory;
 
-    @FunctionCallRegistry(functionDesc = "新增一个新的记忆", scene = {ChatSceneEnum.MEMORY_DIMENSION})
+    @FunctionCallRegistry(functionDesc = "Add a new memory", scene = {ChatSceneEnum.MEMORY_DIMENSION})
     public Boolean addNewMemory(MemoryDimensionInfo memoryDimensionInfo) {
         return true;
     }

@@ -48,26 +48,23 @@ public class EmojiSpider1 {
         String searchUrl = baseUrl + String.format(urlContent, word);
 
         try {
-            // 获取页面内容
             Document doc = Jsoup.connect(searchUrl).userAgent(userAgent).get();
             if (Files.notExists(Paths.get(directory))) {
                 Files.createDirectories(Paths.get(directory));
             }
 
-            // 解析图片信息
             Elements imgList = doc.select("img.ui.image.bqppsearch.lazy");
             if (CollectionUtils.isEmpty(imgList)) {
                 return null;
             }
             Element img = imgList.get(0);
             String imgUrl = img.attr("data-original");
-            //            String imgTitle = img.attr("title");
             try {
-                // 构造图片保存路径
+                // Construct image saving path
                 String extension = imgUrl.substring(imgUrl.lastIndexOf("."));
                 String filePath = directory + UUID.randomUUID() + extension;
 
-                // 下载图片
+                // Download pictures
                 downloadImage(imgUrl, filePath);
                 return filePath;
             } catch (Exception e) {
@@ -81,7 +78,6 @@ public class EmojiSpider1 {
     }
 
 
-    // 下载图片方法
     private void downloadImage(String imageUrl, String destinationFilePath) throws Exception {
         Map<String, String> headers = new HashMap<>();
         headers.put("User-Agent", userAgent);

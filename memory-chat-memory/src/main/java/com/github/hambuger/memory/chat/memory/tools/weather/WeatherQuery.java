@@ -41,13 +41,13 @@ public class WeatherQuery {
     @Data
     public static class WeatherParam {
 
-        @JsonPropertyDescription("地址名")
+        @JsonPropertyDescription("Address name")
         @JsonProperty(required = true)
         private String address;
 
     }
 
-    @FunctionCallRegistry(functionDesc = "查询天气", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.PLAN})
+    @FunctionCallRegistry(functionDesc = "Check the weather", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE, ChatSceneEnum.TASK, ChatSceneEnum.PLAN})
     public String getWeather(WeatherParam param) {
         try {
             String locationName = URLEncoder.encode(param.getAddress(), StandardCharsets.UTF_8);

@@ -35,7 +35,7 @@ public class EmojiSpider {
     @Value("${emoji.directory:xxx}")
     private String directory;
 
-    // 网址
+
     private final static String emojiWebAddress = "https://www.dbbqb.com/api/search/json?start=0&w=/%s";
 
 
@@ -69,27 +69,26 @@ public class EmojiSpider {
 
 
     /**
-     * 下载图片到本地
+     * Download the image to your local computer
      */
     private String downloadImage(String imageUrl, String destinationFilePath) throws Exception {
         HttpResponse<InputStream> response = Unirest.get(imageUrl).asBinary();
         try (InputStream in = response.getBody()) {
 
-            // 获取内容类型并根据此信息设置文件扩展名
+            // Get the content type and set the file extension based on this information
             List<String> contentTypes = response.getHeaders().get("Content-Type");
             if (contentTypes != null && contentTypes.size() > 0) {
                 destinationFilePath = destinationFilePath + contentTypes.get(0).replace("image/", ".");
             }
 
-            // 确保目录存在
+            // Make sure the directory exists
             File file = new File(destinationFilePath);
             File parentDir = file.getParentFile();
             if (!parentDir.exists()) {
-                parentDir.mkdirs();  // 创建所有必要的父目录
+                parentDir.mkdirs();
             }
 
             try (FileOutputStream out = new FileOutputStream(file)) {
-                // 写入文件
                 byte[] buffer = new byte[4096];
                 int bytesRead;
                 while ((bytesRead = in.read(buffer)) != -1) {
@@ -101,7 +100,7 @@ public class EmojiSpider {
 
         } catch (Exception e) {
             log.error("downloadImage error", e);
-            return null;  // 返回null表示下载失败
+            return null;
         }
     }
 }

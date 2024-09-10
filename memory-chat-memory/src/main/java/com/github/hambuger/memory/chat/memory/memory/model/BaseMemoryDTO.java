@@ -23,79 +23,79 @@ import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatC
 public class BaseMemoryDTO {
 
     /**
-     * 消息创建者id
+     * Message creator id
      */
     private String messageCreatorId;
 
     /**
-     * 消息创建者名称
+     * Message creator name
      */
     private String messageCreatorName;
 
     /**
-     * 消息创建者类型
+     * Message creator type
      */
     private String messageCreatorType;
 
     /**
-     * 消息接受者id
+     * message receiver id
      */
     private String messageReceiveId;
 
     /**
-     * 消息接受者名称
+     * Message recipient name
      */
     private String messageReceiveName;
 
     /**
-     * 消息接受者类型
+     * message receiver type
      */
     private String messageReceiveType;
 
     /**
-     * 消息拥有者id
+     * message owner id
      */
     private String messageOwnerId;
 
     /**
-     * 消息拥有者名称
+     * message owner name
      */
     private String messageOwnerName;
 
     /**
-     * 消息拥有者类型
+     * message owner type
      */
     private String messageOwnerType;
 
     /**
-     * 消息发送时间
+     * message sending time
      */
     private String messageCreateAt;
 
     /**
-     * 消息内容类型
+     * message content type
      */
     private String messageContentType;
 
 
     /**
-     * 消息内容
+     * message content
      */
     private String messageContent;
 
 
     /**
-     * 是否群消息，1:是 0:否
+     * Whether to group message, 1: yes 0: no
      */
     private String groupMsgFlag;
 
     /**
-     * 真正的消息发送者id
+     * real message sender id
      */
     private String realCreatorId;
 
     /**
-     * 真正的消息发送者名称
+     * real message sender name
      */
     private String realCreatorName;
 

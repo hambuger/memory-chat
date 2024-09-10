@@ -147,7 +147,7 @@ public class MemoryInsert {
         } catch (IOException e) {
             log.error("insert memory error", e);
         }
-        // 检查是否需要提炼
+        // Check if refining is needed
         MEMORY_POOL.execute(() ->checkAndGetReflection(memoryDTO, textMsgFlag));
         return true;
     }
@@ -180,7 +180,7 @@ public class MemoryInsert {
 
     private void checkAndInsertDepthLeafReflection(Integer leafDepth, String depthLeafKey, String depthLeafListKey, String ownerId, String ownerName, String ownerType
             , String receiveId, String receiveName, String receiveType) {
-        // 总token提炼限制
+        // Total token extraction limit
         if (redisUtil.get(depthLeafKey) < reflectionTokenLimit) {
             return;
         }

@@ -66,11 +66,11 @@ public class DayPlanGenerate {
     @Data
     public static class HourActivity {
 
-        @JsonPropertyDescription("小时时间点，取值范围为0到23的整数")
+        @JsonPropertyDescription("hour time point, an integer ranging from 0 to 23")
         @JsonProperty(required = true)
         private Integer hour;
 
-        @JsonPropertyDescription("做的事情的描述")
+        @JsonPropertyDescription("Description of what was done")
         @JsonProperty(required = true)
         private String task;
 
@@ -80,7 +80,7 @@ public class DayPlanGenerate {
     @Data
     public static class OneDayActivity {
 
-        @JsonPropertyDescription("每个小时(0-23)活动内容,需要全部的24个小时")
+        @JsonPropertyDescription("Each hour (0-23) activity content requires all 24 hours")
         @JsonProperty(required = true)
         private List<HourActivity> tasks;
 
@@ -90,7 +90,7 @@ public class DayPlanGenerate {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "生成一天24个小时活动内容", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.TASK})
+    @FunctionCallRegistry(functionDesc = "Generate activity content 24 hours a day", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.TASK})
     public Boolean generateDayActivity(OneDayActivity oneDayActivity) {
         if (oneDayActivity == null || CollectionUtils.isEmpty(oneDayActivity.getTasks())) {
             return false;
