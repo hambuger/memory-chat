@@ -18,7 +18,7 @@ public enum ChatSceneEnum {
 
     MEMORY_DIMENSION("Complete memory dimensions","addNewMemory"),
 
-    PLAN("Plan generation","generateDayActivity"),
+    PLAN("Plan generation","updateFinishFlag"),
 
     MEMORY_MERGE("Memory organization","updateFinishFlag"),
 

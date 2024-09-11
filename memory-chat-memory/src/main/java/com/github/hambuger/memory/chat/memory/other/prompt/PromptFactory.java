@@ -39,7 +39,7 @@ public class PromptFactory {
     @Resource
     private RuleUpdate ruleUpdate;
 
-    @Value("${env.language:zh}")
+    @Value("${env.language:en}")
     private String language;
 
     public boolean isZh(){

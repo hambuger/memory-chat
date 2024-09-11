@@ -82,9 +82,6 @@ public class DayPlanGenerate {
         @JsonProperty(required = true)
         private List<HourActivity> tasks;
 
-        @JsonIgnore
-        private String userName;
-
     }
 
 
@@ -95,10 +92,10 @@ public class DayPlanGenerate {
         }
         Map<String, Object> hourTaskMap = oneDayActivity.getTasks().stream().collect(Collectors.toMap(k -> k.getHour().toString(), HourActivity::getTask));
         String planKey;
-        if (StringUtil.isBlank(UserInfoUtil.getUser())) {
-            planKey = String.format(CUSTOM_DAY_PLAN_KEY, oneDayActivity.getUserName());
-        }else {
+        if (StringUtil.isNotBlank(UserInfoUtil.getUser())) {
             planKey = getCustomDayPlanKey();
+        } else {
+            return true;
         }
         redisUtil.reset(planKey);
         redisUtil.saveMap(planKey, hourTaskMap);
@@ -111,24 +108,20 @@ public class DayPlanGenerate {
         if (CollectionUtils.isEmpty(allMembers)) {
             return;
         }
-        for (Object member : allMembers) {
+        allMembers.parallelStream().forEach(member -> {
             ChatMember chatMember = JSON.parseObject(member.toString(), ChatMember.class);
             String name = chatMember.getName();
             if (StringUtil.isBlank(name)) {
-                continue;
+                return;
             }
+            UserInfoUtil.putUser(name);
             String allTask = delayedTask.getAllTask(name);
             String portraitStr = Optional.ofNullable(redisUtil.getString(String.format(SelfUpdate.CUSTOM_SELF_PORTRAIT, name))).orElse(redisUtil.getString(SELF_PORTRAIT_KEY));
             SelfPortrait selfPortrait = JSON.parseObject(portraitStr, SelfPortrait.class);
             String planPrompt = promptFactory.getDayPlanPrompt(allTask, selfPortrait.toMarkDown());
             List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(planPrompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-            OpenAiApi.ChatCompletion chatCompletion = springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.PLAN, 1.0f);
-            if (chatCompletion != null && chatCompletion.choices() != null) {
-                OneDayActivity plan = JSON.parseObject(chatCompletion.choices().get(0).message().toolCalls().get(0).function().arguments(), OneDayActivity.class);
-                plan.setUserName(name);
-                generateDayActivity(plan);
-            }
-        }
+            springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.PLAN, 1.0f);
+        });
     }
 
 }
