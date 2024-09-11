@@ -12,7 +12,6 @@ import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCal
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
@@ -30,7 +29,6 @@ import org.apache.poi.util.StringUtil;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import static com.github.hambuger.memory.chat.memory.other.constants.MemoryChatConstants.SELF_PORTRAIT_KEY;
 
@@ -90,7 +88,7 @@ public class DayPlanGenerate {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "Generate activity content 24 hours a day", scene = {ChatSceneEnum.PLAN, ChatSceneEnum.TASK})
+    @FunctionCallRegistry(functionDesc = "Generate activity content 24 hours a day", scene = {ChatSceneEnum.PLAN})
     public Boolean generateDayActivity(OneDayActivity oneDayActivity) {
         if (oneDayActivity == null || CollectionUtils.isEmpty(oneDayActivity.getTasks())) {
             return false;

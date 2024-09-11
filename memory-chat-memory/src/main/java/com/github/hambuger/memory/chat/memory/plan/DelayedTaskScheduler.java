@@ -2,6 +2,7 @@ package com.github.hambuger.memory.chat.memory.plan;
 
 import com.alibaba.fastjson.JSON;
 import com.github.hambuger.memory.chat.memory.chat.ChatCompletionsApi;
+import com.github.hambuger.memory.chat.memory.chat.CommonMessageHandler;
 import com.github.hambuger.memory.chat.memory.chat.model.ChatMember;
 import com.github.hambuger.memory.chat.memory.tools.websearch.HotNews;
 import com.github.hambuger.memory.chat.memory.other.util.RedisUtil;
@@ -26,6 +27,8 @@ public class DelayedTaskScheduler {
     @Resource
     private HotNews hotNews;
 
+    @Resource
+    private CommonMessageHandler commonMessageHandler;
 
     @Scheduled(fixedRate = 1000 * 60 * 30)
     public void processTasks() {
@@ -38,6 +41,9 @@ public class DelayedTaskScheduler {
 
     private void executeSchedulerTask(Object member) {
         ChatMember chatMember = JSON.parseObject(member.toString(), ChatMember.class);
+        if (StringUtils.isBlank(chatMember.getChannelScene()) || commonMessageHandler.getSendTool(chatMember.getChannelScene()) == null) {
+            return;
+        }
         String news = getRecentNews();
         if (StringUtils.isBlank(news)) {
             return;

@@ -34,6 +34,11 @@ public class CommonMessageHandler implements MessageHandler {
 
     private static final Map<String, Consumer<SendChannelMessageRequest>> SEND_TOOL_MAP = new ConcurrentHashMap<>();
 
+
+    public Consumer<SendChannelMessageRequest> getSendTool(String sceneName) {
+        return SEND_TOOL_MAP.get(sceneName);
+    }
+
     public void registerSendTool(String channelEnum, Consumer<SendChannelMessageRequest> consumer) {
         SEND_TOOL_MAP.put(channelEnum, consumer);
     }
