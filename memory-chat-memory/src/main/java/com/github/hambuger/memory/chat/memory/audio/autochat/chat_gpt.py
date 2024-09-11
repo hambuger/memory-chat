@@ -86,12 +86,12 @@ class ChatClass:
         data = {
             'messageContent': prompt,
             'messageContentType': 'TEXT',
-            'messageCreatorName': '小明',
+            'messageCreatorName': 'Leonard',
             'groupMsgFlag': '0',
-            'realCreatorId': '小明',
-            'realCreatorName': '小明',
+            'realCreatorId': 'Leonard',
+            'realCreatorName': 'Leonard',
             'channelEnum': 'AUDIO',
-            'receiveMessageUserId': 'xiaoming'
+            'receiveMessageUserId': 'Leonard'
         }
 
         response = requests.post(url, json=data)

@@ -52,11 +52,11 @@ def get_google_news(query_word):
 
         time = div.find('div', class_='OSrXXb').text.strip()
         news_info = {
-            "新闻标题": title,
-            "新闻URL": url,
-            "新闻描述": description,
-            "新闻来源": source,
-            "新闻时间": time
+            "title": title,
+            "url": url,
+            "description": description,
+            "source": source,
+            "time": time
         }
         print(news_info)
         result.append(news_info)
@@ -89,11 +89,11 @@ def get_baidu_news(word):
 
 
         news_info = {
-            "新闻标题": title,
-            "新闻URL": url,
-            "新闻描述": description,
-            "新闻来源": source,
-            "新闻时间": time
+            "title": title,
+            "url": url,
+            "description": description,
+            "source": source,
+            "time": time
         }
         print(news_info)
 

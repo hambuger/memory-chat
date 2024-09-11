@@ -216,7 +216,7 @@ Context and background:
 Is the background and situation of the statement special? If the conversation occurs at a special time, place or is related to an important event, these statements tend to be easier to remember and give importance.
 
 Personal significance:
-Does the statement involve personal important topics, values ​​or identity? Statements related to core topics such as personal beliefs, goals, relationships, etc. usually become important memories because they affect the individual's self-cognition.
+Does the statement involve personal important topics, values or identity? Statements related to core topics such as personal beliefs, goals, relationships, etc. usually become important memories because they affect the individual's self-cognition.
 
 Future impact:
 Does this sentence have an important impact on future decisions or behaviors? Important conversations that can affect future life are usually remembered and occupy an important position in memory.

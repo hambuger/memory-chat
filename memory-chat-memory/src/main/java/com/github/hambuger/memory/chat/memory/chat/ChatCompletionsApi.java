@@ -298,8 +298,8 @@ public class ChatCompletionsApi {
             return false;
         }
         String lowerStr = messageContent.trim().toLowerCase();
-        if (lowerStr.startsWith("/change") || lowerStr.startsWith("/变身")) {
-            baseMemoryDTO.setMessageContent(messageContent.replace("/change", "").replace("/变身", "").trim());
+        if (lowerStr.startsWith("/change")) {
+            baseMemoryDTO.setMessageContent(messageContent.replace("/change", "").trim());
             return true;
         }
         return false;
