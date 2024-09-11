@@ -1,48 +1,48 @@
 <p align="center">
-        English</a>&nbsp ｜ &nbsp<a href="README.md">中文</a>
+        中文</a>&nbsp ｜ &nbsp<a href="README_EN.md">English</a>
 </p>
 
 ---
 # MEMORY-CHAT
-## A chat bot named Andrew with the ability to remember, plan, and learn.
-### Special thanks to [Generative Agents](https://github.com/joonspk-research/generative_agents), without which this project would not have happened.
-- Implementing AI Chat Using OpenAI API,Using SpringAi as the java framework.
-- The memory-chat-memory module is the entire logic content, and memory-chat-wechat is an example of the use of this module
+## 一个名叫 Andrew 的聊天机器人，具备记忆、计划和学习的能力。
+### 特别感谢 [Generative Agents](https://github.com/joonspk-research/generative_agents)，没有他们的帮助，这个项目就不会发生。
+- 使用 OpenAI API 实现人工智能聊天，使用 SpringAi 作为 java 框架。
+- memory-chat-memory模块是全部的逻辑内容，memory-chat-wechat是一个该模块的使用实例
 <p align="center">
     <img src="Memory-chat.png" width="400"/>
 <p>
 
-## Access method
+## 接入方式
 
-### Method 1
+### 方式一
 
-- If you use Java to write, introduce CommonMessageHandler in the code and call receiveNewMsg to send a message to get the return, registerSendTool to register the method to receive messages (optional)
+- 如果你使用Java编写，代码中引入CommonMessageHandler并调用receiveNewMsg发送消息获取返回，registerSendTool注册接收消息方法(非必须)
 
-### Method 2
+### 方式二
 
-- Provide the http method of the above steps at the same time, send a message through /chat/message to get the return, /chat/send/register to register the method to receive messages (optional)
+- 同时提供上述步骤的http方式，通过/chat/message来发送消息获取返回，/chat/send/register注册接收消息方法(非必须)
 
-## Scene
+## 场景
+1. 模仿存在过的某人和你聊天或者自己的聊天分身
+   代码中有getCustomChatModel可以通过微调文件生成符合某人风格的微调模型
 
-1. Imitate someone who has existed and chat with you or your own chat avatar
-   There is getCustomChatModel in the code, which can generate a fine-tuning model that matches someone's style through a fine-tuning file
+2. 自定义聊天伴侣
+输入/change ...可以生成特定角色设定的聊天模型
 
-2. Custom chat partner
-   Input /change ... can generate a chat model with specific role settings
+3. 个人的日常助手
+可以通过语音或者微信或者其他聊天方式接入
 
-3. Personal daily assistant
-   Access through voice, WeChat or other chat methods
 
-## Startup
-- If a proxy is required, JVM startup parameters: -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
-- Copy the template.yaml file as application.ymal, modify the configuration, and run the com.github.hambuger.memory.chat.wechat.Application class.
-- After waiting for the project to start, scan the WeChat login QR code, add the logged-in WeChat account as a friend, and then chat.
-    ### Required
-    - Redis is needed to store data such as conversation status and conversation cache.
-    - Required elasticsearch index:chat_memory to keep memory.
-    - Required a github repository access token for picture bed.Or your custom image hosting address telegraph_url.
-    - Weather and wolframalpha key are optional.
-    ```json
+## 启动
+- 如果需要代理，JVM 启动参数：-Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7890
+- 将 template.yaml 文件复制为 application.ymal，修改配置，运行 com.github.hambuger.memory.chat.wechat.Application 类。
+- 等待项目启动后，扫描微信登录二维码，将登录的微信账号添加为好友，即可聊天。
+### 必备
+- 需要 Redis 来存储对话状态、对话缓存等数据。
+- 需要 elasticsearch index:chat_memory 来保存内存。
+- 需要图片床的 github 存储库访问令牌，或者你的自定义图床地址telegraph_url。
+- 天气和 wolframalpha 密钥是可选的。
+```json
     {
       "chat_memory": {
         "mappings": {
@@ -163,44 +163,44 @@
         }
       }
     }
-    ```
+```
 
 
-### Features List
+### 功能列表
 
-- [x] Supports incoming files
+- [x] 支持传入文件
 
-- [x] Supports replying to images
+- [x] 支持回复图片
 
-- [x] Unified processing of multiple messages
+- [x] 多条消息统一处理
 
-- [x] Supports user-defined system messages
+- [x] 支持用户自定义系统消息
 
-- [x] Supports AI to decide whether to reply, and initiate messages based on hot news
+- [x] 支持AI决定是否回复，根据热点新闻发起消息
 
-- [x] Exponential backoff to check whether to initiate a message
+- [x] 指数退避检查是否发起消息
 
-- [x] Supports video message reply
+- [x] 支持视频消息回复
 
-- [x] Supports web search
+- [x] 支持网页搜索
 
-- [x] Supports replying emoticons
+- [x] 支持回复表情包
 
-- [x] Supports accepting friend requests
+- [x] 支持接受好友请求
 
-- [x] Plan time plans, modify plans, modify personality, and actively initiate messages
+- [x] 规划时间计划、修改计划、修改个性、主动发起消息
 
-- [x] Memory update logic, memory organization, and memory obsolescence.
+- [x] 记忆更新逻辑、记忆组织、记忆淘汰
 
-- [x] AI learns new skills and persists
+- [x] AI学习新技能并坚持
 
-- [x] Personalized modification settings
+- [x] 个性化修改设置
 
-- [x] Learning and persisting non-declarative memory
+- [x] 非陈述性记忆的学习和坚持
 
-- [x] More colloquial
+- [x] 更加口语化
 
-- [x] Weather change perception
+- [x] 天气变化感知
 
 
 
