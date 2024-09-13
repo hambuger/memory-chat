@@ -191,7 +191,7 @@ public class ChatCompletionsApi {
                 return null;
             }
             // Get AI reply
-            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, memoryDTO.groupFlag(), ChatSceneEnum.NORMAL_USER);
+            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, memoryDTO.groupFlag(), ChatSceneEnum.NORMAL_USER, 0.7f);
             if (aiMessageResponse == null || CollectionUtils.isEmpty(aiMessageResponse.choices())) {
                 return null;
             }
