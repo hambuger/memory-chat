@@ -32,7 +32,7 @@ public class CommonMessageHandler implements MessageHandler {
     @Resource
     private FileUtil fileUtil;
 
-    private static volatile Map<String, Consumer<SendChannelMessageRequest>> SEND_TOOL_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, Consumer<SendChannelMessageRequest>> SEND_TOOL_MAP = new ConcurrentHashMap<>();
 
 
     public Consumer<SendChannelMessageRequest> getSendTool(String sceneName) {
