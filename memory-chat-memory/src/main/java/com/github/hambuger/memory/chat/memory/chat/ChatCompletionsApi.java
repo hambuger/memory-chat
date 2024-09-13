@@ -312,7 +312,7 @@ public class ChatCompletionsApi {
             String userName = Optional.ofNullable(toUserName).orElse(UserInfoUtil.getUser());
             ChatMember member = redisUtil.getMember(userName);
             toUserId = member.getSendUserId();
-            channelName = member.getName();
+            channelName = member.getChannelScene();
         }
         for (SendMessage sendMessage : sendMessageList) {
             SendChannelMessageRequest message = new SendChannelMessageRequest();
