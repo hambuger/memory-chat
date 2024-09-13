@@ -186,7 +186,7 @@ public class ChatCompletionsApi {
                 return null;
             }
             OpenAiApi.ChatCompletionMessage systemMessage = getSystemMessage(memoryDTO, searchMemoryList, existMsgIds);
-            messageList.addFirst(systemMessage);
+            messageList.add(systemMessage);
             if (checkLastMessageId(memoryDTO)) {
                 return null;
             }
