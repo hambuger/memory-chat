@@ -101,7 +101,7 @@ public class SpringAiChat {
 
         OpenAiChatOptions chatOptions =
                 OpenAiChatOptions.builder().withModel(modelName).withTools(tools).withToolChoice(REQUIRED).withTemperature(Optional.ofNullable(temperature).orElse(this.temperature)).build();
-        switchCustomModel(messages, chatOptions);
+        switchCustomModel(messages, chatOptions, scene);
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
         if (response == null || CollectionUtils.isEmpty(response.getBody().choices())
@@ -133,7 +133,7 @@ public class SpringAiChat {
         return  response.getBody();
     }
 
-    private void switchCustomModel(List<OpenAiApi.ChatCompletionMessage> messages, OpenAiChatOptions chatOptions) {
+    private void switchCustomModel(List<OpenAiApi.ChatCompletionMessage> messages, OpenAiChatOptions chatOptions, ChatSceneEnum scene) {
         if (CollectionUtils.isEmpty(messages)) {
             return;
         }
@@ -151,9 +151,7 @@ public class SpringAiChat {
             }
         });
         String customChatModel = portraitGenerate.getCustomModel();
-        if (imageFlag) {
-            chatOptions.setModel(OpenAiApi.ChatModel.GPT_4_O.getName());
-        }else if (StringUtils.isNotBlank(customChatModel)) {
+        if (!imageFlag && StringUtils.isNotBlank(customChatModel) && Lists.newArrayList(ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE).contains(scene)) {
             chatOptions.setModel(customChatModel);
         }
     }
