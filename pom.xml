@@ -183,7 +183,21 @@
                 <artifactId>javapoet</artifactId>
                 <version>1.13.0</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.volcengine</groupId>
+                <artifactId>volc-sdk-java</artifactId>
+                <version>1.0.184</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>3.12.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
+                <version>3.12.4</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
