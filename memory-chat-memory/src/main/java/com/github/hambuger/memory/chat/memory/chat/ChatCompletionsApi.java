@@ -191,7 +191,7 @@ public class ChatCompletionsApi {
                 return null;
             }
             // Get AI reply
-            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, memoryDTO.groupFlag(), ChatSceneEnum.NORMAL_USER, 0.7f);
+            OpenAiApi.ChatCompletion aiMessageResponse = springAiChat.generateMsgWithMsgListAndFunctions(messageList, memoryDTO.groupFlag(), ChatSceneEnum.NORMAL_USER, 0.7d);
             if (aiMessageResponse == null || CollectionUtils.isEmpty(aiMessageResponse.choices())) {
                 return null;
             }
@@ -287,7 +287,7 @@ public class ChatCompletionsApi {
     private String getRoleDetail(String content) {
         String rolePrompt = promptFactory.getRoleDetailPrompt(content);
         List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(rolePrompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-        springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.ROLE_CHANGE, 0.7f);
+        springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.ROLE_CHANGE, 0.7d);
         return selfUpdate.getSelfPortrait();
     }
 

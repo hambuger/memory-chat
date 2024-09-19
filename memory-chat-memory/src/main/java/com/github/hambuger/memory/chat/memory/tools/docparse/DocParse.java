@@ -95,7 +95,7 @@ Answer the question based on the question and the query content.
     public String summaryUrl(String url, String summaryTemplate) {
         TextReader doc = new TextReader(url);
         List<Document> transformDocumentList = doc.get();
-        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi, OpenAiChatOptions.builder().withModel(OpenAiApi.ChatModel.GPT_4_O_MINI).withTemperature(0.7F).build()), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT), summaryTemplate, MetadataMode.ALL);
+        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi, OpenAiChatOptions.builder().withModel(OpenAiApi.ChatModel.GPT_4_O_MINI).withTemperature(0.7d).build()), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT), summaryTemplate, MetadataMode.ALL);
         int sumTokens;
         List<Document> transform;
         while (true) {
@@ -121,7 +121,7 @@ Answer the question based on the question and the query content.
         } else {
             documentReader = new TikaDocumentReader(fileUrl);
         }
-        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi, OpenAiChatOptions.builder().withModel(OpenAiApi.ChatModel.GPT_4_O_MINI).withTemperature(0.7F).build()), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT), summaryTemplate, MetadataMode.ALL);
+        SummaryMetadataEnricher summaryMetadataEnricher = new SummaryMetadataEnricher(new OpenAiChatModel(springAiChat.openAiApi, OpenAiChatOptions.builder().withModel(OpenAiApi.ChatModel.GPT_4_O_MINI).withTemperature(0.7d).build()), Lists.newArrayList(SummaryMetadataEnricher.SummaryType.CURRENT), summaryTemplate, MetadataMode.ALL);
         TokenTextSplitter tokenTextSplitter = new TokenTextSplitter(10000, 8000, 5, 1000, true);
         List<Document> transformDocumentList = tokenTextSplitter.transform(documentReader.read());
         List<Document> transform;

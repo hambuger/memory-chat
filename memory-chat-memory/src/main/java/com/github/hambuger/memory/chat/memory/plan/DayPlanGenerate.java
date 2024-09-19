@@ -120,7 +120,7 @@ public class DayPlanGenerate {
             SelfPortrait selfPortrait = JSON.parseObject(portraitStr, SelfPortrait.class);
             String planPrompt = promptFactory.getDayPlanPrompt(allTask, selfPortrait.toMarkDown());
             List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(planPrompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-            springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.PLAN, 1.0f);
+            springAiChat.generateMsgWithMsgListAndFunctions(messages, false, ChatSceneEnum.PLAN, 1.0d);
         });
     }
 

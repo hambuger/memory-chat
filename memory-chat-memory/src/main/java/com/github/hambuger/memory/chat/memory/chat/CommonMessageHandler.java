@@ -61,7 +61,8 @@ public class CommonMessageHandler implements MessageHandler {
             ContentTypeEnum contentTypeEnum = ContentTypeEnum.getByType(sendMessage.getMessageContentType());
             message.setMessageContentType(sendMessage.getMessageContentType());
             if (contentTypeEnum == ContentTypeEnum.PICTURE) {
-                String filePath = fileUtil.downloadImage(sendMessage.getMessageContent());
+//                String filePath = fileUtil.downloadImage(sendMessage.getMessageContent());
+                String filePath = sendMessage.getMessageContent();
                 message.setFilePath(filePath);
                 message.setMessageContent(null);
             }else if (contentTypeEnum == ContentTypeEnum.EMOJI) {

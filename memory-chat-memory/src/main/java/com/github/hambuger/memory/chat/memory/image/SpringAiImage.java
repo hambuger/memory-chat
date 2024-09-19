@@ -42,7 +42,7 @@ public class SpringAiImage {
     }
 
 
-    @FunctionCallRegistry(functionDesc = "Generate pictures", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
+//    @FunctionCallRegistry(functionDesc = "Generate pictures", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
     public String generateImage(ImageGenerateParam generateParam) {
         ImagePrompt imagePrompt = new ImagePrompt(generateParam.generateText);
         ImageResponse imageResponse = imageModel.call(imagePrompt);

@@ -59,7 +59,7 @@ public class SpringAiChat {
     private String baseUrl;
 
     @Value("${spring.ai.openai.temperature}")
-    private Float temperature;
+    private Double temperature;
 
     @Value("${spring.ai.openai.chat.options.model}")
     private String modelName;
@@ -95,7 +95,7 @@ public class SpringAiChat {
         return generateMsgWithMsgListAndFunctions(messages, groupFlag, scene, this.temperature);
     }
 
-    public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages, boolean groupFlag, ChatSceneEnum scene, Float temperature) {
+    public OpenAiApi.ChatCompletion generateMsgWithMsgListAndFunctions(List<OpenAiApi.ChatCompletionMessage> messages, boolean groupFlag, ChatSceneEnum scene, Double temperature) {
         OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
         List<OpenAiApi.FunctionTool> tools = CallFunctionRegistryFactory.getAllFunctionCall(groupFlag, scene);
 

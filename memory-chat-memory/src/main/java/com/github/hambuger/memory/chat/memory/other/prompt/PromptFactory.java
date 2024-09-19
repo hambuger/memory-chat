@@ -266,4 +266,8 @@ The following is the content of the note:
 Follow the instructions of the note to complete what you need to do.
 The current time is: %s""", time, taskMessage, now);
     }
+
+    public String getImageGeneratePrompt() {
+        return PromptTemplate.IMAGE_GENERATE_PROMPT;
+    }
 }

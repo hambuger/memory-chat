@@ -90,3 +90,7 @@ temp:
 
 env:
   language: en
+
+doubao:
+  accessKey:
+  secretAccessKey:
