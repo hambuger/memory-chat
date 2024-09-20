@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class EmojiSpider1 {
+public class FabiaoqingEmoji {
 
     @Value("${emoji.baseUrlPrefix:xxx}")
     private String baseUrl;
@@ -42,6 +42,14 @@ public class EmojiSpider1 {
 
     @Value("${emoji.directory:xxx}")
     private String directory;
+
+    {
+        EmojiManager.registerChannel("fabiaoqing", this::searchEmoticonPhoto);
+    }
+
+    private String searchEmoticonPhoto(EmoticonPictureQuery query) {
+        return searchEmoji(query.getEmoticonPictureQueryWord());
+    }
 
 
     public String searchEmoji(String word) {

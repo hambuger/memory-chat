@@ -29,11 +29,19 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class EmojiSpider {
+public class DbbqbEmoji {
 
 
     @Value("${emoji.directory:xxx}")
     private String directory;
+
+    {
+        EmojiManager.registerChannel("dbbqb", this::searchEmoticonPhoto);
+    }
+
+    private String searchEmoticonPhoto(EmoticonPictureQuery query) {
+        return searchEmoji(query.getEmoticonPictureQueryWord());
+    }
 
 
     private final static String emojiWebAddress = "https://www.dbbqb.com/api/search/json?start=0&w=/%s";

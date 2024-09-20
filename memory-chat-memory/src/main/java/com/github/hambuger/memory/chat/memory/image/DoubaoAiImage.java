@@ -53,8 +53,11 @@ public class DoubaoAiImage {
 
     private static final String URL = "https://visual.volcengineapi.com?Action=HighAesSmartDrawing&Version=2022-08-31";
 
-    @FunctionCallRegistry(functionDesc = "Generate pictures", scene = {ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP})
-    public String generateImg(SpringAiImage.ImageGenerateParam param) {
+    {
+        ImageGenerate.registerChannel("doubao", this::generateImg);
+    }
+
+    public String generateImg(ImageGenerateParam param) {
         try {
             String imageGeneratePrompt = promptFactory.getImageGeneratePrompt();
             List<OpenAiApi.ChatCompletionMessage> messageList = new ArrayList<>();

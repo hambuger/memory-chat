@@ -9,6 +9,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.github.hambuger.memory.chat.memory.audio.AudioRecognition;
 import com.github.hambuger.memory.chat.memory.audio.SpringAiAudio;
 import com.github.hambuger.memory.chat.memory.chat.model.*;
 import com.github.hambuger.memory.chat.memory.emoji.SogouEmoji;
@@ -86,7 +87,7 @@ public class ChatCompletionsApi {
     private Integer maxMsgCount;
 
     @Autowired
-    private SpringAiAudio springAiAudio;
+    private AudioRecognition audioRecognition;
 
     @Autowired
     private SpringAiChat springAiChat;
@@ -510,13 +511,13 @@ public class ChatCompletionsApi {
     }
 
 
-    private SpringAiChatMessageMemoryDTO getChatMemory(BaseMemoryDTO baseMemoryDTO) throws Exception {
+    private SpringAiChatMessageMemoryDTO getChatMemory(BaseMemoryDTO baseMemoryDTO){
         SpringAiChatMessageMemoryDTO memoryDTO = new SpringAiChatMessageMemoryDTO();
         memoryDTO.setMessageId(IdUtil.generateUniqueId());
         BeanUtil.copyProperties(baseMemoryDTO, memoryDTO);
         if (StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.AUDIO.getType())) {
             memoryDTO.setMessageContentType(ContentTypeEnum.TEXT.getType());
-            memoryDTO.setMessageContent(springAiAudio.generateTextWithAudio(new FileSystemResource(baseMemoryDTO.getMessageContent())));
+            memoryDTO.setMessageContent(audioRecognition.recognitionAudio(new FileSystemResource(baseMemoryDTO.getMessageContent())));
         }else if (StringUtils.equals(baseMemoryDTO.getMessageContentType(), ContentTypeEnum.VIDEO.getType())) {
             memoryDTO.setMessageContentType(ContentTypeEnum.NOTE.getType());
             memoryDTO.setMessageContent(String.format("%s sent you a video, currently viewing it", Optional.ofNullable(baseMemoryDTO.getRealCreatorName()).orElse(baseMemoryDTO.getMessageCreatorName())));

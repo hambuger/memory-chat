@@ -51,6 +51,13 @@ public class SelfEmoji {
 
     public static final String EMOJI_INDEX = "self_emoji";
 
+    {
+        EmojiManager.registerChannel("self", this::searchEmoticonPhoto);
+    }
+
+    private String searchEmoticonPhoto(EmoticonPictureQuery query) {
+        return queryEmoji(query.getEmoticonPictureQueryWord());
+    }
 
     @Data
     @NoArgsConstructor

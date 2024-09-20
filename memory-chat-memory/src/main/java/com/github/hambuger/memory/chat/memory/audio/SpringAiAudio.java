@@ -40,6 +40,11 @@ public class SpringAiAudio {
     @jakarta.annotation.Resource
     private PromptFactory promptFactory;
 
+    {
+        AudioRecognition.registerRecognition("openai", this::generateTextWithAudio);
+
+    }
+
 
     public String generateTextWithAudio(Resource audioFile) {
         OpenAiAudioTranscriptionOptions transcriptionOptions =

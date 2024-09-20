@@ -1,14 +1,9 @@
 package com.github.hambuger.memory.chat.memory.emoji;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
-import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.other.util.MyHttpUtils;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -22,9 +17,15 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -40,15 +41,10 @@ public class SogouEmoji {
 
     private final static String emojiWebAddress = "https://pic.sogou.com/pic/emo/searchList.jsp?keyword=%s&spver=&rcer=&routeName=emosearch&tag=0";
 
-    @Data
-    public static class EmoticonPictureQuery {
-        @JsonPropertyDescription("Emoticon image search text")
-        @JsonProperty(required = true)
-        private String emoticonPictureQueryWord;
-
+    {
+        EmojiManager.registerChannel("sougou", this::searchEmoticonPhoto);
     }
 
-    @FunctionCallRegistry(functionDesc = "Search for emoticon pictures and return the picture URL", scene = {ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NORMAL_USER})
     public String searchEmoticonPhoto(EmoticonPictureQuery query) {
         try {
             log.info("emoji query:{}", query.getEmoticonPictureQueryWord());

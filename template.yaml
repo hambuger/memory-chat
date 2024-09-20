@@ -94,3 +94,12 @@ env:
 doubao:
   accessKey:
   secretAccessKey:
+
+audio:
+  model: openai
+
+emoji:
+  channel: sougou
+
+image:
+  channel: openai
