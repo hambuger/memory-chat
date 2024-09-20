@@ -665,7 +665,7 @@ public class ChatCompletionsApi {
 
 
     private String getVideoInfo(BaseMemoryDTO memoryDTO) {
-        Future<List<String>> audioTask = CHAT_POOL.submit(() -> springAiAudio.generateTextFromVideo(memoryDTO.getMessageContent()));
+        Future<List<String>> audioTask = CHAT_POOL.submit(() -> audioRecognition.generateTextFromVideo(memoryDTO.getMessageContent()));
         Future<List<String>> imageTask = CHAT_POOL.submit(() -> videoUtil.getVideoImg(memoryDTO.getMessageContent()));
         List<String> fileList = new ArrayList<>();
         try {
