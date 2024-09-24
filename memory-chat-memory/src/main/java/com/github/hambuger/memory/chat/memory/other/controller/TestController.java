@@ -2,6 +2,7 @@ package com.github.hambuger.memory.chat.memory.other.controller;
 
 
 import com.alibaba.fastjson.JSON;
+import com.github.hambuger.memory.chat.memory.chat.model.ChatResponse;
 
 import org.apache.commons.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,9 +34,19 @@ public class TestController {
     private ApplicationContext applicationContext;
 
 
+    public static final Map<String, ChatResponse> phoneReceiveMessageMap = new ConcurrentHashMap<>();
+
+
     @GetMapping("/hello")
     public String sayHello(@RequestParam(value = "name", defaultValue = "World") String name) {
         return "Hello, " + name + "!";
+    }
+
+    @GetMapping("/message")
+    public ChatResponse getMessage(@RequestParam(value = "name")String name) {
+        ChatResponse chatResponse = phoneReceiveMessageMap.get(name);
+        phoneReceiveMessageMap.remove(name);
+        return chatResponse;
     }
 
 
