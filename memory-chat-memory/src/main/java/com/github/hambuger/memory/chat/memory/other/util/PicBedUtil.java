@@ -51,8 +51,13 @@ public class PicBedUtil {
                 return null;
             }
         }
-        String fileNameEnd = UUID.randomUUID() + file.substring(file.indexOf(".") + 1);
-        String newImagePath = tempPath + File.separator + "image" + File.separator + fileNameEnd;
+        String fileNameEnd = UUID.randomUUID() + file.substring(file.indexOf("."));
+        String newImagePath = tempPath + File.separator + "image";
+        File folder = new File(newImagePath);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+        newImagePath = newImagePath + File.separator + fileNameEnd;
         try (FileInputStream fis = new FileInputStream(file); FileOutputStream fos = new FileOutputStream(newImagePath)) {
             byte[] buffer = new byte[1024];
             int length;
