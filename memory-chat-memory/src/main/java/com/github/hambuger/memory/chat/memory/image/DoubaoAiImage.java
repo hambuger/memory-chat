@@ -3,13 +3,10 @@ package com.github.hambuger.memory.chat.memory.image;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.hambuger.memory.chat.memory.chat.SpringAiChat;
-import com.github.hambuger.memory.chat.memory.chat.model.ChatSceneEnum;
 import com.github.hambuger.memory.chat.memory.image.utils.Credentials;
 import com.github.hambuger.memory.chat.memory.image.utils.Signer;
-import com.github.hambuger.memory.chat.memory.other.functionCall.aop.FunctionCallRegistry;
 import com.github.hambuger.memory.chat.memory.other.prompt.PromptFactory;
-import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -31,18 +28,21 @@ import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+
 
 @Slf4j
 @Component
 public class DoubaoAiImage {
 
-    @Value("${doubao.accessKey}")
+    @Value("${doubao.accessKey:xxx}")
     private String accessKey;
 
-    @Value("${doubao.secretAccessKey}")
+    @Value("${doubao.secretAccessKey:xxx}")
     private String secretAccessKey;
 
-    @Value("${temp.path}")
+    @Value("${temp.path:xxx}")
     private String tempPath;
 
     @Resource

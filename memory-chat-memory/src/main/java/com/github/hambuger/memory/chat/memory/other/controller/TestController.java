@@ -6,7 +6,12 @@ import com.github.hambuger.memory.chat.memory.chat.model.ChatResponse;
 
 import org.apache.commons.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
@@ -33,6 +39,9 @@ public class TestController {
     @Autowired
     private ApplicationContext applicationContext;
 
+    @Value("${temp.path}")
+    private String tempPath;
+
 
     public static final Map<String, ChatResponse> phoneReceiveMessageMap = new ConcurrentHashMap<>();
 
@@ -40,6 +49,21 @@ public class TestController {
     @GetMapping("/hello")
     public String sayHello(@RequestParam(value = "name", defaultValue = "World") String name) {
         return "Hello, " + name + "!";
+    }
+
+    @GetMapping("/image/{imageName}")
+    public ResponseEntity<Resource> getImage(@PathVariable String imageName){
+        String imagePath = tempPath + File.separator + "image" + File.separator + imageName;
+        Resource resource = new FileSystemResource(imagePath);
+
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String contentType = "image/" + imageName.substring(imageName.indexOf(".") + 1);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
     }
 
     @GetMapping("/message")

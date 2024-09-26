@@ -1,28 +1,21 @@
 package com.github.hambuger.memory.chat.memory.other.util;
 
 
-import com.alibaba.fastjson.JSONObject;
-
 import net.coobird.thumbnailator.Thumbnails;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.annotation.Resource;
@@ -58,16 +51,19 @@ public class PicBedUtil {
                 return null;
             }
         }
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new FileSystemResource(zipImage(file)));
-
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-        ResponseEntity<String> response = restTemplate.exchange(uploadUrl + "/upload", HttpMethod.POST, requestEntity, String.class);
-        return uploadUrl + ((JSONObject) (JSONObject.parseArray(response.getBody()).get(0))).getString("src");
+        String fileNameEnd = UUID.randomUUID() + file.substring(file.indexOf(".") + 1);
+        String newImagePath = tempPath + File.separator + "image" + File.separator + fileNameEnd;
+        try (FileInputStream fis = new FileInputStream(file); FileOutputStream fos = new FileOutputStream(newImagePath)) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = fis.read(buffer)) > 0) {
+                fos.write(buffer, 0, length);
+            }
+            fos.flush();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+        return "https://hamburgerhan.com/image/" + fileNameEnd;
     }
 
 
@@ -82,16 +78,7 @@ public class PicBedUtil {
         }
         Map<String, String> imageUrlMap = new ConcurrentHashMap<>();
         files.parallelStream().forEach(file -> {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("file", new FileSystemResource(zipImage(file)));
-
-            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-            ResponseEntity<String> response = restTemplate.exchange(uploadUrl + "/upload", HttpMethod.POST, requestEntity, String.class);
-            imageUrlMap.put(file, uploadUrl + ((JSONObject) (JSONObject.parseArray(response.getBody()).get(0))).getString("src"));
+            imageUrlMap.put(file, uploadImage(file));
         });
         for (String image : files) {
             Optional.ofNullable(imageUrlMap.get(image)).ifPresent(result::add);
