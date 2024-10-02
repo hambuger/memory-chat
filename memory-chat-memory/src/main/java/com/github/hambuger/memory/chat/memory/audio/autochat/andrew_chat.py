@@ -12,7 +12,7 @@ last_input_time = 0
 # Whether voice chat is activated
 audio_active = False
 # Default audio file path
-file_path = 'tmp/audio.wav'
+file_path = 'C:\\Users\\Administrator\\IdeaProjects\\memory-chat\\temp\\audio.wav'
 # Record the ID of the last dialog response message
 parent_id = '0'
 chatClass = ChatClass()
@@ -47,4 +47,5 @@ while True:
         chatClass.tts_pyttsx3(answer)
         last_input_time = time.time()
     except Exception as e:
+        print(e)
         continue

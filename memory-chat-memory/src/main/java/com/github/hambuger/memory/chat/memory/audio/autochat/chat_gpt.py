@@ -12,15 +12,16 @@ messages = []
 
 
 class ChatClass:
-    def __init__(self):
-        url = "http://localhost:8080/chat/send/register"
-        params = {
-            "channelEnum": "AUDIO",
-            "registerUrl": "http://localhost:5000/tts"
-        }
-        requests.get(url, params=params)
+#     def __init__(self):
+# #         url = "http://localhost:80/chat/send/register"
+# #         params = {
+# #             "channelEnum": "AUDIO",
+# #             "registerUrl": "http://localhost:5000/tts"
+# #         }
+# #         requests.get(url, params=params)
+#         pass
 
-    def tts_pyttsx3(text, rate=150, volume=1.0, voice_index=0):
+    def tts_pyttsx3(self, text, rate=150, volume=1.0, voice_index=0):
         """
         Use pyttsx3 to convert text to speech and play it
         :param text: The text to be read aloud
@@ -50,7 +51,7 @@ class ChatClass:
         # Wait for the reading to complete
         engine.runAndWait()
 
-    def audio_to_text(file):
+    def audio_to_text(self, file):
         audio_file = open(file, "rb")
         transcript = client.audio.transcriptions.create(
             model="whisper-1",
@@ -58,7 +59,7 @@ class ChatClass:
         )
         return transcript.text
 
-    def transcribe_audio(audio):
+    def transcribe_audio(self, audio):
         wav_data = BytesIO(audio.get_wav_data())
         with open("speech.mp3", "wb") as f:
             f.write(wav_data.read())
@@ -69,7 +70,7 @@ class ChatClass:
         )
         return transcript.text
 
-    def chat(prompt):
+    def chat(self, prompt):
         global messages
         messages.append({"role": "user", "content": prompt})
         # completion = client.chat.completions.create(
@@ -80,7 +81,7 @@ class ChatClass:
         # answer = completion.choices[0].message.content
         # messages.append({"role": "assistant", "content": answer})
 
-        url = 'http://127.0.0.1:8080/chat/message'  # Replace this URL with the actual API endpoint
+        url = 'http://127.0.0.1:80/chat/message'  # Replace this URL with the actual API endpoint
 
         # Define the parameters of the request
         data = {
@@ -102,7 +103,7 @@ class ChatClass:
         return answer
 
     # Define a function to detect whether text has Chinese linguistic meaning
-    def has_chinese_meaning(text):
+    def has_chinese_meaning(self, text):
         # Detects whether the text contains Chinese sentence patterns
         if re.search(hanzi.sentence, text):
             return True
