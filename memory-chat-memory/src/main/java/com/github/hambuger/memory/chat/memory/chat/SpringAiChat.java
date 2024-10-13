@@ -137,21 +137,21 @@ public class SpringAiChat {
         if (CollectionUtils.isEmpty(messages)) {
             return;
         }
-        boolean imageFlag = messages.stream().anyMatch(msg -> {
-            if (!msg.role().equals(OpenAiApi.ChatCompletionMessage.Role.USER)) {
-                return false;
-            }
-            if (msg.rawContent() instanceof List) {
-                return ((List<?>) msg.rawContent()).stream().anyMatch(obj -> {
-                    OpenAiApi.ChatCompletionMessage.MediaContent mediaContent = (OpenAiApi.ChatCompletionMessage.MediaContent) obj;
-                    return StringUtils.equals(mediaContent.type(), "image_url");
-                });
-            } else {
-                return false;
-            }
-        });
+//        boolean imageFlag = messages.stream().anyMatch(msg -> {
+//            if (!msg.role().equals(OpenAiApi.ChatCompletionMessage.Role.USER)) {
+//                return false;
+//            }
+//            if (msg.rawContent() instanceof List) {
+//                return ((List<?>) msg.rawContent()).stream().anyMatch(obj -> {
+//                    OpenAiApi.ChatCompletionMessage.MediaContent mediaContent = (OpenAiApi.ChatCompletionMessage.MediaContent) obj;
+//                    return StringUtils.equals(mediaContent.type(), "image_url");
+//                });
+//            } else {
+//                return false;
+//            }
+//        });
         String customChatModel = portraitGenerate.getCustomModel();
-        if (!imageFlag && StringUtils.isNotBlank(customChatModel) && Lists.newArrayList(ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE).contains(scene)) {
+        if (StringUtils.isNotBlank(customChatModel) && Lists.newArrayList(ChatSceneEnum.NORMAL_USER, ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.SCHEDULE, ChatSceneEnum.NEWS_SCHEDULE).contains(scene)) {
             chatOptions.setModel(customChatModel);
         }
     }
