@@ -178,7 +178,8 @@ public class SpringAiChat {
 
     public String generateJsonWithSingleMsgAndPrompt(String prompt, Class paramClass) {
         List<OpenAiApi.ChatCompletionMessage> messages = Lists.newArrayList(new OpenAiApi.ChatCompletionMessage(prompt, OpenAiApi.ChatCompletionMessage.Role.SYSTEM));
-        OpenAiApi.ChatCompletion chatCompletion = generateMsgWithMsgList(messages, paramClass, paramClass.getSimpleName());
+        // OpenAiApi.ChatCompletion chatCompletion = generateMsgWithMsgList(messages, paramClass, paramClass.getSimpleName());
+        OpenAiApi.ChatCompletion chatCompletion = generateMsgWithMsgList(messages, true);
         return Optional.ofNullable(chatCompletion).map(OpenAiApi.ChatCompletion::choices).map(list -> list.get(0)).map(OpenAiApi.ChatCompletion.Choice::message).map(OpenAiApi.ChatCompletionMessage::content).orElse(null);
     }
 
