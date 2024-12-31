@@ -104,7 +104,7 @@ public class LearnProceduralMemory {
             FunctionTool customFunctionTool = new FunctionTool();
             customFunctionTool.setFunctionTool(functionTool);
             customFunctionTool.setScene(new ChatSceneEnum[]{ChatSceneEnum.NORMAL_GROUP, ChatSceneEnum.NORMAL_USER});
-            Function<Map<String, Object>, String> methodFunction = x -> invokePythonFunction(functionTool.function().name(), x);
+            Function<Map<String, Object>, String> methodFunction = x -> invokePythonFunction(functionTool.getFunction().getName(), x);
             CallFunctionRegistryFactory.registryFunction(customFunctionTool, Map.class, methodFunction);
         }
     }

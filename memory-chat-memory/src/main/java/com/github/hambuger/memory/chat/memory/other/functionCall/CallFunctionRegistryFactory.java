@@ -44,8 +44,8 @@ public class CallFunctionRegistryFactory {
             return false;
         }
         OpenAiApi.FunctionTool toolSpecification = functionTool.getFunctionTool();
-        FUNCTION_CALL_METHOD_MAP.put(toolSpecification.function().name(), functionTool);
-        FUNCTION_CALL_MAP.put(toolSpecification.function().name(), new MethodFunction(argClass, function));
+        FUNCTION_CALL_METHOD_MAP.put(toolSpecification.getFunction().getName(), functionTool);
+        FUNCTION_CALL_MAP.put(toolSpecification.getFunction().getName(), new MethodFunction(argClass, function));
         return true;
     }
 

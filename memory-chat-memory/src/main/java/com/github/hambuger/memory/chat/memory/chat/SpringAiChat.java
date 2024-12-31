@@ -23,6 +23,7 @@ import org.apache.poi.ss.formula.functions.T;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.web.client.ClientHttpRequestFactories;
@@ -126,7 +127,7 @@ public class SpringAiChat {
         OpenAiApi.ChatCompletionRequest chatRequest = new OpenAiApi.ChatCompletionRequest(messages, false);
         OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().withModel(modelName).withTemperature(temperature).build();
         if (jsonFormat) {
-            chatOptions.setResponseFormat(new OpenAiApi.ChatCompletionRequest.ResponseFormat(OpenAiApi.ChatCompletionRequest.ResponseFormat.Type.JSON_OBJECT));
+            chatOptions.setResponseFormat(new ResponseFormat(ResponseFormat.Type.JSON_OBJECT, null));
         }
         chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
         ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
@@ -165,8 +166,7 @@ public class SpringAiChat {
             objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
             JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(objectMapper);
             JsonNode jsonSchema = jsonSchemaGenerator.generateJsonSchema(paramClass);
-            chatOptions.setResponseFormat(new OpenAiApi.ChatCompletionRequest.ResponseFormat(OpenAiApi.ChatCompletionRequest.ResponseFormat.Type.JSON_SCHEMA,
-                    new OpenAiApi.ChatCompletionRequest.ResponseFormat.JsonSchema(paramName, objectMapper.writeValueAsString(jsonSchema))));
+            chatOptions.setResponseFormat(new ResponseFormat(ResponseFormat.Type.JSON_SCHEMA, objectMapper.writeValueAsString(jsonSchema)));
             chatRequest = ModelOptionsUtils.merge(chatOptions, chatRequest, OpenAiApi.ChatCompletionRequest.class);
             ResponseEntity<OpenAiApi.ChatCompletion> response = openAiApi.chatCompletionEntity(chatRequest);
             return response.getBody();
